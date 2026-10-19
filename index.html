@@ -393,8 +393,8 @@ translateStatic();
 const state = {
   finish:'satin', sleeveOn:true, sleeveColor:'#f3f1ea', sleeveX:.35, recordX:.40, recordRot:0,
   vinyl:'black', vinylColor:'#c8392b', vinyl2:'black', vinyl2Color:'#d9a441', wrapOn:true, wrinkle:1, gloss:1,
-  pattern:'none', patternC1:'#1b1b1b', patternC2:'#d9a441', patternC3:'#4c9f70', patternRot:0,
-  pattern2:'none', pattern2C1:'#1b1b1b', pattern2C2:'#d9a441', pattern2C3:'#4c9f70', pattern2Rot:0,
+  pattern:'none', patternColor:'#1b1b1b', patternAlt:'#2a6f4e', patternContrast:1, patternRot:0,
+  pattern2:'none', pattern2Color:'#1b1b1b', pattern2Alt:'#2a6f4e', pattern2Contrast:1, pattern2Rot:0,
   stickerOn:true, stickerShape:'circle', stickerSize:7.6, stickerX:8.8, stickerY:9.2, stickerRot:0,
   numOn:true, numCur:123, numTotal:1000, numPrefix:'No.', numFormat:'slash', numFont:'auto', numPlace:'back', numFinish:'stamp', numColor:'#25336f',
   numX:10.5, numY:-13.6, numSize:.5, numRot:-3,
@@ -628,16 +628,53 @@ const labelMatB=new THREE.MeshStandardMaterial({map:tex.labelB,roughness:.62});
 const labelMatC=new THREE.MeshStandardMaterial({map:tex.labelC,roughness:.62});
 const labelMatD=new THREE.MeshStandardMaterial({map:tex.labelD,roughness:.62});
 const holeMat=new THREE.MeshStandardMaterial({color:0x6b665c,roughness:.9,side:THREE.DoubleSide});
-// Pattern vinyl: baked masks from vinyl-masks/ (tools/bake-vinyl-masks.py). Each mask is an RGB image
-// whose channels are the coverage of accent colours 1..3, cropped so the disc fills the square, which
-// matches the record face UVs. A missing manifest (e.g. the page opened from file://) leaves only plain vinyl.
-const MASKS=await fetch('vinyl-masks/manifest.json').then(r=>r.ok?r.json():{masks:[]}).then(j=>j.masks).catch(()=>[]);
+// Pattern vinyl. A mask is an RGB image whose channels are the coverage of accent colours 1..3, square
+// with the disc filling it, which matches the record face UVs. Split patterns are drawn here; the rest are
+// baked into vinyl-masks/ by tools/bake-vinyl-masks.py. A missing manifest (e.g. the page opened from
+// file://) leaves only the split patterns.
+// palette.mode says what the user picks; everything else is derived (derivePattern):
+//   regions = one colour per region (the base is the first region); accent = base + pattern colour, further
+//   accents keep their default relation; tonal = base only, accents are lighter/darker shades of it.
+const SPLITS=[
+  {id:'split-half',family:'split',role:'layout',palette:{mode:'regions'},accents:1,base:'#f2efe6',colors:['#c8392b']},
+  {id:'split-tri',family:'split',role:'layout',palette:{mode:'regions'},accents:2,base:'#f2c14e',colors:['#e4572e','#2a6f4e']},
+  {id:'split-quad',family:'split',role:'layout',palette:{mode:'regions'},accents:1,base:'#f2efe6',colors:['#1b4f9c']}];
+const MASKS=[...SPLITS,...await fetch('vinyl-masks/manifest.json').then(r=>r.ok?r.json():{masks:[]}).then(j=>j.masks).catch(()=>[])];
 const maskById=id=>MASKS.find(m=>m.id===id);
+const patternIds=mode=>MASKS.filter(m=>m.palette.mode===mode).map(m=>m.id).join(' / ')||'暂无';
+// Hard wedges per channel, then a slight blur: two vinyl colours meet with a narrow blended seam.
+// half = top half; tri = three 120° sectors; quad = top-right and bottom-left quadrants (diagonal pairs).
+function splitMask(id,N=1024){
+  const hard=canvas(N,N),g=hard.getContext('2d'),c=N/2,PI=Math.PI;
+  const wedge=(a0,a1,fill)=>{g.fillStyle=fill;g.beginPath();g.moveTo(c,c);g.arc(c,c,N,a0,a1);g.closePath();g.fill()};
+  g.fillStyle='#000';g.fillRect(0,0,N,N);
+  if(id==='split-half')wedge(PI,2*PI,'#f00');
+  else if(id==='split-tri'){wedge(-PI/2-2*PI/3,-PI/2,'#f00');wedge(-PI/2+2*PI/3,-PI/2+4*PI/3,'#0f0')}
+  else{wedge(-PI/2,0,'#f00');wedge(PI/2,PI,'#f00')}
+  const out=canvas(N,N),o=out.getContext('2d');o.filter=`blur(${N/512}px)`;o.drawImage(hard,0,0);return out}
 const maskCache=new Map();
 function loadMask(id){
-  if(!maskCache.has(id))maskCache.set(id,fetch('vinyl-masks/'+maskById(id).file).then(r=>{if(!r.ok)throw new Error(`HTTP ${r.status}`);return r.blob()}).then(b=>createImageBitmap(b,{colorSpaceConversion:'none',premultiplyAlpha:'none'}))
+  const m=maskById(id);
+  if(!maskCache.has(id))maskCache.set(id,m.family==='split'?Promise.resolve(splitMask(id)):fetch('vinyl-masks/'+m.file).then(r=>{if(!r.ok)throw new Error(`HTTP ${r.status}`);return r.blob()}).then(b=>createImageBitmap(b,{colorSpaceConversion:'none',premultiplyAlpha:'none'}))
     .catch(e=>{maskCache.delete(id);throw e}));
   return maskCache.get(id)}
+// OKLab (Björn Ottosson); the same conversion and rules as apply_params() in tools/bake-vinyl-masks.py.
+const srgbToLin=c=>c<=.04045?c/12.92:((c+.055)/1.055)**2.4,linToSrgb=c=>{c=Math.min(1,Math.max(0,c));return c<=.0031308?12.92*c:1.055*c**(1/2.4)-.055};
+function hexToOklab(h){const[r,g,b]=[1,3,5].map(i=>srgbToLin(parseInt(h.slice(i,i+2),16)/255));
+  const l=Math.cbrt(.4122214708*r+.5363325363*g+.0514459929*b),m=Math.cbrt(.2119034982*r+.6806995451*g+.1073969566*b),s=Math.cbrt(.0883024619*r+.2817188376*g+.6299787005*b);
+  return[.2104542553*l+.7936177850*m-.0040720468*s,1.9779984951*l-2.4285922050*m+.4505937099*s,.0259040371*l+.7827717662*m-.8086757660*s]}
+function oklabToHex([L,a,b]){const l=(L+.3963377774*a+.2158037573*b)**3,m=(L-.1055613458*a-.0638541728*b)**3,s=(L-.0894841775*a-1.2914855480*b)**3;
+  return'#'+[4.0767416621*l-3.3077115913*m+.2309699292*s,-1.2684380046*l+2.6097574011*m-.3413193965*s,-.0041960863*l-.7034186147*m+1.7076147010*s].map(c=>Math.round(linToSrgb(c)*255).toString(16).padStart(2,'0')).join('')}
+// Accent colours for a mask from the user's picks: base (the disc colour), color, alt (third region) and
+// contrast (tonal strength, 1 = the default palette's spread).
+function derivePattern(m,base,color,alt,contrast){
+  const{mode,derive=[]}=m.palette;
+  if(mode==='regions')return[color,alt].slice(0,m.accents);
+  const B=hexToOklab(base);
+  if(mode==='accent'){const A=hexToOklab(color);return[color,...derive.map(p=>oklabToHex(A.map((v,k)=>v+p.t*(B[k]-v)+(k?0:p.dL))))]}
+  const[Lb]=B,Cb=Math.hypot(B[1],B[2]),hb=Math.atan2(B[2],B[1]);
+  return derive.map(p=>{const dL=p.dL*contrast;let L=Lb+dL>=.1?Lb+dL:Lb-dL;L=Math.min(.98,Math.max(.05,L));
+    const C=Cb<.02?Cb:Math.max(0,Cb+p.dC*contrast);return oklabToHex([L,C*Math.cos(hb),C*Math.sin(hb)])})}
 const VINYL_BLACK='#0b0b0c',CLEAR_OPACITY=.62;
 // Composite base + accents in sRGB bytes (what the bake preview shows). Clear vinyl also gets an alpha map:
 // the base stays see-through and accents turn opaque where they cover it, like splatter in clear vinyl.
@@ -662,8 +699,8 @@ async function applyPatternTo(i,mats,style,color){
   // Until the mask lands (or if it never does) the face keeps the plain colour and opacity set by applyVinylTo.
   if(!m){drop();return}
   const img=await loadMask(id);if(token!==patternToken[i-1])return;
-  const colors=[1,2,3].slice(0,m.accents).map(k=>state[`pattern${s}C${k}`]);
-  const t=patternTextures(img,style==='black'?VINYL_BLACK:color,colors,state[`pattern${s}Rot`],style==='clear');
+  const base=style==='black'?VINYL_BLACK:color,colors=derivePattern(m,base,state[`pattern${s}Color`],state[`pattern${s}Alt`],state[`pattern${s}Contrast`]);
+  const t=patternTextures(img,base,colors,state[`pattern${s}Rot`],style==='clear');
   drop();mats.face.map=t.map;mats.face.alphaMap=t.alpha;mats.face.color.set(0xffffff);if(t.alpha)mats.face.opacity=1;mats.face.needsUpdate=true}
 function applyVinylTo(i,mats,style,color){
   const black=style==='black',clear=style==='clear',col=new THREE.Color(black?VINYL_BLACK:color),patterned=!!maskById(state[i===1?'pattern':'pattern2']);
@@ -1068,8 +1105,10 @@ const SPEC_FIELDS=[
     colorF(`records.disc${i}.color`,`vinyl${s}Color`,`第 ${i} 张彩胶或半透明的颜色${note}`),
     numF(`records.disc${i}.sleeveOut`,`sleeve${s}X`,0,100,.01,`第 ${i} 张内袋连同唱片从封套开口抽出的比例（%）${note}`),
     numF(`records.disc${i}.recordOut`,`record${s}X`,0,100,.01,`第 ${i} 张唱片再从内袋里抽出的比例（%）${note}`),
-    enumF(`records.disc${i}.pattern.id`,`pattern${s}`,['none',...MASKS.map(m=>m.id)],`第 ${i} 张彩胶纹路：none 为纯色，其余为蒙版 ID（${MASKS.map(m=>`${m.id} ${m.role==='layout'?'分色布局':'叠加效果'}，${m.accents} 色`).join('；')}）。底色仍由 vinyl/color 决定，black 底也可以叠纹路；只给 id 时，color1–3 和 color 回到这款纹路的默认配色${note}`),
-    ...[1,2,3].map(k=>colorF(`records.disc${i}.pattern.color${k}`,`pattern${s}C${k}`,`第 ${i} 张纹路第 ${k} 个色层的颜色，超出该纹路色层数时无效${note}`)),
+    enumF(`records.disc${i}.pattern.id`,`pattern${s}`,['none',...MASKS.map(m=>m.id)],`第 ${i} 张彩胶纹路，none 为纯色。按配色方式分三类——分色（底色是第一块，pattern.color 第二块，split-tri 再用 pattern.color2 第三块；split-quad 对角同色）：${patternIds('regions')}；主次（底色 + pattern.color，其余色层自动推算）：${patternIds('accent')}；同色系（只用底色，纹路是它的深浅变化，pattern.contrast 调反差）：${patternIds('tonal')}。底色由 vinyl/color 决定，black 底也可以叠纹路；只给 id 时，color、pattern.color、pattern.color2 回到这款纹路的默认配色${note}`),
+    colorF(`records.disc${i}.pattern.color`,`pattern${s}Color`,`第 ${i} 张纹路色：主次类为纹路颜色，分色类为第二块颜色；同色系不使用${note}`),
+    colorF(`records.disc${i}.pattern.color2`,`pattern${s}Alt`,`第 ${i} 张分色第三块颜色，仅 split-tri 使用${note}`),
+    numF(`records.disc${i}.pattern.contrast`,`pattern${s}Contrast`,0,200,.01,`第 ${i} 张同色系纹路的反差（%），100 为这款纹路的原始深浅差；仅同色系使用${note}`),
     numF(`records.disc${i}.pattern.rotation`,`pattern${s}Rot`,-180,180,1,`第 ${i} 张纹路相对标签的旋转角度（度，逆时针为正）${note}`)]}),
   boolF('insert.on','insertOn','是否放入双面插页'),
   numF('insert.out','insertX',0,100,.01,'插页抽出比例（%）。插页在内袋后面，需要比内袋抽得多才看得到'),
@@ -1187,9 +1226,14 @@ async function applySpec(spec){
   if(has('number.place')){const d=NUM_DEFAULTS[state.numPlace];if(!has('number.x'))state.numX=d.x;if(!has('number.y'))state.numY=d.y;if(!has('number.size'))state.numSize=d.size;if(!has('number.rotation'))state.numRot=d.rot}
   if(has('number.finish')&&!has('number.color'))state.numColor=NUM_INK[state.numFinish];
   for(const i of[1,2]){const s=i===1?'':'2',m=maskById(state['pattern'+s]),pre=`records.disc${i}`;if(!m)continue;
-    if(has(`${pre}.pattern.id`)){m.colors.forEach((c,k)=>{if(!has(`${pre}.pattern.color${k+1}`))state[`pattern${s}C${k+1}`]=c});
+    const mode=m.palette.mode,tri=mode==='regions'&&m.accents===2;
+    if(has(`${pre}.pattern.id`)){if(!has(`${pre}.pattern.color`)&&mode!=='tonal')state[`pattern${s}Color`]=m.colors[0];
+      if(!has(`${pre}.pattern.color2`)&&tri)state[`pattern${s}Alt`]=m.colors[1];
+      if(!has(`${pre}.pattern.contrast`))state[`pattern${s}Contrast`]=1;
       if(!has(`${pre}.color`)&&m.base)state[`vinyl${s}Color`]=m.base}
-    for(let k=m.accents+1;k<=3;k++)if(has(`${pre}.pattern.color${k}`))warnings.push(`${pre}.pattern.color${k} 无效：${m.id} 只有 ${m.accents} 个色层`);
+    if(has(`${pre}.pattern.color`)&&mode==='tonal')warnings.push(`${pre}.pattern.color 无效：${m.id} 是同色系纹路，只用底色 ${pre}.color`);
+    if(has(`${pre}.pattern.color2`)&&!tri)warnings.push(`${pre}.pattern.color2 无效：只有 split-tri 使用第三块颜色`);
+    if(has(`${pre}.pattern.contrast`)&&mode!=='tonal')warnings.push(`${pre}.pattern.contrast 无效：只有同色系纹路（${patternIds('tonal')}）使用反差`);
     if(i===2&&state.lpCount!==2&&has(`${pre}.pattern.id`))warnings.push(`${pre}.pattern 仅在 records.count=2 时可见`)}
   const bg=getPath(spec,'output.background');
   if(bg!==undefined){if(bg==='transparent')state.bg='transparent';else if(typeof bg==='string'&&/^#[0-9a-f]{6}$/i.test(bg)){state.bg='color';state.bgColor=bg.toLowerCase()}else warnings.push('output.background 需要 "transparent" 或 #rrggbb，已忽略')}
