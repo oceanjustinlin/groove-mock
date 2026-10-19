@@ -1,0 +1,25 @@
+# Local renders, downloaded artwork, custom fonts and run reports
+/output/
+
+# Dependencies and package-manager logs
+node_modules/
+npm-debug.log*
+
+# Local tools, settings and credentials
+/.claude/
+/.codex/
+/.agents/
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# Ad-hoc render output beside example specs
+/examples/*.png

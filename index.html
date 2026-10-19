@@ -1,0 +1,1126 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Groove Mock</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=IBM+Plex+Mono:wght@400;500;600&family=Caveat:wght@600&family=Noto+Serif+SC:wght@600&family=Special+Elite&family=Noto+Sans+SC:wght@400;500;700&display=swap">
+<style>
+/* Layout: one-screen workbench. Live 3D stage on the left, a job-ticket style control column on the right; stacks on phones. */
+:root{
+  --bg:#eceee9; --surface:#fbfbf9; --ink:#1a1e1b; --muted:#5d655f; --line:#d3d8d1;
+  --accent:#2c49c9; --accent-ink:#ffffff; --stage:#e2e5df; --check:#d6dad3;
+  --font-display:"Archivo","PingFang SC","Noto Sans SC",system-ui,sans-serif;
+  --font-body:"Noto Sans SC","PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#131614; --surface:#1b1f1c; --ink:#e6eae5; --muted:#9aa39b; --line:#2c322d;
+  --accent:#8299ff; --accent-ink:#0d1020; --stage:#0e110f; --check:#1a1e1b; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#131614; --surface:#1b1f1c; --ink:#e6eae5; --muted:#9aa39b; --line:#2c322d;
+  --accent:#8299ff; --accent-ink:#0d1020; --stage:#0e110f; --check:#1a1e1b; color-scheme:dark}
+
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:14px;line-height:1.5}
+*{box-sizing:border-box}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.app{height:100%;display:grid;grid-template-rows:auto 1fr;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px;gap:12px}
+.bar{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 10px;margin-right:auto;min-width:0}
+.brand h1{margin:0;white-space:nowrap;font-family:var(--font-display);font-stretch:78%;font-weight:800;font-size:24px;letter-spacing:.01em;line-height:1}
+.spec{font-family:var(--font-mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.views{display:flex;gap:4px}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;cursor:pointer;font-size:13px}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.primary{background:var(--accent);color:var(--accent-ink);border:0;border-radius:8px;padding:8px 16px;font-weight:700;cursor:pointer}
+.primary:disabled{opacity:.6;cursor:progress}
+
+.work{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:12px;min-height:0}
+.stage{position:relative;border-radius:12px;overflow:hidden;background:var(--stage);min-height:0}
+.stage.transparent{background-color:var(--stage);background-image:conic-gradient(var(--check) 25%,transparent 0 50%,var(--check) 0 75%,transparent 0);background-size:24px 24px}
+.stage canvas{display:block;width:100%;height:100%;touch-action:none}
+.hint{position:absolute;left:12px;bottom:10px;font-size:12px;color:var(--muted);background:color-mix(in srgb,var(--surface) 80%,transparent);padding:3px 8px;border-radius:6px;pointer-events:none}
+.loading{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-size:13px}
+.err{position:absolute;inset:0;display:grid;place-items:center;padding:24px;text-align:center}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:auto;min-height:0}
+.group{padding:14px 16px;border-bottom:1px solid var(--line);display:grid;gap:10px}
+.group:last-child{border-bottom:0}
+.group h2{margin:0;display:flex;align-items:baseline;justify-content:space-between;gap:8px;font-family:var(--font-display);font-stretch:85%;font-weight:700;font-size:15px;letter-spacing:.02em}
+.group h2 small{font-family:var(--font-mono);font-weight:400;font-size:11px;color:var(--muted);letter-spacing:0}
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.tiles.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.tiles.one{grid-template-columns:minmax(0,1fr)}
+.disc{border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;gap:10px}
+.disc h3{margin:0;display:flex;align-items:baseline;gap:8px;font-family:var(--font-display);font-stretch:85%;font-weight:700;font-size:13px}
+.disc h3 small{font-family:var(--font-body);font-weight:400;font-size:12px;color:var(--muted)}
+.tile.mini{grid-template-columns:auto auto;align-items:center;gap:6px}
+.tile.mini .thumb{width:26px;border-radius:6px}
+
+.tile{position:relative;display:grid;gap:4px;cursor:pointer;font-size:12px;color:var(--muted)}
+.tile input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.tile .thumb{aspect-ratio:1;max-width:100%;border:1px dashed var(--line);border-radius:8px;background:var(--bg) center/cover no-repeat;position:relative}
+.tile .thumb.contain{background-size:contain}
+.tile.filled .thumb{border-style:solid}
+.tile .tag{position:absolute;right:4px;top:4px;font-size:10px;background:var(--surface);color:var(--muted);border-radius:4px;padding:0 4px}
+.tile:focus-within .thumb{outline:2px solid var(--accent);outline-offset:2px}
+.row{display:flex;align-items:center;gap:10px;justify-content:space-between}
+.row label,.lbl{font-size:13px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:transparent;padding:4px 10px;cursor:pointer;font-size:13px}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.slider{display:grid;grid-template-columns:72px minmax(0,1fr) 58px;align-items:center;gap:8px;font-size:13px}
+.slider input{width:100%;accent-color:var(--accent)}
+.field{border:1px solid var(--line);border-radius:6px;background:var(--surface);padding:3px 8px;font-family:var(--font-mono);font-size:13px;width:84px;font-variant-numeric:tabular-nums}
+.field.wide{width:120px}
+.field.select{width:158px;font-family:var(--font-body);padding:3px 4px}
+.chip.upload{font-size:12px;padding:4px 10px;white-space:nowrap}
+.vh{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none}
+.seg.wrap{flex-wrap:wrap}
+.slider output{font-family:var(--font-mono);font-size:12px;text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
+.switch{display:inline-flex;align-items:center;gap:6px;font-size:13px;cursor:pointer}
+.switch input{accent-color:var(--accent);width:16px;height:16px}
+input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line);border-radius:6px;background:none;cursor:pointer}
+.note{margin:0;font-size:12px;color:var(--muted)}
+.sub[hidden]{display:none!important}
+.sub{display:grid;gap:10px}
+
+.modal{position:fixed;inset:0;background:color-mix(in srgb,var(--ink) 55%,transparent);display:grid;place-items:center;padding:24px max(16px,env(safe-area-inset-right,0px)) 24px max(16px,env(safe-area-inset-left,0px));z-index:10}
+.sheet{background:var(--surface);border-radius:12px;padding:16px;max-width:min(720px,100%);max-height:100%;overflow:auto;display:grid;gap:12px}
+.sheet img{border-radius:8px;background-image:conic-gradient(var(--check) 25%,transparent 0 50%,var(--check) 0 75%,transparent 0);background-size:16px 16px;max-height:60vh;justify-self:center}
+.sheet .row{flex-wrap:wrap}
+
+@media (max-width:860px){
+  html,body{height:auto}
+  .app{height:auto;grid-template-rows:auto auto}
+  .work{grid-template-columns:minmax(0,1fr)}
+  .stage{height:62vh;min-height:360px}
+  .panel{overflow:visible}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="app">
+  <header class="bar">
+    <div class="brand"><h1>Groove Mock</h1><span class="spec">12″ LP · 封套 314 × 314 mm · 唱片 Ø302 mm</span></div>
+    <div class="views" role="group" aria-label="视角">
+      <button class="chip" data-view="quarter" aria-pressed="true">斜侧</button>
+      <button class="chip" data-view="front" aria-pressed="false">正面</button>
+      <button class="chip" data-view="side" aria-pressed="false">侧面</button>
+    </div>
+    <button class="primary" id="export-btn">导出 PNG</button>
+  </header>
+
+  <div class="work">
+    <main class="stage transparent" id="stage" aria-label="3D 预览">
+      <div class="loading" id="loading">正在准备工作台…</div>
+      <div class="err" id="gl-error" hidden><div><strong>无法启动 3D 预览</strong><p class="note">请使用支持 WebGL 2 的最新版浏览器，并开启硬件加速。</p></div></div>
+      <span class="hint">拖动旋转 · 滚轮缩放 · 右键拖动平移</span>
+    </main>
+
+    <aside class="panel" aria-label="设置">
+      <section class="group">
+        <h2>封套 <small id="jacket-spec">单开 · 书脊 4 mm</small></h2>
+        <div class="row"><span class="lbl">类型</span>
+          <div class="seg" id="jacket-type"><button data-v="single" aria-pressed="true">单开</button><button data-v="gatefold" aria-pressed="false">双开</button></div>
+        </div>
+        <div class="tiles">
+          <label class="tile" data-slot="front"><span class="thumb"><span class="tag">示例</span></span><input id="up-front" type="file" accept="image/*" aria-label="上传封套正面">正面</label>
+          <label class="tile" data-slot="back"><span class="thumb"><span class="tag">示例</span></span><input id="up-back" type="file" accept="image/*" aria-label="上传封套背面">背面</label>
+          <label class="tile" data-slot="spine"><span class="thumb"><span class="tag">示例</span></span><input id="up-spine" type="file" accept="image/*" aria-label="上传书脊">书脊</label>
+        </div>
+        <div class="sub" id="gate-sub" hidden>
+          <div class="tiles two">
+            <label class="tile" data-slot="innerLeft"><span class="thumb"><span class="tag">示例</span></span><input id="up-innerLeft" type="file" accept="image/*" aria-label="上传内页左">内页左</label>
+            <label class="tile" data-slot="innerRight"><span class="thumb"><span class="tag">示例</span></span><input id="up-innerRight" type="file" accept="image/*" aria-label="上传内页右">内页右</label>
+          </div>
+          <div class="slider"><label for="gate-open">打开角度</label><input type="range" id="gate-open" min="0" max="180" value="0"><output id="gate-open-v">0°</output></div>
+          <p class="note">打开后，塑封膜、贴纸和侧标会一起拆掉。</p>
+        </div>
+        <div class="row"><span class="lbl">纸张工艺</span>
+          <div class="seg" id="finish"><button data-v="matte" aria-pressed="false">哑光</button><button data-v="satin" aria-pressed="true">缎面</button><button data-v="gloss" aria-pressed="false">亮面</button></div>
+        </div>
+      </section>
+
+      <section class="group">
+        <h2>Obi 侧标 <small>包住书脊一侧</small></h2>
+        <label class="switch"><input type="checkbox" id="obi-on" checked>显示侧标</label>
+        <div class="sub" id="obi-sub">
+          <div class="row" style="align-items:flex-start">
+            <div class="tiles one" style="flex:0 0 31%"><label class="tile" data-slot="obi"><span class="thumb contain"><span class="tag">示例</span></span><input id="up-obi" type="file" accept="image/*" aria-label="上传侧标展开图">展开图</label></div>
+            <p class="note" style="flex:1">上传一张竖长条图，从左到右依次是：背面、书脊、正面。正面和背面宽度相同。</p>
+          </div>
+          <div class="slider"><label for="obi-width">正面宽度</label><input type="range" id="obi-width" min="20" max="80" value="32"><output id="obi-width-v">32 mm</output></div>
+        </div>
+      </section>
+
+      <section class="group">
+        <h2>限量编号 <small id="num-preview">No. 0123 / 1000</small></h2>
+        <label class="switch"><input type="checkbox" id="num-on" checked>显示编号</label>
+        <div class="sub" id="num-sub">
+          <div class="row"><label class="lbl" for="num-cur">编号</label>
+            <div class="row" style="justify-content:flex-end;gap:6px"><input class="field" type="number" id="num-cur" min="1" value="123" aria-label="当前编号"><span class="lbl">/</span><input class="field" type="number" id="num-total" min="1" value="1000" aria-label="限量总数"></div>
+          </div>
+          <div class="row"><label class="lbl" for="num-prefix">前缀</label><input class="field wide" type="text" id="num-prefix" value="No." maxlength="10"></div>
+          <div class="row"><span class="lbl">格式</span>
+            <div class="seg" id="num-format"><button data-v="slash" aria-pressed="true">No. 0123/1000</button><button data-v="compact" aria-pressed="false">0123/1000</button><button data-v="cn" aria-pressed="false">中文</button></div>
+          </div>
+          <div class="row"><label class="lbl" for="num-font">字体</label>
+            <div class="row" style="justify-content:flex-end;gap:6px">
+              <select class="field select" id="num-font">
+                <option value="auto" selected>跟随工艺</option>
+                <option value="sans">无衬线 · Archivo</option>
+                <option value="mono">等宽 · Plex Mono</option>
+                <option value="serif">衬线 · Noto Serif</option>
+                <option value="type">打字机 · Special Elite</option>
+                <option value="hand">手写 · Caveat</option>
+                <option value="hei">中文黑体 · Noto Sans</option>
+                <option value="custom" id="num-font-custom" disabled>自定义（未上传）</option>
+              </select>
+              <label class="chip upload" for="up-font">上传字体</label><input class="vh" id="up-font" type="file" accept=".ttf,.otf,.woff,.woff2" tabindex="-1" aria-label="上传字体文件">
+            </div>
+          </div>
+          <div class="row"><span class="lbl">位置</span>
+            <div class="seg" id="num-place"><button data-v="back" aria-pressed="true">背面</button><button data-v="front" aria-pressed="false">正面</button><button data-v="obi" aria-pressed="false">Obi</button><button data-v="sticker" aria-pressed="false">贴纸</button></div>
+          </div>
+          <div class="row"><span class="lbl">工艺</span>
+            <div class="row" style="justify-content:flex-end">
+              <div class="seg" id="num-finish"><button data-v="print" aria-pressed="false">印刷</button><button data-v="stamp" aria-pressed="true">印章</button><button data-v="foil" aria-pressed="false">烫金</button><button data-v="hand" aria-pressed="false">手写</button></div>
+              <input type="color" id="num-color" value="#25336f" aria-label="编号颜色">
+            </div>
+          </div>
+          <div class="slider"><label for="num-x">水平</label><input type="range" id="num-x" min="-150" max="150" value="105"><output id="num-x-v">105 mm</output></div>
+          <div class="slider"><label for="num-y">垂直</label><input type="range" id="num-y" min="-150" max="150" value="-136"><output id="num-y-v">-136 mm</output></div>
+          <div class="slider"><label for="num-size">字高</label><input type="range" id="num-size" min="3" max="20" value="5"><output id="num-size-v">5 mm</output></div>
+          <div class="slider"><label for="num-rot">角度</label><input type="range" id="num-rot" min="-90" max="90" value="-3"><output id="num-rot-v">-3°</output></div>
+          <p class="note">切换位置时，坐标会回到该位置的默认值。烫金在转动视角时会反光。只含英文的字体遇到中文时，会用黑体补齐。上传的字体只在本地使用。</p>
+        </div>
+      </section>
+
+      <section class="group">
+        <h2>唱片与内袋 <small>33⅓ RPM · 标签 Ø100</small></h2>
+        <div class="row"><span class="lbl">数量</span>
+          <div class="seg" id="lp-count"><button data-v="1" aria-pressed="true">单 LP</button><button data-v="2" aria-pressed="false">2LP</button></div>
+        </div>
+        <div class="slider"><label for="record-rot">标签角度</label><input type="range" id="record-rot" min="-180" max="180" value="0"><output id="record-rot-v">0°</output></div>
+        <div class="row">
+          <label class="switch"><input type="checkbox" id="sleeve-on" checked>显示内袋</label>
+          <div class="row" style="justify-content:flex-end">
+            <label class="tile mini" data-slot="sleeve"><span class="thumb"></span><input id="up-sleeve" type="file" accept="image/*" aria-label="上传内袋印刷图">印刷图</label>
+            <input type="color" id="sleeve-color" value="#f3f1ea" aria-label="内袋颜色">
+          </div>
+        </div>
+
+        <div class="disc">
+          <h3>第 1 张 <small>A / B 面</small></h3>
+          <div class="tiles two">
+            <label class="tile" data-slot="labelA"><span class="thumb"><span class="tag">示例</span></span><input id="up-labelA" type="file" accept="image/*" aria-label="上传 A 面标签">A 面标签</label>
+            <label class="tile" data-slot="labelB"><span class="thumb"><span class="tag">示例</span></span><input id="up-labelB" type="file" accept="image/*" aria-label="上传 B 面标签">B 面标签</label>
+          </div>
+          <div class="row"><span class="lbl">胶色</span>
+            <div class="row" style="justify-content:flex-end">
+              <div class="seg" id="vinyl-style"><button data-v="black" aria-pressed="true">黑胶</button><button data-v="color" aria-pressed="false">彩胶</button><button data-v="clear" aria-pressed="false">半透明</button></div>
+              <input type="color" id="vinyl-color" value="#c8392b" aria-label="第 1 张胶色">
+            </div>
+          </div>
+          <div class="slider"><label for="sleeve-x">内袋抽出</label><input type="range" id="sleeve-x" min="0" max="100" value="35"><output id="sleeve-x-v">35%</output></div>
+          <div class="slider"><label for="record-x">唱片抽出</label><input type="range" id="record-x" min="0" max="100" value="40"><output id="record-x-v">40%</output></div>
+        </div>
+
+        <div class="disc" id="lp2-sub" hidden>
+          <h3>第 2 张 <small>C / D 面 · 放在第 1 张后面</small></h3>
+          <div class="tiles two">
+            <label class="tile" data-slot="labelC"><span class="thumb"><span class="tag">示例</span></span><input id="up-labelC" type="file" accept="image/*" aria-label="上传 C 面标签">C 面标签</label>
+            <label class="tile" data-slot="labelD"><span class="thumb"><span class="tag">示例</span></span><input id="up-labelD" type="file" accept="image/*" aria-label="上传 D 面标签">D 面标签</label>
+          </div>
+          <div class="row"><span class="lbl">胶色</span>
+            <div class="row" style="justify-content:flex-end">
+              <div class="seg" id="vinyl2-style"><button data-v="black" aria-pressed="true">黑胶</button><button data-v="color" aria-pressed="false">彩胶</button><button data-v="clear" aria-pressed="false">半透明</button></div>
+              <input type="color" id="vinyl2-color" value="#d9a441" aria-label="第 2 张胶色">
+            </div>
+          </div>
+          <div class="slider"><label for="sleeve2-x">内袋抽出</label><input type="range" id="sleeve2-x" min="0" max="100" value="60"><output id="sleeve2-x-v">60%</output></div>
+          <div class="slider"><label for="record2-x">唱片抽出</label><input type="range" id="record2-x" min="0" max="100" value="30"><output id="record2-x-v">30%</output></div>
+        </div>
+        <p class="note">内袋抽出：内袋连同唱片一起从封套开口拉出。唱片抽出：唱片再从内袋里往外拉。</p>
+      </section>
+
+      <section class="group">
+        <h2>Insert 插页 <small>304 × 304 mm · 双面</small></h2>
+        <label class="switch"><input type="checkbox" id="insert-on" checked>放入插页</label>
+        <div class="sub" id="insert-sub">
+          <div class="tiles two">
+            <label class="tile" data-slot="insertFront"><span class="thumb"><span class="tag">示例</span></span><input id="up-insertFront" type="file" accept="image/*" aria-label="上传插页正面">正面</label>
+            <label class="tile" data-slot="insertBack"><span class="thumb"><span class="tag">示例</span></span><input id="up-insertBack" type="file" accept="image/*" aria-label="上传插页背面">背面</label>
+          </div>
+          <div class="slider"><label for="insert-x">抽出</label><input type="range" id="insert-x" min="0" max="100" value="0"><output id="insert-x-v">0%</output></div>
+          <p class="note">插页在内袋后面，抽得比内袋多才看得到。</p>
+        </div>
+      </section>
+
+      <section class="group">
+        <h2>塑封膜 <small>Shrink wrap</small></h2>
+        <label class="switch"><input type="checkbox" id="wrap-on" checked>套上塑封膜</label>
+        <div class="sub" id="wrap-sub">
+          <div class="slider"><label for="wrap-wrinkle">褶皱</label><input type="range" id="wrap-wrinkle" min="0" max="200" value="100"><output id="wrap-wrinkle-v">100%</output></div>
+          <div class="slider"><label for="wrap-gloss">反光</label><input type="range" id="wrap-gloss" min="0" max="200" value="100"><output id="wrap-gloss-v">100%</output></div>
+          <p class="note">唱片抽出时，开口一侧的膜会被视为已拆开。</p>
+        </div>
+      </section>
+
+      <section class="group">
+        <h2>Hype sticker <small>贴在塑封膜上</small></h2>
+        <label class="switch"><input type="checkbox" id="sticker-on" checked>显示贴纸</label>
+        <div class="sub" id="sticker-sub">
+          <div class="row">
+            <div class="tiles" style="flex:1"><label class="tile" data-slot="sticker"><span class="thumb"><span class="tag">示例</span></span><input id="up-sticker" type="file" accept="image/*" aria-label="上传贴纸">贴纸图</label></div>
+            <div class="seg" id="sticker-shape"><button data-v="circle" aria-pressed="true">圆形</button><button data-v="rect" aria-pressed="false">长方形</button></div>
+          </div>
+          <div class="slider"><label for="sticker-size">尺寸</label><input type="range" id="sticker-size" min="40" max="140" value="76"><output id="sticker-size-v">76 mm</output></div>
+          <div class="slider"><label for="sticker-x">水平</label><input type="range" id="sticker-x" min="-120" max="120" value="88"><output id="sticker-x-v">88 mm</output></div>
+          <div class="slider"><label for="sticker-y">垂直</label><input type="range" id="sticker-y" min="-120" max="120" value="92"><output id="sticker-y-v">92 mm</output></div>
+          <div class="slider"><label for="sticker-rot">角度</label><input type="range" id="sticker-rot" min="-45" max="45" value="-8"><output id="sticker-rot-v">-8°</output></div>
+        </div>
+      </section>
+
+      <section class="group">
+        <h2>输出</h2>
+        <div class="row"><span class="lbl">背景</span>
+          <div class="row" style="justify-content:flex-end">
+            <div class="seg" id="bg-mode"><button data-v="transparent" aria-pressed="true">透明</button><button data-v="color" aria-pressed="false">纯色</button></div>
+            <input type="color" id="bg-color" value="#e6e3dc" aria-label="背景颜色">
+          </div>
+        </div>
+        <div class="row"><span class="lbl">分辨率</span>
+          <div class="seg" id="export-scale"><button data-v="1" aria-pressed="false">1×</button><button data-v="2" aria-pressed="true">2×</button><button data-v="3" aria-pressed="false">3×</button></div>
+        </div>
+        <p class="note">图片只在你的浏览器里处理，不会上传。</p>
+      </section>
+    </aside>
+  </div>
+</div>
+
+<div class="modal" id="modal" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="row"><strong id="modal-title">PNG 已生成</strong><span class="spec" id="modal-size"></span></div>
+    <img id="modal-img" alt="导出的模型图">
+    <p class="note">如果点"下载"没有反应，请右键（手机长按）图片另存。</p>
+    <div class="row"><a class="primary" id="modal-dl" download="groove-mock.png" href="#" style="text-decoration:none">下载</a><button class="chip" id="modal-close">关闭</button></div>
+  </div>
+</div>
+
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
+
+// ---------- Physical spec. One scene unit = 10 mm. ----------
+const J = {w:31.4, h:31.4, d:0.4, board:0.05};           // 12" jacket; d is the pocket depth (4 mm for 1LP, 6.2 mm for 2LP)
+const POCKET_D = {1:0.4, 2:0.62};
+const WRAP = {pad:0.11, extra:0.12};                      // shrink wrap envelope: jacket + 1.2 mm
+const INS = {s:30.4, t:0.012, z:-0.12};                   // printed insert, rides behind the inner sleeve
+const LP = {r:15.1, t:0.13, label:5.0, hole:0.362};       // 302 mm disc, 100 mm label, 7.24 mm spindle hole
+const SLV = {s:30.6, hole:4.5, z:0.09};                   // paper inner sleeve
+const GROUND_Y = -WRAP.pad - J.h/2;
+
+const $ = id => document.getElementById(id);
+const state = {
+  finish:'satin', sleeveOn:true, sleeveColor:'#f3f1ea', sleeveX:.35, recordX:.40, recordRot:0,
+  vinyl:'black', vinylColor:'#c8392b', vinyl2:'black', vinyl2Color:'#d9a441', wrapOn:true, wrinkle:1, gloss:1,
+  stickerOn:true, stickerShape:'circle', stickerSize:7.6, stickerX:8.8, stickerY:9.2, stickerRot:-8,
+  numOn:true, numCur:123, numTotal:1000, numPrefix:'No.', numFormat:'slash', numFont:'auto', numPlace:'back', numFinish:'stamp', numColor:'#25336f',
+  numX:10.5, numY:-13.6, numSize:.5, numRot:-3,
+  jacketType:'single', gateOpen:0, lpCount:1, sleeve2X:.6, record2X:.3, obiOn:true, obiWidth:3.2, insertOn:true, insertX:0,
+  bg:'transparent', bgColor:'#e6e3dc', scale:2, view:'quarter',
+  camZoom:1, camAz:0, camEl:0, outW:2400, outH:1600   // used by the agent API / CLI
+};
+const isGate=()=>state.jacketType==='gatefold';
+const frontZ=()=>isGate()?J.d/2+J.board:J.d/2;          // outer face of the front cover
+const jacketDepth=()=>frontZ()+J.d/2;
+const gateOpened=()=>isGate()&&state.gateOpen>.5;
+const specText=()=>`${isGate()?'双开':'单开'} · ${state.lpCount===2?'2LP':'单 LP'} · 书脊 ${+(jacketDepth()*10).toFixed(1)} mm`;
+
+// ---------- Seeded random ----------
+function rng(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+
+// ---------- Canvas helpers ----------
+function canvas(w,h){const c=document.createElement('canvas');c.width=w;c.height=h;return c}
+let maxAniso=8;
+function colorTex(c){const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=maxAniso;return t}
+const DISPLAY='"Archivo","PingFang SC","Noto Sans SC",sans-serif', BODY='"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif', MONO='"IBM Plex Mono",Menlo,monospace';
+
+// Sample artwork, clearly labelled as such, so the tool opens in a working state.
+function sampleFront(){const s=2048,c=canvas(s,s),g=c.getContext('2d');
+  g.fillStyle='#1f3b2d';g.fillRect(0,0,s,s);
+  const cx=s*.63,cy=s*.6;
+  for(let i=0;i<16;i++){g.beginPath();g.arc(cx,cy,s*(.09+i*.043),0,Math.PI*2);g.strokeStyle=`rgba(236,229,210,${.75-i*.04})`;g.lineWidth=s*.005;g.stroke()}
+  g.beginPath();g.arc(cx,cy,s*.085,0,Math.PI*2);g.fillStyle='#e7ad45';g.fill();
+  g.beginPath();g.arc(cx,cy,s*.008,0,Math.PI*2);g.fillStyle='#1f3b2d';g.fill();
+  g.fillStyle='#efe9d8';g.font=`800 ${s*.11}px ${DISPLAY}`;g.textBaseline='alphabetic';
+  g.fillText('NIGHT',s*.07,s*.18);g.fillText('PRESSING',s*.07,s*.29);
+  g.font=`500 ${s*.026}px ${MONO}`;g.fillText('GM-001  ·  12″ LP  ·  33⅓ RPM',s*.07,s*.345);
+  g.font=`500 ${s*.024}px ${BODY}`;g.fillStyle='rgba(239,233,216,.7)';g.fillText('示例封面 · 上传图片后替换',s*.07,s*.94);
+  return c}
+function sampleBack(){const s=2048,c=canvas(s,s),g=c.getContext('2d');
+  g.fillStyle='#e9e3d2';g.fillRect(0,0,s,s);g.fillStyle='#1f3b2d';
+  g.font=`800 ${s*.05}px ${DISPLAY}`;g.fillText('NIGHT PRESSING',s*.08,s*.13);
+  const tracks=[['A1','Lacquer Cut','4:12'],['A2','Matrix Number','3:48'],['A3','Test Pressing','5:02'],['A4','Lead-in Groove','3:31'],['B1','Run-out','4:40'],['B2','Center Label','3:57'],['B3','Dead Wax','4:18'],['B4','Locked Groove','6:05']];
+  g.font=`500 ${s*.03}px ${MONO}`;
+  tracks.forEach(([n,t,d],i)=>{const y=s*(.24+i*.065)+(i>3?s*.04:0);g.fillText(n,s*.08,y);g.fillText(t,s*.17,y);g.fillText(d,s*.8,y)});
+  g.fillRect(s*.08,s*.86,s*.2,s*.06);g.fillStyle='#e9e3d2';for(let i=0;i<34;i++)g.fillRect(s*.085+i*s*.0055,s*.865,s*(i%3?.0018:.0032),s*.05);
+  g.fillStyle='#1f3b2d';g.font=`500 ${s*.022}px ${BODY}`;g.fillText('示例背面 · 上传图片后替换',s*.36,s*.9);
+  return c}
+function sampleSpine(){const w=64,h=4096,c=canvas(w,h),g=c.getContext('2d');
+  g.fillStyle='#1f3b2d';g.fillRect(0,0,w,h);g.save();g.translate(w/2,0);g.rotate(Math.PI/2);
+  g.fillStyle='#efe9d8';g.font=`700 38px ${DISPLAY}`;g.textBaseline='middle';g.fillText('NIGHT PRESSING',260,0);
+  g.font=`500 30px ${MONO}`;g.fillText('GM-001',h-420,0);g.restore();return c}
+function sampleLabel(side){const s=1024,c=canvas(s,s),g=c.getContext('2d'),m=s/2;
+  g.fillStyle=side==='A'?'#e7ad45':side==='C'?'#d98a4e':'#efe9d8';g.fillRect(0,0,s,s);
+  g.strokeStyle='#1f3b2d';g.lineWidth=4;g.beginPath();g.arc(m,m,s*.46,0,Math.PI*2);g.stroke();
+  g.fillStyle='#1f3b2d';g.textAlign='center';
+  g.font=`800 ${s*.075}px ${DISPLAY}`;g.fillText('NIGHT PRESSING',m,s*.27);
+  g.font=`800 ${s*.13}px ${DISPLAY}`;g.fillText('SIDE '+side,m,s*.8);
+  g.font=`500 ${s*.04}px ${MONO}`;g.fillText('33⅓ RPM · STEREO · GM-001',m,s*.35);
+  g.font=`500 ${s*.036}px ${BODY}`;g.fillText('示例标签',m,s*.66);
+  return c}
+function sampleSticker(shape){const w=1024,h=shape==='rect'?640:1024,c=canvas(w,h),g=c.getContext('2d');
+  g.fillStyle='#f3d649';g.beginPath();
+  if(shape==='rect')g.roundRect(6,6,w-12,h-12,40);else g.arc(w/2,h/2,w/2-6,0,Math.PI*2);
+  g.fill();g.strokeStyle='#1a1e1b';g.lineWidth=10;g.stroke();
+  g.fillStyle='#1a1e1b';g.textAlign='center';g.textBaseline='middle';
+  const k=shape==='rect'?.8:1;
+  g.font=`700 ${150*k}px ${BODY}`;g.fillText('首版限定',w/2,h*.36);
+  g.font=`700 ${80*k}px ${DISPLAY}`;g.fillText('180g VINYL',w/2,h*.58);
+  g.font=`500 ${58*k}px ${BODY}`;g.fillText('附歌词插页',w/2,h*.74);
+  return c}
+
+function textLines(g,x,y,w,rows,lh,color,seed){const r=rng(seed);g.fillStyle=color;for(let i=0;i<rows;i++){if(r()<.12)continue;g.fillRect(x,y+i*lh,w*(.55+r()*.45),lh*.38)}}
+function sampleInnerLeft(){const s=2048,c=canvas(s,s),g=c.getContext('2d');
+  const grad=g.createRadialGradient(s*.42,s*.4,s*.05,s*.42,s*.4,s*.75);grad.addColorStop(0,'#5f7d5f');grad.addColorStop(1,'#14261c');g.fillStyle=grad;g.fillRect(0,0,s,s);
+  g.strokeStyle='rgba(236,229,210,.18)';g.lineWidth=s*.003;for(let i=0;i<40;i++){g.beginPath();g.arc(s*.42,s*.4,s*(.04+i*.018),0,Math.PI*2);g.stroke()}
+  g.fillStyle='#efe9d8';g.font=`800 ${s*.05}px ${DISPLAY}`;g.fillText('CREDITS',s*.08,s*.8);
+  textLines(g,s*.08,s*.83,s*.5,6,s*.022,'rgba(239,233,216,.75)',4);
+  g.font=`500 ${s*.022}px ${BODY}`;g.fillStyle='rgba(239,233,216,.6)';g.fillText('示例内页 · 左',s*.08,s*.96);return c}
+function sampleInnerRight(){const s=2048,c=canvas(s,s),g=c.getContext('2d');
+  g.fillStyle='#e9e3d2';g.fillRect(0,0,s,s);g.fillStyle='#1f3b2d';g.font=`800 ${s*.05}px ${DISPLAY}`;g.fillText('LYRICS',s*.08,s*.12);
+  for(let col=0;col<2;col++){const x=s*(.08+col*.46);g.font=`700 ${s*.024}px ${MONO}`;g.fillStyle='#1f3b2d';g.fillText(col?'B1 Run-out':'A1 Lacquer Cut',x,s*.2);textLines(g,x,s*.23,s*.38,30,s*.024,'rgba(31,59,45,.55)',7+col)}
+  g.font=`500 ${s*.022}px ${BODY}`;g.fillStyle='#1f3b2d';g.fillText('示例内页 · 右',s*.08,s*.96);return c}
+function sampleInsert(side){const s=2048,c=canvas(s,s),g=c.getContext('2d');
+  if(side==='front'){g.fillStyle='#f4f1e8';g.fillRect(0,0,s,s);g.fillStyle='#b8322a';g.fillRect(0,0,s,s*.16);
+    g.fillStyle='#f4f1e8';g.font=`800 ${s*.06}px ${DISPLAY}`;g.fillText('NIGHT PRESSING',s*.07,s*.1);
+    g.fillStyle='#1a1e1b';g.font=`700 ${s*.03}px ${BODY}`;g.fillText('歌词与制作名单',s*.07,s*.23);
+    for(let col=0;col<3;col++)textLines(g,s*(.07+col*.3),s*.28,s*.25,26,s*.024,'rgba(26,30,27,.5)',20+col);
+    g.font=`500 ${s*.022}px ${BODY}`;g.fillStyle='#1a1e1b';g.fillText('示例插页 · 正面',s*.07,s*.96)}
+  else{g.fillStyle='#1a1e1b';g.fillRect(0,0,s,s);for(let i=0;i<9;i++){g.fillStyle=`hsl(${18+i*4} 60% ${30+i*6}%)`;g.fillRect(s*.07+i*s*.095,s*.12,s*.08,s*.62)}
+    g.fillStyle='#f4f1e8';g.font=`800 ${s*.045}px ${DISPLAY}`;g.fillText('RECORDED AT NIGHT',s*.07,s*.84);
+    g.font=`500 ${s*.022}px ${BODY}`;g.fillText('示例插页 · 背面',s*.07,s*.96)}
+  return c}
+// Obi unfolded, left to right: back | spine | front.
+function vtext(g,str,x,y,size){g.save();g.textAlign='center';g.textBaseline='top';g.font=`700 ${size}px ${BODY}`;[...str].forEach((ch,i)=>g.fillText(ch,x,y+i*size*1.08));g.restore()}
+function sampleObi(w,h){const c=canvas(w,h),g=c.getContext('2d'),{a,b}=obiLayout(),xa=w*a,xb=w*(a+b),fw=w-xb,bw=xa;
+  g.fillStyle='#f5f2ea';g.fillRect(0,0,w,h);
+  g.fillStyle='#b8322a';g.fillRect(xa,0,xb-xa,h);g.fillRect(xb,0,fw,h*.3);
+  g.fillStyle='#ffffff';vtext(g,'首版限定',xb+fw/2,h*.04,Math.min(fw*.5,h*.055));
+  g.save();g.translate(xb+fw/2,h*.34);g.rotate(Math.PI/2);g.fillStyle='#1a1e1b';g.font=`800 ${Math.min(fw*.4,h*.05)}px ${DISPLAY}`;g.textBaseline='middle';g.fillText('NIGHT PRESSING',0,0);g.restore();
+  g.fillStyle='#b8322a';vtext(g,'附中文歌词',xb+fw/2,h*.74,Math.min(fw*.2,h*.03));
+  g.fillStyle='#1a1e1b';g.font=`500 ${Math.min(fw*.13,h*.02)}px ${MONO}`;g.textAlign='center';g.fillText('GM-001',xb+fw/2,h*.97);
+  g.save();g.translate(xa+(xb-xa)/2,h*.06);g.rotate(Math.PI/2);g.fillStyle='#fff';g.font=`700 ${Math.max(8,(xb-xa)*.55)}px ${DISPLAY}`;g.textBaseline='middle';g.fillText('NIGHT PRESSING · GM-001',0,0);g.restore();
+  g.fillStyle='#1a1e1b';vtext(g,'示例侧标',bw/2,h*.06,Math.min(bw*.22,h*.03));
+  g.fillRect(bw*.25,h*.82,bw*.5,h*.1);g.fillStyle='#f5f2ea';for(let i=0;i<14;i++)g.fillRect(bw*.27,h*.825+i*h*.0068,bw*.46,h*(i%3?.0018:.003));
+  return c}
+
+// Fit a user image into a slot canvas with uniform scale (cover), never stretching.
+function fitImage(src,w,h,{rotateIfWide=false}={}){
+  const c=canvas(w,h),g=c.getContext('2d');let sw=src.width,sh=src.height,rot=rotateIfWide&&sw>sh;
+  if(rot)[sw,sh]=[sh,sw];
+  const k=Math.max(w/sw,h/sh),dw=sw*k,dh=sh*k;
+  g.save();g.translate(w/2,h/2);if(rot)g.rotate(Math.PI/2);
+  if(rot)g.drawImage(src,-dh/2,-dw/2,dh,dw);else g.drawImage(src,-dw/2,-dh/2,dw,dh);
+  g.restore();return c}
+
+// ---------- Procedural material maps ----------
+// Vinyl: roughness (G) and anisotropy (RG = radial direction, B = strength) from one radial profile.
+function grooveMaps(){
+  const N=2048,R=LP.r,bins=4096,rough=new Float32Array(bins),aniso=new Float32Array(bins),r=rng(11);
+  // Track boundaries between run-out (≈61 mm) and lead-in (≈147 mm radius).
+  const gaps=[6.95,8.3,9.9,11.2,12.9].map(x=>[x,x+.07]);
+  let noise=0;
+  for(let i=0;i<bins;i++){const rr=i/bins*R;noise=noise*.55+(r()*2-1)*.45;
+    let gap=0;
+    if(rr<LP.label+.02)gap=1;
+    else if(rr<6.1)gap=.92;                 // run-out / dead wax
+    else if(rr>14.95)gap=1;                  // outer rim
+    else if(rr>14.72)gap=.55;                // lead-in
+    for(const[a,b]of gaps)if(rr>a&&rr<b)gap=Math.max(gap,.9);
+    rough[i]=THREE.MathUtils.lerp(.34+.07*noise,.09,gap);
+    aniso[i]=THREE.MathUtils.lerp(.92,.12,gap);
+  }
+  const rc=canvas(N,N),ac=canvas(N,N),rg=rc.getContext('2d'),ag=ac.getContext('2d'),rd=rg.createImageData(N,N),ad=ag.createImageData(N,N);
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++){
+    const u=(x+.5)/N-.5,v=.5-(y+.5)/N,dist=Math.hypot(u,v),i=(y*N+x)*4,bin=Math.min(bins-1,Math.floor(dist*2*bins));
+    const ro=rough[bin],an=aniso[bin],dx=dist>0?u/dist:1,dy=dist>0?v/dist:0;
+    rd.data[i]=rd.data[i+2]=0;rd.data[i+1]=ro*255;rd.data[i+3]=255;
+    ad.data[i]=(dx*.5+.5)*255;ad.data[i+1]=(dy*.5+.5)*255;ad.data[i+2]=an*255;ad.data[i+3]=255;
+  }
+  rg.putImageData(rd,0,0);ag.putImageData(ad,0,0);
+  const rt=new THREE.CanvasTexture(rc),at=new THREE.CanvasTexture(ac);
+  for(const t of[rt,at]){t.anisotropy=maxAniso;t.colorSpace=THREE.NoColorSpace}
+  return{rough:rt,aniso:at}}
+
+// Shrink wrap crinkles: random creases (denser toward the edges) -> blurred height -> normal map.
+function wrapNormalMap(){
+  const N=1024,c=canvas(N,N),g=c.getContext('2d'),r=rng(5);
+  g.fillStyle='rgb(128,128,128)';g.fillRect(0,0,N,N);g.lineCap='round';
+  for(let k=0;k<1100;k++){
+    let x,y;const edgeStroke=r()<.82;if(edgeStroke){const side=Math.floor(r()*4),t=r()*N,d=Math.pow(r(),2.2)*N*.22;[x,y]=side===0?[t,d]:side===1?[t,N-d]:side===2?[d,t]:[N-d,t]}else{x=r()*N;y=r()*N}
+    const near=Math.min(x,y,N-x,N-y)<N*.2,ang=near?(Math.min(x,N-x)<Math.min(y,N-y)?Math.PI/2:0)+(r()-.5)*1.1:r()*Math.PI,len=(near?20:40)+r()*(near?140:260);
+    const al=edgeStroke?.05+r()*.18:.02+r()*.06;g.strokeStyle=r()<.5?`rgba(255,255,255,${al})`:`rgba(0,0,0,${al})`;g.lineWidth=1+r()*3.5;
+    g.beginPath();g.moveTo(x,y);g.quadraticCurveTo(x+Math.cos(ang)*len*.5+(r()-.5)*30,y+Math.sin(ang)*len*.5+(r()-.5)*30,x+Math.cos(ang)*len,y+Math.sin(ang)*len);g.stroke();
+  }
+  const src=g.getImageData(0,0,N,N).data,hgt=new Float32Array(N*N);
+  for(let i=0;i<N*N;i++)hgt[i]=src[i*4]/255;
+  // two box-blur passes
+  const tmp=new Float32Array(N*N),blur=(a,b,rad)=>{for(let y=0;y<N;y++)for(let x=0;x<N;x++){let s=0,n=0;for(let k=-rad;k<=rad;k++){const xx=x+k;if(xx>=0&&xx<N){s+=a[y*N+xx];n++}}b[y*N+x]=s/n}for(let y=0;y<N;y++)for(let x=0;x<N;x++){let s=0,n=0;for(let k=-rad;k<=rad;k++){const yy=y+k;if(yy>=0&&yy<N){s+=b[yy*N+x];n++}}a[y*N+x]=s/n}};
+  blur(hgt,tmp,2);
+  const out=g.createImageData(N,N),H=(x,y)=>hgt[Math.min(N-1,Math.max(0,y))*N+Math.min(N-1,Math.max(0,x))],strength=6;
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++){const dx=(H(x+1,y)-H(x-1,y))*strength,dy=(H(x,y+1)-H(x,y-1))*strength,l=Math.hypot(dx,dy,1),i=(y*N+x)*4;
+    out.data[i]=(-dx/l*.5+.5)*255;out.data[i+1]=(dy/l*.5+.5)*255;out.data[i+2]=(1/l*.5+.5)*255;out.data[i+3]=255}
+  g.putImageData(out,0,0);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.NoColorSpace;t.anisotropy=maxAniso;return t}
+
+// Paper tooth: fine noise used as a bump map on printed stock.
+function paperBump(){const N=512,c=canvas(N,N),g=c.getContext('2d'),d=g.createImageData(N,N),r=rng(3);
+  for(let i=0;i<N*N;i++){const v=118+r()*20;d.data[i*4]=d.data[i*4+1]=d.data[i*4+2]=v;d.data[i*4+3]=255}
+  g.putImageData(d,0,0);const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(10,10);t.colorSpace=THREE.NoColorSpace;return t}
+
+// ---------- Renderer / scene ----------
+const stage=$('stage');let renderer;
+try{
+  renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,premultipliedAlpha:true});
+  if(!renderer.capabilities.isWebGL2)throw new Error('WebGL2 unavailable');
+}catch(e){$('loading').hidden=true;$('gl-error').hidden=false;throw e}
+maxAniso=Math.min(8,renderer.capabilities.getMaxAnisotropy());
+renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
+renderer.setClearColor(0x000000,0);
+renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1;
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;
+stage.prepend(renderer.domElement);
+
+const scene=new THREE.Scene();
+// Two environments: a soft room for paper, and a dark studio with bright softbox strips that the
+// film and the vinyl reflect as crisp glare streaks.
+let studioEnv;
+{const pm=new THREE.PMREMGenerator(renderer),room=new RoomEnvironment();scene.environment=pm.fromScene(room,.03).texture;scene.environmentIntensity=.85;room.dispose();
+  const studio=new THREE.Scene(),box=new THREE.Mesh(new THREE.BoxGeometry(200,200,200),new THREE.MeshBasicMaterial({color:0x0c0d0c,side:THREE.BackSide}));studio.add(box);
+  const panel=(w,h,pos,look,power)=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({color:new THREE.Color(1,1,1).multiplyScalar(power),side:THREE.DoubleSide}));m.position.set(...pos);m.lookAt(...look);studio.add(m)};
+  // Film reflects ~4-8% at normal incidence, so the lamps must be far brighter than 1.0 to read as glare.
+  panel(70,26,[-40,60,70],[0,0,0],24);   // key softbox, upper left front
+  panel(10,90,[85,10,40],[0,0,0],14);    // tall strip, right
+  panel(8,70,[-80,0,-30],[0,0,0],8);     // rim strip, back left
+  panel(120,20,[0,-30,90],[0,0,0],2);    // low card bounce
+  // Diagonal sheets placed where the front face mirrors the default "front" and "quarter" cameras.
+  const sheet=(deg,elev,width,power)=>{const a=THREE.MathUtils.degToRad(deg),e=THREE.MathUtils.degToRad(elev),m=new THREE.Mesh(new THREE.PlaneGeometry(width,220),new THREE.MeshBasicMaterial({color:new THREE.Color(1,1,1).multiplyScalar(power),side:THREE.DoubleSide}));
+    m.position.set(100*Math.sin(a),100*Math.sin(e),100*Math.cos(a));m.lookAt(0,0,0);m.rotateZ(.5);studio.add(m)};
+  sheet(-7,5,13,5);sheet(19,-2,16,5);
+  studioEnv=pm.fromScene(studio,.012).texture;studio.traverse(o=>{o.geometry?.dispose();o.material?.dispose()});pm.dispose()}
+const camera=new THREE.PerspectiveCamera(26,1,1,600);
+const controls=new OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true;controls.dampingFactor=.1;controls.minDistance=18;controls.maxDistance=260;
+
+scene.add(new THREE.HemisphereLight(0xf6f6f0,0x80867d,.55));
+const key=new THREE.DirectionalLight(0xfff3e4,2.3);key.position.set(-34,42,52);key.castShadow=true;
+key.shadow.mapSize.set(2048,2048);Object.assign(key.shadow.camera,{left:-50,right:60,top:45,bottom:-45,near:1,far:200});key.shadow.radius=5;key.shadow.bias=-.0004;key.shadow.normalBias=.02;
+scene.add(key);
+const fill=new THREE.DirectionalLight(0xe6edff,.7);fill.position.set(44,12,30);scene.add(fill);
+const rim=new THREE.DirectionalLight(0xffffff,1.1);rim.position.set(12,24,-44);scene.add(rim);
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(400,400),new THREE.ShadowMaterial({color:0x1e221f,opacity:.2,depthWrite:false}));
+ground.rotation.x=-Math.PI/2;ground.position.y=GROUND_Y;ground.receiveShadow=true;scene.add(ground);
+
+// ---------- Textures ----------
+const tex={front:colorTex(sampleFront()),back:colorTex(sampleBack()),spine:colorTex(sampleSpine()),labelA:colorTex(sampleLabel('A')),labelB:colorTex(sampleLabel('B')),labelC:colorTex(sampleLabel('C')),labelD:colorTex(sampleLabel('D')),sticker:colorTex(sampleSticker('circle')),sleeve:null,
+  innerLeft:colorTex(sampleInnerLeft()),innerRight:colorTex(sampleInnerRight()),insertFront:colorTex(sampleInsert('front')),insertBack:colorTex(sampleInsert('back')),obi:null};
+const userSticker={img:null},userObi={img:null};
+const grooves=grooveMaps(),wrapNormal=wrapNormalMap(),bump=paperBump();
+
+// ---------- Materials ----------
+function paper(map){return new THREE.MeshPhysicalMaterial({map,roughness:.6,metalness:0,clearcoat:.03,clearcoatRoughness:.4,bumpMap:bump,bumpScale:.35})}
+const frontMat=paper(tex.front),backMat=paper(tex.back),spineMat=paper(tex.spine),innerLeftMat=paper(tex.innerLeft),innerRightMat=paper(tex.innerRight);
+const insertFrontMat=paper(tex.insertFront),insertBackMat=paper(tex.insertBack);
+const obiMat=new THREE.MeshPhysicalMaterial({roughness:.42,clearcoat:.25,clearcoatRoughness:.2,side:THREE.FrontSide});
+const stock=new THREE.MeshStandardMaterial({color:0xd8d2c3,roughness:.95});
+const stockInner=new THREE.MeshStandardMaterial({color:0xb9b3a4,roughness:.95});
+function applyFinish(){const f=state.finish;for(const m of[frontMat,backMat,spineMat,innerLeftMat,innerRightMat,insertFrontMat,insertBackMat]){m.roughness=f==='gloss'?.26:f==='matte'?.92:.6;m.clearcoat=f==='gloss'?.55:.03;m.clearcoatRoughness=f==='gloss'?.1:.4;m.bumpScale=f==='gloss'?.12:.35}}
+
+// Each disc gets its own face/edge materials, so a 2LP can mix black and coloured vinyl.
+function vinylMats(){return{face:new THREE.MeshPhysicalMaterial({color:0x0b0b0c,metalness:0,roughness:1,roughnessMap:grooves.rough,anisotropy:.9,anisotropyMap:grooves.aniso,envMap:studioEnv,envMapIntensity:.32,side:THREE.FrontSide}),
+  edge:new THREE.MeshPhysicalMaterial({color:0x0b0b0c,metalness:0,roughness:.3,envMap:studioEnv,envMapIntensity:.3})}}
+const vinyl1=vinylMats(),vinyl2=vinylMats();
+const labelMatA=new THREE.MeshStandardMaterial({map:tex.labelA,roughness:.62});
+const labelMatB=new THREE.MeshStandardMaterial({map:tex.labelB,roughness:.62});
+const labelMatC=new THREE.MeshStandardMaterial({map:tex.labelC,roughness:.62});
+const labelMatD=new THREE.MeshStandardMaterial({map:tex.labelD,roughness:.62});
+const holeMat=new THREE.MeshStandardMaterial({color:0x6b665c,roughness:.9,side:THREE.DoubleSide});
+function applyVinylTo(mats,style,color){
+  const black=style==='black',clear=style==='clear',col=new THREE.Color(black?'#0b0b0c':color);
+  for(const m of[mats.face,mats.edge]){m.color.copy(col);m.transparent=clear;m.opacity=clear?.62:1;m.depthWrite=!clear;m.needsUpdate=true}
+  mats.face.envMapIntensity=black?.32:.22;
+}
+function applyVinyl(){
+  applyVinylTo(vinyl1,state.vinyl,state.vinylColor);applyVinylTo(vinyl2,state.vinyl2,state.vinyl2Color);
+}
+const sleeveMat=new THREE.MeshStandardMaterial({color:state.sleeveColor,roughness:.88,side:THREE.DoubleSide,bumpMap:bump,bumpScale:.25});
+
+// Shrink wrap: alpha comes from the film's own reflections, so the film stays invisible where it reflects
+// nothing and a transparent PNG never picks up a baked backdrop (no transmission pass).
+const wrapStrength={value:1};
+function wrapMaterial(){
+  const m=new THREE.MeshPhysicalMaterial({color:0xffffff,metalness:0,roughness:.07,clearcoat:1,clearcoatRoughness:.05,transparent:true,opacity:.03,depthWrite:false,side:THREE.DoubleSide,normalMap:wrapNormal,normalScale:new THREE.Vector2(.35,.35),envMap:studioEnv,envMapIntensity:1.5});
+  m.onBeforeCompile=sh=>{sh.uniforms.uWrap=wrapStrength;
+    sh.fragmentShader='uniform float uWrap;\n'+sh.fragmentShader.replace('#include <opaque_fragment>',`
+      vec3 wrapSpec = max(outgoingLight - reflectedLight.directDiffuse - reflectedLight.indirectDiffuse, vec3(0.0));
+      float wrapFres = pow(1.0 - abs(dot(normalize(normal), normalize(vViewPosition))), 4.0);
+      float wrapLum = max(max(wrapSpec.r, wrapSpec.g), wrapSpec.b);
+      diffuseColor.a = clamp(uWrap * (diffuseColor.a + 0.42 * wrapFres + min(wrapLum * 0.5, 0.82)), 0.0, 0.94);
+      outgoingLight = wrapSpec * uWrap / max(diffuseColor.a, 0.04) + vec3(0.025);
+      #include <opaque_fragment>`)};
+  m.customProgramCacheKey=()=>'shrink-wrap-v1';return m}
+const wrapMat=wrapMaterial(),wrapMouthMat=wrapMaterial();
+const stickerMat=new THREE.MeshPhysicalMaterial({map:tex.sticker,roughness:.32,clearcoat:.6,clearcoatRoughness:.12,transparent:true,alphaTest:.02});
+
+// ---------- Geometry builders ----------
+function remapUV(geo,scaleX,scaleY=scaleX){const p=geo.attributes.position,uv=geo.attributes.uv;for(let i=0;i<p.count;i++)uv.setXY(i,p.getX(i)/scaleX+.5,p.getY(i)/scaleY+.5);return geo}
+function mesh(geo,mat,{cast=true,receive=true}={}){const m=new THREE.Mesh(geo,mat);m.castShadow=cast;m.receiveShadow=receive;return m}
+
+// Jacket: printed front/back boards, a printed spine on the left, glued top/bottom flaps, open mouth on the right.
+const jacket=new THREE.Group();scene.add(jacket);
+let pocketFront;
+function buildJacket(){
+  for(const c of[...jacket.children]){c.geometry.dispose();jacket.remove(c)}
+  const {w,h,d,board:t}=J;
+  const front=pocketFront=mesh(new THREE.BoxGeometry(w,h,t),[stock,stock,stock,stock,frontMat,stockInner]);front.position.z=d/2-t/2;
+  const back=mesh(new THREE.BoxGeometry(w,h,t),[stock,stock,stock,stock,stockInner,backMat]);back.position.z=-d/2+t/2;
+  const spine=mesh(new THREE.BoxGeometry(t,h,d-2*t),[stockInner,spineMat,stock,stock,stock,stock]);spine.position.x=-w/2+t/2;
+  jacket.add(front,back,spine);
+  for(const s of[-1,1]){const flap=mesh(new THREE.BoxGeometry(w-t,t,d-2*t),stock);flap.position.set(t/2,s*(h/2-t/2),0);jacket.add(flap)}
+  coverPivot.position.z=d/2;
+}
+// Gatefold: a separate front cover board hinged on the spine edge, laid over the pocket. Its inside is
+// the left page of the spread; the pocket's front face becomes the right page.
+const coverPivot=new THREE.Group();coverPivot.position.set(-J.w/2,0,J.d/2);scene.add(coverPivot);
+const coverMesh=mesh(new THREE.BoxGeometry(J.w,J.h,J.board),[stock,stock,stock,stock,frontMat,innerLeftMat]);coverMesh.position.set(J.w/2,0,J.board/2);coverPivot.add(coverMesh);
+buildJacket();
+
+// Insert: one double-sided printed sheet.
+const insert=mesh(new THREE.BoxGeometry(INS.s,INS.s,INS.t),[stock,stock,stock,stock,insertFrontMat,insertBackMat]);scene.add(insert);
+
+// Obi: three printed planes (back, spine, front) sharing one unfolded texture.
+const obi=new THREE.Group();scene.add(obi);
+function obiLayout(){const F=state.obiWidth,eps=.008,s=jacketDepth()+2*eps,total=2*F+s;return{F,s,eps,total,a:F/total,b:s/total}}
+function buildObi(){
+  for(const c of[...obi.children]){if(!c.isMesh)continue;c.geometry.dispose();obi.remove(c)}
+  const {F,s,eps,a,b}=obiLayout(),H=J.h,fz=frontZ()+eps,bz=-J.d/2-eps;
+  const strip=(w,u0,u1)=>{const g=new THREE.PlaneGeometry(w,H),uv=g.attributes.uv;for(let i=0;i<uv.count;i++)uv.setX(i,u0+uv.getX(i)*(u1-u0));return g};
+  const front=mesh(strip(F,a+b,1),obiMat);front.position.set(-J.w/2+F/2,0,fz);
+  const spine=mesh(strip(s,a,a+b),obiMat);spine.rotation.y=-Math.PI/2;spine.position.set(-J.w/2-eps,0,(fz+bz)/2);
+  const back=mesh(strip(F,0,a),obiMat);back.rotation.y=Math.PI;back.position.set(-J.w/2+F/2,0,bz);
+  obi.add(front,spine,back);obiTexture();placeNumber();
+}
+function obiTexture(){const {total}=obiLayout(),h=2048,w=Math.max(64,Math.round(h*total/J.h)),c=userObi.img?fitImage(userObi.img,w,h):sampleObi(w,h);setTex('obi',colorTex(c),obiMat);if(!userObi.img)thumb('obi',c.toDataURL('image/jpeg',.6))}
+
+// Inner sleeve: two paper faces with the centre hole that shows the label.
+function makeSleeve(){const group=new THREE.Group(),s=SLV.s,shape=new THREE.Shape();shape.moveTo(-s/2,-s/2);shape.lineTo(s/2,-s/2);shape.lineTo(s/2,s/2);shape.lineTo(-s/2,s/2);shape.closePath();
+  const hole=new THREE.Path();hole.absarc(0,0,SLV.hole,0,Math.PI*2,true);shape.holes.push(hole);
+  const geo=remapUV(new THREE.ShapeGeometry(shape,64),s);
+  const a=mesh(geo,sleeveMat);a.position.z=SLV.z;const b=mesh(geo,sleeveMat);b.position.z=-SLV.z;b.rotation.y=Math.PI;
+  group.add(a,b);
+  for(const side of[-1,1]){const seam=mesh(new THREE.BoxGeometry(s,.04,SLV.z*2),sleeveMat);seam.position.y=side*(s/2-.02);group.add(seam)}
+  scene.add(group);return group}
+const sleeve=makeSleeve(),sleeve2=makeSleeve();
+
+// LP: grooved faces, rim, two labels, spindle hole.
+function makeRecord(matA,matB,vm){const group=new THREE.Group(),{r,t,label,hole}=LP;
+  const face=remapUV(new THREE.RingGeometry(label,r,256,6),r*2);
+  const top=mesh(face,vm.face);top.position.z=t/2;const bot=mesh(face,vm.face);bot.position.z=-t/2;bot.rotation.y=Math.PI;
+  const edge=mesh(new THREE.CylinderGeometry(r,r,t,256,1,true),vm.edge);edge.rotation.x=Math.PI/2;
+  const lab=remapUV(new THREE.RingGeometry(hole,label,128,2),label*2);
+  const la=mesh(lab,matA);la.position.z=t/2;const lb=mesh(lab,matB);lb.position.z=-t/2;lb.rotation.y=Math.PI;
+  const bore=mesh(new THREE.CylinderGeometry(hole,hole,t,48,1,true),holeMat);bore.rotation.x=Math.PI/2;
+  group.add(top,bot,edge,la,lb,bore);scene.add(group);return group}
+const record=makeRecord(labelMatA,labelMatB,vinyl1),record2=makeRecord(labelMatC,labelMatD,vinyl2);
+
+// Shrink wrap shell: displaced box. Faces stay tight at the box edges (no cracks), wrinkle near edges and corners.
+const wrap=new THREE.Mesh(undefined,[wrapMouthMat,wrapMat,wrapMat,wrapMat,wrapMat,wrapMat]);wrap.renderOrder=2;scene.add(wrap);
+function buildWrap(strength){
+  const w=J.w+2*WRAP.pad,h=J.h+2*WRAP.pad,d=jacketDepth()+WRAP.extra,g=new THREE.BoxGeometry(w,h,d,180,180,2),p=g.attributes.position,n=g.attributes.normal,r=rng(21);
+  const waves=Array.from({length:22},()=>({a:r()*Math.PI,f:.3+r()*1.9,ph:r()*6.283,amp:.4+r()*.6}));
+  for(let i=0;i<p.count;i++){
+    const nz=n.getZ(i);if(Math.abs(nz)<.5)continue;
+    const x=p.getX(i),y=p.getY(i),ex=w/2-Math.abs(x),ey=h/2-Math.abs(y),m=Math.min(ex,ey);
+    let s=0;for(const v of waves)s+=v.amp*Math.sin((Math.cos(v.a)*x+Math.sin(v.a)*y)*v.f+v.ph);s/=Math.sqrt(waves.length);
+    const cx=Math.sign(x)*w/2,cy=Math.sign(y)*h/2,ang=Math.atan2(y-cy,x-cx),crease=Math.pow(Math.abs(Math.sin(ang*7+x*.13)),5);
+    const edge=Math.exp(-m/1.5),corner=Math.exp(-Math.hypot(ex,ey)/3.2),tight=THREE.MathUtils.smoothstep(m,0,.35);
+    const disp=strength*tight*(.018*s+edge*.05*(s*.5+.5)+corner*.11*crease);
+    p.setZ(i,p.getZ(i)+Math.sign(nz)*disp);
+  }
+  g.computeVertexNormals();
+  if(wrap.geometry)wrap.geometry.dispose();wrap.geometry=g;
+}
+
+// Hype sticker sits on the film's front face.
+const sticker=new THREE.Mesh(undefined,stickerMat);sticker.renderOrder=3;sticker.castShadow=false;scene.add(sticker);
+function buildSticker(){
+  let g;if(state.stickerShape==='rect'){const w=1.6,h=1,rr=.08,s=new THREE.Shape();s.roundRect?0:0;
+    s.moveTo(-w/2+rr,-h/2);s.lineTo(w/2-rr,-h/2);s.quadraticCurveTo(w/2,-h/2,w/2,-h/2+rr);s.lineTo(w/2,h/2-rr);s.quadraticCurveTo(w/2,h/2,w/2-rr,h/2);s.lineTo(-w/2+rr,h/2);s.quadraticCurveTo(-w/2,h/2,-w/2,h/2-rr);s.lineTo(-w/2,-h/2+rr);s.quadraticCurveTo(-w/2,-h/2,-w/2+rr,-h/2);
+    g=remapUV(new THREE.ShapeGeometry(s,12),w,h)}
+  else g=remapUV(new THREE.CircleGeometry(.5,96),1);
+  if(sticker.geometry)sticker.geometry.dispose();sticker.geometry=g;
+}
+function stickerTexture(){
+  const shape=state.stickerShape,c=userSticker.img?fitImage(userSticker.img,1024,shape==='rect'?640:1024):sampleSticker(shape);
+  if(userSticker.img&&shape==='circle'){const g=c.getContext('2d');g.globalCompositeOperation='destination-in';g.beginPath();g.arc(512,512,506,0,Math.PI*2);g.fill()}
+  setTex('sticker',colorTex(c),stickerMat);
+}
+
+// ---------- Limited-edition number ----------
+// A decal: a transparent plane laid on the chosen face with its own material, so foil can be metallic
+// and the uploaded artwork underneath is never altered.
+const NUM_DEFAULTS={back:{x:10.5,y:-13.6,size:.5,rot:-3},front:{x:10.5,y:-13.6,size:.5,rot:-3},obi:{x:0,y:-12.6,size:.4,rot:90},sticker:{x:0,y:-2.9,size:.35,rot:0}};
+const NUM_INK={print:'#1a1e1b',stamp:'#25336f',foil:'#e0b85c',hand:'#1a1e1b'};
+function numberText(){
+  const total=Math.max(1,Math.round(state.numTotal)||1),cur=Math.min(total,Math.max(1,Math.round(state.numCur)||1)),c=String(cur).padStart(String(total).length,'0'),pre=state.numPrefix.trim();
+  if(state.numFormat==='cn')return `限量 ${total} 张 · 第 ${c} 张`;
+  if(state.numFormat==='compact')return `${c}/${total}`;
+  return `${pre?pre+' ':''}${c} / ${total}`}
+// Font is chosen separately from the finish; 'auto' keeps each finish's natural face.
+const NUM_FONTS={sans:{family:'"Archivo"',weight:700},mono:{family:'"IBM Plex Mono"',weight:600},serif:{family:'"Noto Serif SC"',weight:600},type:{family:'"Special Elite"',weight:400},hand:{family:'"Caveat"',weight:600},hei:{family:'"Noto Sans SC"',weight:700},custom:{family:'"GM User Font"',weight:400}};
+const AUTO_FONT={print:'sans',stamp:'mono',foil:'sans',hand:'hand'};
+const numFontKey=()=>state.numFont==='auto'?AUTO_FONT[state.numFinish]:state.numFont;
+const numFontCss=px=>{const f=NUM_FONTS[numFontKey()];return `${f.weight} ${px}px ${f.family},${BODY}`};
+// Web fonts load lazily: draw now, and redraw once the face (and the glyphs this text needs) has arrived.
+const numFontTried=new Set();
+function ensureNumFont(){
+  if(!document.fonts)return;const font=numFontCss(200),text=numberText(),k=font+'|'+text;
+  if(document.fonts.check(font,text)||numFontTried.has(k))return;numFontTried.add(k);
+  document.fonts.load(font,text).then(()=>{if(numFontCss(200)===font&&numberText()===text)numTexture()}).catch(()=>{})}
+function numberCanvas(text){
+  const f=state.numFinish,key=numFontKey(),px=key==='hand'?230:200,font=numFontCss(px);
+  const probe=canvas(8,8).getContext('2d');probe.font=font;const w=Math.ceil(probe.measureText(text).width)+60,h=Math.round(px*1.35);
+  const c=canvas(w,h),g=c.getContext('2d');g.font=font;g.fillStyle='#fff';g.textBaseline='middle';g.fillText(text,30,h*.52);
+  if(f==='stamp'){
+    // Uneven ink: low-frequency blotches times fine speckle, so the stamp reads as pressed, not printed.
+    const r=rng(text.length*97+7),lo=canvas(48,8),lg=lo.getContext('2d'),ld=lg.createImageData(48,8);
+    for(let i=0;i<48*8;i++){const v=70+r()*185;ld.data[i*4]=ld.data[i*4+1]=ld.data[i*4+2]=v;ld.data[i*4+3]=255}
+    lg.putImageData(ld,0,0);const big=canvas(w,h),bg=big.getContext('2d');bg.imageSmoothingEnabled=true;bg.drawImage(lo,0,0,w,h);
+    const blot=bg.getImageData(0,0,w,h).data,img=g.getImageData(0,0,w,h),d=img.data;
+    for(let i=0;i<w*h;i++){if(!d[i*4+3])continue;const k=(blot[i*4]/255)*(r()<.1?.15:.7+r()*.3);d[i*4+3]=Math.round(d[i*4+3]*Math.min(1,k*1.15))}
+    g.putImageData(img,0,0)}
+  return c}
+const numMat=new THREE.MeshPhysicalMaterial({transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4,side:THREE.FrontSide});
+const numAnchor=new THREE.Group(),numMesh=new THREE.Mesh(new THREE.PlaneGeometry(1,1),numMat);numMesh.renderOrder=1;numAnchor.add(numMesh);
+let numAspect=4;
+function numTexture(){
+  const text=numberText(),c=numberCanvas(text);numAspect=c.width/c.height;$('num-preview').textContent=text;
+  const f=state.numFinish;numMat.color.set(state.numColor);
+  numMat.metalness=f==='foil'?1:0;numMat.roughness=f==='foil'?.16:f==='stamp'?.85:.55;numMat.clearcoat=f==='foil'?.3:0;
+  numMat.alphaTest=f==='foil'?.35:.02;numMat.opacity=f==='stamp'?.94:1;numMat.envMapIntensity=f==='foil'?2.6:1;
+  setTex('num',colorTex(c),numMat);numMat.needsUpdate=true;placeNumber();ensureNumFont()}
+function placeNumber(){
+  const p=state.numPlace,eps=.004;numAnchor.removeFromParent();numAnchor.rotation.set(0,0,0);numAnchor.scale.setScalar(1);
+  if(p==='back'){scene.add(numAnchor);numAnchor.position.set(0,0,-J.d/2-eps);numAnchor.rotation.y=Math.PI}
+  else if(p==='front'){if(isGate()){coverMesh.add(numAnchor);numAnchor.position.set(0,0,J.board/2+eps)}else{scene.add(numAnchor);numAnchor.position.set(0,0,J.d/2+eps)}}
+  else if(p==='obi'){const {F,eps:oe}=obiLayout();obi.add(numAnchor);numAnchor.position.set(-J.w/2+F/2,0,frontZ()+oe+eps)}
+  else{sticker.add(numAnchor);const k=1/state.stickerSize;numAnchor.scale.setScalar(k);numAnchor.position.set(0,0,eps*k)}
+  numAnchor.visible=state.numOn;
+  numMesh.position.set(state.numX,state.numY,0);numMesh.rotation.z=THREE.MathUtils.degToRad(state.numRot);numMesh.scale.set(state.numSize*numAspect,state.numSize,1)}
+
+// ---------- Pose ----------
+function pose(){
+  const gate=isGate(),opened=gateOpened();
+  pocketFront.material[4]=gate?innerRightMat:frontMat;
+  coverPivot.visible=gate;coverPivot.rotation.y=-THREE.MathUtils.degToRad(state.gateOpen);
+  // 1LP rides at the pocket centre; 2LP stacks two sleeve sets front/back, insert behind both.
+  const two=state.lpCount===2,zc=two?.1:0;
+  // Anything still partly inside its container rests on that container's floor; only once it has fully
+  // cleared the mouth does it settle onto the ground. This keeps a disc from poking out under its sleeve.
+  const jacketFloor=-(J.h/2-J.board),settle=clear=>THREE.MathUtils.smoothstep(clear,0,1.5);
+  const placeSet=(sl,rec,sX,rX,z,on)=>{
+    const S=SLV.s,x=sX*24,sy=THREE.MathUtils.lerp(jacketFloor+S/2,GROUND_Y+S/2,settle(x-S/2-J.w/2));
+    sl.visible=on&&state.sleeveOn;sl.position.set(x,sy,z);rec.visible=on;
+    const rx=x+rX*27,floor=state.sleeveOn?sy-S/2+.04:jacketFloor,mouth=state.sleeveOn?x+S/2:J.w/2;
+    rec.position.set(rx,THREE.MathUtils.lerp(floor+LP.r,GROUND_Y+LP.r,settle(rx-LP.r-mouth)),z);
+    rec.rotation.z=THREE.MathUtils.degToRad(state.recordRot)};
+  placeSet(sleeve,record,state.sleeveX,state.recordX,zc,true);
+  placeSet(sleeve2,record2,state.sleeve2X,state.record2X,-zc,two);
+  const ix=state.insertX*25;
+  insert.visible=state.insertOn;insert.position.set(ix,THREE.MathUtils.lerp(jacketFloor+INS.s/2,GROUND_Y+INS.s/2,settle(ix-INS.s/2-J.w/2)),two?-.23:INS.z);
+  const mouthOpen=state.sleeveX>.005||state.recordX>.005||(state.insertOn&&state.insertX>.005)||(two&&(state.sleeve2X>.005||state.record2X>.005));
+  const wrapZ=gate?J.board/2:0,wrapFront=wrapZ+(jacketDepth()+WRAP.extra)/2;
+  wrap.visible=state.wrapOn&&!opened;wrap.position.z=wrapZ;wrapMouthMat.visible=!mouthOpen;
+  wrapStrength.value=state.gloss;wrapMat.normalScale.setScalar(.35*state.wrinkle);wrapMouthMat.normalScale.setScalar(.35*state.wrinkle);
+  obi.visible=state.obiOn&&!opened;
+  sticker.visible=state.stickerOn&&!opened;
+  sticker.position.set(state.stickerX,state.stickerY,state.wrapOn?wrapFront+.05+.03*state.wrinkle:frontZ()+.03);
+  sticker.scale.setScalar(state.stickerSize);sticker.rotation.z=THREE.MathUtils.degToRad(state.stickerRot);
+  placeNumber();
+}
+function applyLpCount(){
+  J.d=POCKET_D[state.lpCount];$('lp2-sub').hidden=state.lpCount!==2;buildJacket();applyJacketType();
+}
+function applyJacketType(){
+  const gate=isGate();$('gate-sub').hidden=!gate;$('jacket-spec').textContent=specText();
+  buildWrap(state.wrinkle);buildObi();pose();if(!userMoved)setView(state.view);
+}
+
+// ---------- Views ----------
+// Each view frames a box of the given size (scene units) so it fits any stage aspect ratio.
+const VIEWS={quarter:{t:[9,-.5,0],dir:[-.36,.1,1],fit:[62,35]},front:{t:[9,0,0],dir:[0,0,1],fit:[64,35]},side:{t:[5,-1,0],dir:[-.86,.12,.5],fit:[56,36]}};
+function setView(name){userMoved=false;const v=VIEWS[name],half=Math.tan(THREE.MathUtils.degToRad(camera.fov/2));
+  // An opening gatefold cover reaches left of the jacket; widen the frame by that reach.
+  const reach=isGate()?Math.max(0,-J.w*Math.cos(THREE.MathUtils.degToRad(state.gateOpen))):0,t=[v.t[0]-reach/2,v.t[1],v.t[2]];
+  const dist=Math.max(v.fit[1]/(2*half),(v.fit[0]+reach)/(2*half*camera.aspect)),dir=new THREE.Vector3(...v.dir).normalize().multiplyScalar(dist);
+  controls.target.set(...t);camera.position.set(t[0]+dir.x,t[1]+dir.y,t[2]+dir.z);controls.update();state.view=name;
+  for(const b of document.querySelectorAll('[data-view]'))b.setAttribute('aria-pressed',b.dataset.view===name)}
+
+// ---------- Resize / loop ----------
+// Re-frame on resize until the viewer moves the camera themselves.
+let userMoved=false;controls.addEventListener('start',()=>{userMoved=true});
+function resize(){const w=stage.clientWidth,h=stage.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();if(!userMoved)setView(state.view)}
+function applyBg(){stage.classList.toggle('transparent',state.bg==='transparent');scene.background=state.bg==='color'?new THREE.Color(state.bgColor):null;stage.style.backgroundColor=state.bg==='color'?state.bgColor:''}
+let first=true;
+renderer.setAnimationLoop(()=>{controls.update();renderer.render(scene,camera);if(first){first=false;$('loading').hidden=true}});
+
+// ---------- Texture swapping ----------
+function setTex(slot,t,...mats){const old=tex[slot];tex[slot]=t;for(const m of mats){const had=!!m.map;m.map=t;if(!had||!t)m.needsUpdate=true}if(old&&old!==t)old.dispose()}
+const SLOTS={
+  front:{w:2048,h:2048,mats:()=>[frontMat]},back:{w:2048,h:2048,mats:()=>[backMat]},
+  spine:{w:64,h:4096,rotateIfWide:true,mats:()=>[spineMat]},
+  labelA:{w:1024,h:1024,mats:()=>[labelMatA]},labelB:{w:1024,h:1024,mats:()=>[labelMatB]},
+  labelC:{w:1024,h:1024,mats:()=>[labelMatC]},labelD:{w:1024,h:1024,mats:()=>[labelMatD]},
+  sleeve:{w:2048,h:2048,mats:()=>[sleeveMat]},sticker:{},obi:{},
+  innerLeft:{w:2048,h:2048,mats:()=>[innerLeftMat]},innerRight:{w:2048,h:2048,mats:()=>[innerRightMat]},
+  insertFront:{w:2048,h:2048,mats:()=>[insertFrontMat]},insertBack:{w:2048,h:2048,mats:()=>[insertBackMat]}
+};
+function thumb(slot,url){const el=document.querySelector(`[data-slot="${slot}"]`);if(!el)return;el.querySelector('.thumb').style.backgroundImage=`url("${url}")`}
+function markFilled(slot){const el=document.querySelector(`[data-slot="${slot}"]`);el.classList.add('filled');el.querySelector('.tag')?.remove()}
+for(const slot of['front','back','spine','labelA','labelB','labelC','labelD','sticker','innerLeft','innerRight','insertFront','insertBack'])thumb(slot,tex[slot].image.toDataURL('image/jpeg',.6));
+// One loader for every artwork slot, shared by the upload tiles and the agent API.
+async function setSlotImage(slot,img,thumbUrl){
+  if(slot==='sticker'){userSticker.img=img;stickerTexture()}
+  else if(slot==='obi'){userObi.img=img;obiTexture()}
+  else{const s=SLOTS[slot];setTex(slot,colorTex(fitImage(img,s.w,s.h,{rotateIfWide:s.rotateIfWide})),...s.mats());if(slot==='sleeve')sleeveMat.color.set('#ffffff')}
+  thumb(slot,thumbUrl);markFilled(slot)}
+for(const slot of Object.keys(SLOTS)){
+  $('up-'+slot).addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;
+    try{await setSlotImage(slot,await createImageBitmap(file),URL.createObjectURL(file))}
+    catch(err){alertNote(`没能读取这张图片（${file.name}）。请换成 PNG、JPG 或 WebP 再试。`)}
+    e.target.value='';});
+}
+function alertNote(msg){$('modal-title').textContent=msg;$('modal-img').hidden=true;$('modal-dl').hidden=true;$('modal-size').textContent='';$('modal').hidden=false}
+
+// ---------- Controls wiring ----------
+// Every control is registered against its state key, so syncUI() can redraw the whole panel from state
+// after a spec is applied through window.grooveMock.
+const CONTROLS=[];
+const UNITS={pct:{toState:v=>v/100,toUI:v=>Math.round(v*100),fmt:v=>v+'%'},mm:{toState:v=>v/10,toUI:v=>Math.round(v*10),fmt:v=>v+' mm'},deg:{toState:v=>v,toUI:v=>Math.round(v),fmt:v=>v+'°'}};
+function seg(id,key,after){CONTROLS.push({kind:'seg',id,key});const root=$(id);root.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;state[key]=isNaN(+b.dataset.v)?b.dataset.v:+b.dataset.v;for(const x of root.children)x.setAttribute('aria-pressed',x===b);after?.()})}
+function slider(id,key,unit,after=pose){CONTROLS.push({kind:'slider',id,key,unit});const el=$(id),out=$(id+'-v'),u=UNITS[unit];const f=()=>{state[key]=u.toState(+el.value);out.textContent=u.fmt(+el.value);after()};el.addEventListener('input',f);f()}
+function toggle(id,key,sub,after=pose){CONTROLS.push({kind:'toggle',id,key,sub});$(id).addEventListener('change',e=>{state[key]=e.target.checked;if(sub)$(sub).hidden=!state[key];after()})}
+const field=(id,key)=>CONTROLS.push({kind:'field',id,key});
+function syncUI(){
+  for(const c of CONTROLS){const el=$(c.id),v=state[c.key];
+    if(c.kind==='seg')for(const b of el.children)b.setAttribute('aria-pressed',String(b.dataset.v===String(v)));
+    else if(c.kind==='slider'){const u=UNITS[c.unit],x=u.toUI(v);el.value=x;$(c.id+'-v').textContent=u.fmt(x)}
+    else if(c.kind==='toggle'){el.checked=!!v;if(c.sub)$(c.sub).hidden=!v}
+    else el.value=v}
+  $('lp2-sub').hidden=state.lpCount!==2;$('gate-sub').hidden=!isGate();$('jacket-spec').textContent=specText();
+  for(const b of document.querySelectorAll('[data-view]'))b.setAttribute('aria-pressed',b.dataset.view===state.view)}
+
+seg('finish','finish',applyFinish);
+seg('jacket-type','jacketType',applyJacketType);
+seg('lp-count','lpCount',applyLpCount);
+seg('vinyl-style','vinyl',applyVinyl);
+seg('vinyl2-style','vinyl2',applyVinyl);
+seg('sticker-shape','stickerShape',()=>{buildSticker();stickerTexture();pose()});
+seg('bg-mode','bg',applyBg);
+seg('export-scale','scale');
+// Picking a colour while on black switches that disc to coloured vinyl.
+for(const [cid,sid,key] of[['vinyl-color','vinyl-style','vinyl'],['vinyl2-color','vinyl2-style','vinyl2']])
+  $(cid).addEventListener('input',e=>{state[key+'Color']=e.target.value;if(state[key]==='black'){state[key]='color';for(const x of $(sid).children)x.setAttribute('aria-pressed',x.dataset.v==='color')}applyVinyl()});
+$('bg-color').addEventListener('input',e=>{state.bgColor=e.target.value;state.bg='color';for(const x of $('bg-mode').children)x.setAttribute('aria-pressed',x.dataset.v==='color');applyBg()});
+$('sleeve-color').addEventListener('input',e=>{state.sleeveColor=e.target.value;sleeveMat.color.set(tex.sleeve?'#ffffff':e.target.value)});
+field('vinyl-color','vinylColor');field('vinyl2-color','vinyl2Color');field('bg-color','bgColor');field('sleeve-color','sleeveColor');
+toggle('sleeve-on','sleeveOn');
+toggle('wrap-on','wrapOn','wrap-sub');
+toggle('obi-on','obiOn','obi-sub');
+toggle('insert-on','insertOn','insert-sub');
+toggle('sticker-on','stickerOn','sticker-sub');
+toggle('num-on','numOn','num-sub',placeNumber);
+slider('sleeve-x','sleeveX','pct');
+slider('record-x','recordX','pct');
+slider('record-rot','recordRot','deg');
+slider('insert-x','insertX','pct');
+slider('sleeve2-x','sleeve2X','pct');
+slider('record2-x','record2X','pct');
+slider('gate-open','gateOpen','deg',()=>{pose();if(!userMoved)setView(state.view)});
+let obiTimer;
+slider('obi-width','obiWidth','mm',()=>{clearTimeout(obiTimer);obiTimer=setTimeout(()=>{if(obi.children.length)buildObi()},60)});
+// Numbering controls
+function setSlider(id,v){const el=$(id);el.value=v;el.dispatchEvent(new Event('input'))}
+for(const [id,key] of[['num-cur','numCur'],['num-total','numTotal'],['num-prefix','numPrefix']]){
+  $(id).addEventListener('input',e=>{state[key]=key==='numPrefix'?e.target.value:+e.target.value;numTexture()});field(id,key)}
+seg('num-format','numFormat',numTexture);
+$('num-font').addEventListener('change',e=>{state.numFont=e.target.value;numTexture()});field('num-font','numFont');
+let userFontFace=null;
+async function setNumberFont(buffer,name){
+  const face=new FontFace('GM User Font',buffer);await face.load();
+  if(userFontFace)document.fonts.delete(userFontFace);document.fonts.add(face);userFontFace=face;
+  const opt=$('num-font-custom');opt.disabled=false;opt.textContent='自定义 · '+name.replace(/\.[^.]+$/,'').slice(0,16);
+  state.numFont='custom';$('num-font').value='custom'}
+$('up-font').addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;
+  try{await setNumberFont(await file.arrayBuffer(),file.name);numTexture()}
+  catch(err){alertNote(`没能读取这个字体文件（${file.name}）。请换成 TTF、OTF、WOFF 或 WOFF2 再试。`)}
+  e.target.value=''});
+seg('num-finish','numFinish',()=>{state.numColor=NUM_INK[state.numFinish];$('num-color').value=state.numColor;numTexture()});
+seg('num-place','numPlace',()=>{const d=NUM_DEFAULTS[state.numPlace];setSlider('num-x',Math.round(d.x*10));setSlider('num-y',Math.round(d.y*10));setSlider('num-size',Math.round(d.size*10));setSlider('num-rot',d.rot)});
+$('num-color').addEventListener('input',e=>{state.numColor=e.target.value;numMat.color.set(state.numColor)});field('num-color','numColor');
+slider('num-x','numX','mm',placeNumber);
+slider('num-y','numY','mm',placeNumber);
+slider('num-size','numSize','mm',placeNumber);
+slider('num-rot','numRot','deg',placeNumber);
+let wrinkleTimer;
+slider('wrap-wrinkle','wrinkle','pct',()=>{pose();clearTimeout(wrinkleTimer);wrinkleTimer=setTimeout(()=>buildWrap(state.wrinkle),120)});
+slider('wrap-gloss','gloss','pct');
+slider('sticker-size','stickerSize','mm');
+slider('sticker-x','stickerX','mm');
+slider('sticker-y','stickerY','mm');
+slider('sticker-rot','stickerRot','deg');
+for(const b of document.querySelectorAll('[data-view]'))b.addEventListener('click',()=>setView(b.dataset.view));
+
+// ---------- Export ----------
+let lastUrl;
+$('export-btn').addEventListener('click',async()=>{
+  const btn=$('export-btn');btn.disabled=true;btn.textContent='生成中…';
+  try{const w=stage.clientWidth,h=stage.clientHeight,k=Math.min(state.scale,4096/Math.max(w,h)),tw=Math.round(w*k),th=Math.round(h*k);
+    renderer.setPixelRatio(1);renderer.setSize(tw,th,false);camera.aspect=tw/th;camera.updateProjectionMatrix();renderer.render(scene,camera);
+    const blob=await new Promise((res,rej)=>renderer.domElement.toBlob(b=>b?res(b):rej(new Error('toBlob')),'image/png'));
+    if(lastUrl)URL.revokeObjectURL(lastUrl);lastUrl=URL.createObjectURL(blob);
+    $('modal-title').textContent='PNG 已生成';$('modal-img').hidden=false;$('modal-dl').hidden=false;
+    $('modal-img').src=lastUrl;$('modal-dl').href=lastUrl;$('modal-size').textContent=`${tw} × ${th} px · ${(blob.size/1048576).toFixed(1)} MB`;$('modal').hidden=false;
+  }catch(e){alertNote('导出失败，请把分辨率调到 1× 再试。')}
+  finally{renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));resize();btn.disabled=false;btn.textContent='导出 PNG'}
+});
+$('modal-close').addEventListener('click',()=>$('modal').hidden=true);
+$('modal').addEventListener('click',e=>{if(e.target===$('modal'))$('modal').hidden=true});
+addEventListener('keydown',e=>{if(e.key==='Escape')$('modal').hidden=true});
+
+// ---------- Scene spec + agent API ----------
+// One JSON document describes everything the panel controls, in the panel's own units (mm, %, degrees).
+// window.grooveMock applies it, renders PNGs at any size and describes itself as a JSON Schema, so a
+// headless browser (the groove-mock CLI) can drive this page without clicking anything.
+const DEFAULT_STATE=structuredClone(state);
+const enumF=(path,key,values,desc)=>({path,key,type:'enum',values,desc});
+const numF=(path,key,min,max,k,desc,integer=false)=>({path,key,type:'number',min,max,k,desc,integer});
+const boolF=(path,key,desc)=>({path,key,type:'boolean',desc});
+const colorF=(path,key,desc)=>({path,key,type:'color',desc});
+const strF=(path,key,desc,maxLength)=>({path,key,type:'string',desc,maxLength});
+const SPEC_FIELDS=[
+  enumF('jacket.type','jacketType',['single','gatefold'],'封套类型：single 单开，gatefold 双开'),
+  enumF('jacket.finish','finish',['matte','satin','gloss'],'纸张工艺：matte 哑光，satin 缎面，gloss 亮面'),
+  numF('jacket.gateOpen','gateOpen',0,180,1,'双开封面打开角度（度）。大于 0 时塑封、贴纸、Obi 视为已拆除，不显示'),
+  numF('records.count','lpCount',1,2,1,'唱片数量：1 为单 LP，2 为 2LP（封套自动加厚）',true),
+  numF('records.labelRotation','recordRot',-180,180,1,'唱片标签旋转角度（度），两张共用'),
+  boolF('records.sleeve.on','sleeveOn','是否显示内袋'),
+  colorF('records.sleeve.color','sleeveColor','内袋纸色，未提供 images.sleeve 时生效'),
+  ...[1,2].flatMap(i=>{const s=i===1?'':'2',note=i===2?'（仅 records.count=2 时生效）':'';return[
+    enumF(`records.disc${i}.vinyl`,`vinyl${s}`,['black','color','clear'],`第 ${i} 张胶色类型：black 黑胶，color 彩胶，clear 半透明${note}`),
+    colorF(`records.disc${i}.color`,`vinyl${s}Color`,`第 ${i} 张彩胶或半透明的颜色${note}`),
+    numF(`records.disc${i}.sleeveOut`,`sleeve${s}X`,0,100,.01,`第 ${i} 张内袋连同唱片从封套开口抽出的比例（%）${note}`),
+    numF(`records.disc${i}.recordOut`,`record${s}X`,0,100,.01,`第 ${i} 张唱片再从内袋里抽出的比例（%）${note}`)]}),
+  boolF('insert.on','insertOn','是否放入双面插页'),
+  numF('insert.out','insertX',0,100,.01,'插页抽出比例（%）。插页在内袋后面，需要比内袋抽得多才看得到'),
+  boolF('obi.on','obiOn','是否显示 Obi 侧标'),
+  numF('obi.width','obiWidth',20,80,.1,'Obi 正面宽度（mm），背面同宽'),
+  boolF('wrap.on','wrapOn','是否套塑封膜'),
+  numF('wrap.wrinkle','wrinkle',0,200,.01,'塑封褶皱强度（%），100 为默认'),
+  numF('wrap.gloss','gloss',0,200,.01,'塑封反光强度（%），100 为默认'),
+  boolF('sticker.on','stickerOn','是否显示 hype sticker（贴在塑封膜上）'),
+  enumF('sticker.shape','stickerShape',['circle','rect'],'贴纸形状：circle 圆形，rect 圆角长方形（宽高比 1.6:1）'),
+  numF('sticker.size','stickerSize',40,140,.1,'贴纸尺寸（mm）：圆形为直径，长方形为高度'),
+  numF('sticker.x','stickerX',-120,120,.1,'贴纸中心相对封套中心的水平位置（mm，向右为正）'),
+  numF('sticker.y','stickerY',-120,120,.1,'贴纸中心相对封套中心的垂直位置（mm，向上为正）'),
+  numF('sticker.rotation','stickerRot',-45,45,1,'贴纸旋转角度（度，逆时针为正）'),
+  boolF('number.on','numOn','是否显示限量编号'),
+  numF('number.current','numCur',1,999999,1,'当前编号',true),
+  numF('number.total','numTotal',1,999999,1,'限量总数，也决定补零位数（1000 → 0123）',true),
+  strF('number.prefix','numPrefix','编号前缀，仅 slash 格式使用，如 "No."',10),
+  enumF('number.format','numFormat',['slash','compact','cn'],'编号格式：slash 为 "No. 0123 / 1000"，compact 为 "0123/1000"，cn 为 "限量 1000 张 · 第 0123 张"'),
+  enumF('number.font','numFont',['auto','sans','mono','serif','type','hand','hei','custom'],'字体：auto 跟随工艺，sans 无衬线，mono 等宽，serif 衬线，type 打字机，hand 手写，hei 中文黑体，custom 需同时提供 number.fontFile'),
+  enumF('number.place','numPlace',['back','front','obi','sticker'],'编号位置：back 封套背面，front 封套正面，obi 侧标正面，sticker 贴纸上。只给 place 时，x/y/size/rotation 回到该位置的默认值'),
+  enumF('number.finish','numFinish',['print','stamp','foil','hand'],'工艺：print 印刷，stamp 印章（墨色不均），foil 烫金（金属反光），hand 手写。只给 finish 时，颜色回到该工艺的默认色'),
+  colorF('number.color','numColor','编号颜色；烫金时就是金属的颜色'),
+  numF('number.x','numX',-150,150,.1,'编号中心相对所在面中心的水平位置（mm，向右为正；背面以从背后看为准）'),
+  numF('number.y','numY',-150,150,.1,'编号中心相对所在面中心的垂直位置（mm，向上为正）'),
+  numF('number.size','numSize',3,20,.1,'编号字高（mm）'),
+  numF('number.rotation','numRot',-90,90,1,'编号旋转角度（度，逆时针为正）'),
+];
+const IMAGE_SLOTS={
+  front:'封套正面（方图，314 × 314 mm）',back:'封套背面（方图）',spine:'书脊（竖长条；横图会自动转 90°）',
+  innerLeft:'双开内页左（方图）',innerRight:'双开内页右（方图）',
+  obi:'Obi 展开图（竖长条，从左到右依次为背面 | 书脊 | 正面）',sleeve:'内袋印刷图（方图，中孔 Ø90 mm 处会被挖空）',
+  labelA:'A 面标签（方图，只显示中间 Ø100 mm 圆形）',labelB:'B 面标签',labelC:'C 面标签（2LP）',labelD:'D 面标签（2LP）',
+  insertFront:'插页正面（方图，304 × 304 mm）',insertBack:'插页背面（方图）',sticker:'Hype sticker 图（圆形会被裁成圆）'};
+const CAMERA_VIEWS=['quarter','front','side'];
+// Per-slot production guide for agents preparing artwork: canvas size, physical size, what the viewer
+// actually sees, what covers it in the current scene, and whether the slot suits image generation,
+// typesetting or both. Computed from state, so Obi width, gatefold and 2LP are reflected.
+const ASSET_SOURCES=['user','generated','typeset','composite','sample'];
+function slotGuide(){
+  const mm=v=>Math.round(v*10*10)/10,obiMm=mm(state.obiWidth),depth=mm(jacketDepth()),{total}=obiLayout(),obiPx=Math.max(64,Math.round(2048*total/J.h));
+  const obiFront=state.obiOn?[`Obi 盖住左侧 ${obiMm} mm`]:[],obiBack=state.obiOn?[`Obi 盖住右侧 ${obiMm} mm（从背后看）`]:[];
+  const num=p=>state.numOn&&state.numPlace===p?[`编号在中心偏 (${mm(state.numX)}, ${mm(state.numY)}) mm 处，字高 ${mm(state.numSize)} mm`]:[];
+  const stickerCover=state.stickerOn&&state.wrapOn?[`hype sticker 盖在中心偏 (${mm(state.stickerX)}, ${mm(state.stickerY)}) mm 处，尺寸 ${mm(state.stickerSize)} mm`]:[];
+  const square=(slot,label,sizeMm,recommend,extra={})=>({slot,label,px:[2048,2048],mm:[sizeMm,sizeMm],visible:'整张可见',covered:[],recommend,used:true,notes:'',...extra});
+  return[
+    square('front','封套正面',314,'user',{covered:[...obiFront,...stickerCover,...num('front')],notes:'真实发行请用正式封面，不要生成'}),
+    square('back','封套背面',314,'composite',{covered:[...obiBack,...num('back')],notes:'生图只出无字底图，曲目、厂牌、条码位用代码排版'}),
+    {slot:'spine',label:'书脊',px:[64,4096],mm:[depth,314],visible:`整条可见，但只有 ${depth} mm 宽`,covered:state.obiOn?['Obi 书脊段盖住整条书脊']:[],recommend:'typeset',used:true,notes:'取封面主色做底，文字竖排从上往下读；横图会被自动转 90°'},
+    square('innerLeft','双开内页左',314,'composite',{used:isGate(),notes:'可生成 2:1 跨页后从中间切开；中线是折痕，避开人脸和主体'}),
+    square('innerRight','双开内页右',314,'composite',{used:isGate(),notes:'右页适合留给歌词排版'}),
+    {slot:'obi',label:'Obi 展开图',px:[obiPx,2048],mm:[Math.round(total*10*10)/10,314],visible:`从左到右：背面 ${obiMm} mm | 书脊 ${mm(obiLayout().s)} mm | 正面 ${obiMm} mm`,covered:[],recommend:'typeset',used:state.obiOn,notes:'文字为主，不建议生图'},
+    {...square('sleeve','内袋印刷',306,'generated'),visible:'中心 Ø90 mm 圆孔被挖空，抽出时只露出一部分',used:state.sleeveOn,notes:'低对比底纹即可，一般不放文字'},
+    ...['A','B','C','D'].map(k=>({slot:'label'+k,label:`${k} 面标签`,px:[1024,1024],mm:[100,100],visible:'只显示方图的内切圆（Ø100 mm）；正中 Ø7.24 mm 是中孔',covered:[],recommend:'composite',used:k<'C'||state.lpCount===2,notes:'底图可生成俯视平面圆形纹理，标题、面号、转速用排版'})),
+    square('insertFront','插页正面',304,'composite',{used:state.insertOn,notes:'歌词、制作名单用排版'}),
+    square('insertBack','插页背面',304,'composite',{used:state.insertOn}),
+    {slot:'sticker',label:'Hype sticker',px:state.stickerShape==='rect'?[1024,640]:[1024,1024],mm:state.stickerShape==='rect'?[mm(state.stickerSize*1.6),mm(state.stickerSize)]:[mm(state.stickerSize),mm(state.stickerSize)],
+      visible:state.stickerShape==='rect'?'整张可见，圆角':'只显示内切圆',covered:num('sticker'),recommend:'typeset',used:state.stickerOn,notes:'文字为主，不建议生图'},
+  ]}
+const getPath=(o,p)=>p.split('.').reduce((a,k)=>a==null?undefined:a[k],o);
+const setPath=(o,p,v)=>{const ks=p.split('.');let a=o;for(const k of ks.slice(0,-1))a=a[k]??={};a[ks.at(-1)]=v};
+const toSpecValue=(f,v)=>f.type==='number'?Math.round(v/f.k*100)/100:v;
+function specFromState(){
+  const s={version:1};
+  for(const f of SPEC_FIELDS)setPath(s,f.path,toSpecValue(f,state[f.key]));
+  s.camera={view:state.view,zoom:state.camZoom,azimuth:state.camAz,elevation:state.camEl};
+  s.output={background:state.bg==='transparent'?'transparent':state.bgColor,width:state.outW,height:state.outH};
+  return s}
+function buildSchema(){
+  const root={$schema:'https://json-schema.org/draft/2020-12/schema',title:'Groove Mock scene spec',
+    description:'黑胶实物 3D 模型的场景描述。所有字段都可省略，省略即保持默认值。长度单位 mm，比例单位 %，角度单位度。',
+    type:'object',additionalProperties:false,properties:{version:{const:1}}};
+  const parent=p=>{let o=root;for(const k of p.split('.').slice(0,-1)){o.properties[k]??={type:'object',additionalProperties:false,properties:{}};o=o.properties[k]}return o};
+  for(const f of SPEC_FIELDS){
+    const s=f.type==='enum'?{enum:f.values}:f.type==='number'?{type:f.integer?'integer':'number',minimum:f.min,maximum:f.max}:f.type==='boolean'?{type:'boolean'}:f.type==='color'?{type:'string',pattern:'^#[0-9a-fA-F]{6}$'}:{type:'string',maxLength:f.maxLength};
+    Object.assign(s,{description:f.desc,default:toSpecValue(f,DEFAULT_STATE[f.key])});parent(f.path).properties[f.path.split('.').at(-1)]=s}
+  parent('number.fontFile').properties.fontFile={type:'string',description:'自定义字体文件（TTF/OTF/WOFF/WOFF2）。CLI 中写相对 spec 文件的路径；提供后 number.font 默认变为 custom'};
+  root.properties.images={type:'object',additionalProperties:false,description:'各部件贴图。CLI 中写相对 spec 文件的本地路径或 http(s) 地址；页面 API 接受 data URL 或 URL。未提供的部件使用示例图',
+    properties:Object.fromEntries(Object.entries(IMAGE_SLOTS).map(([k,d])=>[k,{type:'string',description:d}]))};
+  root.properties.camera={type:'object',additionalProperties:false,description:'相机。先按 view 预设自动构图，再按 zoom/azimuth/elevation 微调',properties:{
+    view:{enum:CAMERA_VIEWS,default:'quarter',description:'quarter 斜侧，front 正面，side 侧面'},
+    zoom:{type:'number',minimum:.3,maximum:4,default:1,description:'缩放倍数，>1 拉近'},
+    azimuth:{type:'number',minimum:-180,maximum:180,default:0,description:'在预设基础上水平环绕（度，正值向右转）'},
+    elevation:{type:'number',minimum:-60,maximum:60,default:0,description:'在预设基础上抬高视角（度，正值从上往下看）'}}};
+  root.properties.meta={type:'object',description:'渲染器不读取的说明信息，供 agent 和人登记素材来源',properties:{
+    title:{type:'string',description:'这套模型图的名称'},
+    assets:{type:'object',additionalProperties:false,description:'每张贴图的来源登记，键与 images 相同',
+      properties:Object.fromEntries(Object.keys(IMAGE_SLOTS).map(k=>[k,{type:'object',required:['source'],additionalProperties:false,properties:{
+        source:{enum:ASSET_SOURCES,description:'user 用户提供，generated 生图模型生成，typeset 代码排版，composite 生成底图加排版，sample 工具示例图'},
+        tool:{type:'string',description:'使用的模型或脚本'},prompt:{type:'string',description:'生图提示词'},note:{type:'string'}}}]))}}};
+  root.properties.output={type:'object',additionalProperties:false,properties:{
+    background:{type:'string',default:'transparent',description:'"transparent" 为透明背景，或 #rrggbb 纯色'},
+    width:{type:'integer',minimum:256,maximum:4096,default:DEFAULT_STATE.outW,description:'输出宽度（px）'},
+    height:{type:'integer',minimum:256,maximum:4096,default:DEFAULT_STATE.outH,description:'输出高度（px）'}}};
+  return root}
+
+const SPEC_EXTRA=['version','meta','number.fontFile','output.background','output.width','output.height','camera.view','camera.zoom','camera.azimuth','camera.elevation',...Object.keys(IMAGE_SLOTS).map(k=>'images.'+k)];
+async function applySpec(spec){
+  if(!spec||typeof spec!=='object'||Array.isArray(spec))throw new Error('spec 必须是 JSON 对象');
+  const warnings=[],known=new Set([...SPEC_FIELDS.map(f=>f.path),...SPEC_EXTRA]),has=p=>getPath(spec,p)!==undefined;
+  const walk=(o,pre)=>{for(const [k,v] of Object.entries(o)){const p=pre?pre+'.'+k:k;
+    if(known.has(p))continue;if(v&&typeof v==='object'&&!Array.isArray(v))walk(v,p);else warnings.push(`未知字段 ${p}，已忽略`)}};
+  walk(spec,'');
+  const clampNum=(path,v,min,max,integer)=>{let n=Number(v);if(!Number.isFinite(n)){warnings.push(`${path} 需要数字，已忽略`);return null}
+    if(integer)n=Math.round(n);const c=Math.min(max,Math.max(min,n));if(c!==n)warnings.push(`${path}=${n} 超出范围 ${min}–${max}，已改为 ${c}`);return c};
+  for(const f of SPEC_FIELDS){const v=getPath(spec,f.path);if(v===undefined)continue;
+    if(f.type==='enum'){if(!f.values.includes(v)){warnings.push(`${f.path}=${JSON.stringify(v)} 无效，可选值：${f.values.join(' / ')}`);continue}state[f.key]=v}
+    else if(f.type==='number'){const c=clampNum(f.path,v,f.min,f.max,f.integer);if(c!==null)state[f.key]=c*f.k}
+    else if(f.type==='boolean')state[f.key]=!!v;
+    else if(f.type==='color'){if(typeof v!=='string'||!/^#[0-9a-f]{6}$/i.test(v)){warnings.push(`${f.path} 需要 #rrggbb 格式，已忽略`);continue}state[f.key]=v.toLowerCase()}
+    else state[f.key]=String(v).slice(0,f.maxLength)}
+  // Same conveniences as the panel: a new place brings its own default position, a new finish its default ink.
+  if(has('number.place')){const d=NUM_DEFAULTS[state.numPlace];if(!has('number.x'))state.numX=d.x;if(!has('number.y'))state.numY=d.y;if(!has('number.size'))state.numSize=d.size;if(!has('number.rotation'))state.numRot=d.rot}
+  if(has('number.finish')&&!has('number.color'))state.numColor=NUM_INK[state.numFinish];
+  const bg=getPath(spec,'output.background');
+  if(bg!==undefined){if(bg==='transparent')state.bg='transparent';else if(typeof bg==='string'&&/^#[0-9a-f]{6}$/i.test(bg)){state.bg='color';state.bgColor=bg.toLowerCase()}else warnings.push('output.background 需要 "transparent" 或 #rrggbb，已忽略')}
+  for(const [p,key,min,max,int] of[['output.width','outW',256,4096,true],['output.height','outH',256,4096,true],['camera.zoom','camZoom',.3,4],['camera.azimuth','camAz',-180,180],['camera.elevation','camEl',-60,60]]){
+    const v=getPath(spec,p);if(v===undefined)continue;const c=clampNum(p,v,min,max,int);if(c!==null)state[key]=c}
+  const view=getPath(spec,'camera.view');
+  if(view!==undefined){if(CAMERA_VIEWS.includes(view))state.view=view;else warnings.push(`camera.view=${JSON.stringify(view)} 无效，可选值：${CAMERA_VIEWS.join(' / ')}`)}
+  for(const [slot,src] of Object.entries(spec.images||{})){
+    if(!(slot in IMAGE_SLOTS))continue;
+    if(typeof src!=='string'){warnings.push(`images.${slot} 需要字符串，已忽略`);continue}
+    try{const blob=await (await fetch(src)).blob();await setSlotImage(slot,await createImageBitmap(blob),URL.createObjectURL(blob))}
+    catch(e){warnings.push(`images.${slot} 读取失败：${e.message}`)}}
+  const fontFile=getPath(spec,'number.fontFile');
+  if(fontFile!==undefined){
+    try{await setNumberFont(await (await fetch(fontFile)).arrayBuffer(),'spec font');const fv=getPath(spec,'number.font');if(fv!==undefined&&SPEC_FIELDS.find(f=>f.key==='numFont').values.includes(fv))state.numFont=fv}
+    catch(e){warnings.push(`number.fontFile 读取失败：${e.message}`)}}
+  if(state.numFont==='custom'&&!userFontFace){warnings.push('number.font=custom 但没有可用的 number.fontFile，已改用 auto');state.numFont='auto'}
+  refreshAll();
+  await document.fonts?.load(numFontCss(200),numberText()).catch(()=>{});numTexture();
+  return{warnings}}
+
+// Rebuild every derived object from state; used after a spec lands.
+function refreshAll(){
+  J.d=POCKET_D[state.lpCount];buildJacket();
+  applyFinish();applyVinyl();sleeveMat.color.set(tex.sleeve?'#ffffff':state.sleeveColor);
+  buildSticker();stickerTexture();numTexture();
+  applyJacketType();applyBg();syncUI();
+}
+// Preset framing for the current aspect, then the spec's orbit offsets.
+function applyCamera(){
+  setView(state.view);
+  const sph=new THREE.Spherical().setFromVector3(camera.position.clone().sub(controls.target));
+  sph.theta+=THREE.MathUtils.degToRad(state.camAz);
+  sph.phi=THREE.MathUtils.clamp(sph.phi-THREE.MathUtils.degToRad(state.camEl),.05,Math.PI-.05);
+  sph.radius/=state.camZoom;
+  camera.position.copy(controls.target).add(new THREE.Vector3().setFromSpherical(sph));controls.update()}
+async function renderToBlob(w,h){
+  renderer.setPixelRatio(1);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();
+  try{applyCamera();renderer.render(scene,camera);
+    return await new Promise((res,rej)=>renderer.domElement.toBlob(b=>b?res(b):rej(new Error('PNG 编码失败')),'image/png'))}
+  finally{renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));resize()}}
+
+// ---------- Boot ----------
+applyFinish();applyVinyl();buildWrap(state.wrinkle);numTexture();buildObi();buildSticker();pose();applyBg();resize();setView('quarter');
+new ResizeObserver(resize).observe(stage);
+// Redraw sample art once web fonts arrive so the placeholder type renders correctly.
+const fontsSettled=(document.fonts?.ready??Promise.resolve()).then(()=>{
+  const redo={front:sampleFront,back:sampleBack,spine:sampleSpine,labelA:()=>sampleLabel('A'),labelB:()=>sampleLabel('B'),labelC:()=>sampleLabel('C'),labelD:()=>sampleLabel('D'),innerLeft:sampleInnerLeft,innerRight:sampleInnerRight,insertFront:()=>sampleInsert('front'),insertBack:()=>sampleInsert('back')};
+  for(const[slot,fn]of Object.entries(redo)){const el=document.querySelector(`[data-slot="${slot}"]`);if(el.classList.contains('filled'))continue;setTex(slot,colorTex(fn()),...SLOTS[slot].mats());thumb(slot,tex[slot].image.toDataURL('image/jpeg',.6))}
+  if(!userObi.img)obiTexture();
+  numTexture();
+  if(!userSticker.img){stickerTexture();thumb('sticker',tex.sticker.image.toDataURL('image/jpeg',.6))}
+});
+const nextFrame=()=>new Promise(r=>requestAnimationFrame(()=>r()));
+const ready=fontsSettled.then(nextFrame).then(nextFrame);
+const toDataUrl=blob=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>rej(r.error);r.readAsDataURL(blob)});
+window.grooveMock={
+  version:1,ready,
+  schema:buildSchema,
+  slots:slotGuide,
+  getSpec:specFromState,
+  async apply(spec){await ready;return applySpec(spec)},
+  async render(opts={}){await ready;
+    const size=(v,d)=>Math.min(4096,Math.max(64,Math.round(v||d)));
+    const w=size(opts.width,state.outW),h=size(opts.height,state.outH),blob=await renderToBlob(w,h);
+    return{width:w,height:h,bytes:blob.size,dataUrl:await toDataUrl(blob)}}
+};
+window.__gm={state,scene,camera,renderer,pose,controls,setView};
+</script>

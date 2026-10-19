@@ -1,0 +1,63 @@
+# Groove Mock：给 agent 的操作说明
+
+本目录是一个黑胶唱片 3D 模型工具。`index.html` 既是网页，也是渲染器。agent 通过命令行工具 `cli/groove-mock.mjs` 操作它：写一份 JSON 场景描述（spec），渲染出 PNG，看图后调整参数，再渲染。
+
+不要为了出图去改 `index.html`。所有可调的东西都在 spec 里。
+
+## 准备（只需一次）
+
+```bash
+cd cli && npm install
+```
+
+需要本机装有 Google Chrome（默认使用）。没有的话，运行 `npx playwright-core install chromium`，之后每条命令加 `--browser chromium`。
+
+## 工作流程
+
+1. 查看可用字段：`node cli/groove-mock.mjs schema`。输出的是 JSON Schema，每个字段都有单位、范围、默认值和中文说明。
+2. 写 spec：把 spec 和图片放在同一个目录，图片路径写相对路径。可以从 `examples/2lp-gatefold.json` 改，也可以用 `node cli/groove-mock.mjs init -o spec.json` 生成默认模板。
+3. 渲染：`node cli/groove-mock.mjs render spec.json -o out.png --json`。
+4. 检查：打开输出的 PNG 看效果，同时看结果里的 `warnings`。
+5. 调整：改 spec 后重新渲染。只试一两个参数时，用 `--set path=value`，不用改文件。
+
+结果是单行 JSON：`{"ok":true,"out":…,"width":…,"height":…,"warnings":[…],"ms":…}`。退出码：0 成功；1 出错（看 `error`）；2 在 `--strict` 下有警告。
+
+## 素材不全时：生图 + 排版链路
+
+用户只给了部分素材（比如只有封面）时，按这个顺序补齐。提示词模板在 `prompts/image-prompts.md`。
+
+1. **盘点**：运行 `node cli/groove-mock.mjs slots spec.json`，看当前场景用到哪些贴图位（标 ●）、各自的尺寸、可见区域、遮挡，以及建议做法（用户提供 / 生图 / 排版 / 生图底 + 排版）。
+2. **风格卡**：先看封面，按模板第 0 节输出主色和风格描述。后面每条生图提示词都要带上它。
+3. **生成底图**：只给建议为"生图"或"生图底 + 排版"的贴图位生成，**底图不能有任何文字**，尺寸按 `slots` 的输出来。
+4. **排版文字**：曲目、标题、面号、歌词、Obi、贴纸文案用代码排版（Python 或 HTML 截图都可以），叠到底图上。文字内容来自用户给的信息；用户没给的，用明显的占位文字，不要编造曲目。
+5. **出图检查**：`render` 后看图，重点看三件事：重点内容有没有被 Obi、贴纸或编号挡住；文字在 3D 里是否清楚；整套颜色是否协调。
+6. **登记来源**：在 spec 的 `meta.assets` 里登记每张图的来源（`user` / `generated` / `typeset` / `composite`），生图的写上提示词。最终回复里要说明哪些是示意设计、不是官方素材。
+
+不要生成真实发行的封面。
+
+## spec 速查
+
+单位与面板一致：长度用 mm，比例用 %，角度用度。省略的字段保持默认值。
+
+| 想做的事 | 字段 |
+|---|---|
+| 换封面、背面、书脊 | `images.front` / `images.back` / `images.spine` |
+| 双开及内页 | `jacket.type: "gatefold"`，`images.innerLeft` / `innerRight`，`jacket.gateOpen` 为 0–180 |
+| 2LP | `records.count: 2`，`records.disc2.*`，标签用 `images.labelC` / `labelD` |
+| 胶色 | `records.disc1.vinyl`：black / color / clear，`records.disc1.color` |
+| 抽出程度 | `records.discN.sleeveOut`（内袋出封套），`records.discN.recordOut`（唱片出内袋），`insert.out` |
+| 塑封、贴纸、Obi | `wrap.*`、`sticker.*`、`obi.*`，图片为 `images.sticker` / `images.obi` |
+| 限量编号 | `number.current` / `total` / `format` / `place` / `finish` / `font`，自定义字体用 `number.fontFile` |
+| 构图 | `camera.view`：quarter / front / side，再用 `zoom`、`azimuth`、`elevation` 微调 |
+| 输出 | `output.width` / `height`（px，最大 4096），`output.background`：`"transparent"` 或 `#rrggbb` |
+| 素材来源 | `meta.assets.<贴图位>.source`，渲染器不读，`render` 会在结果的 `assets` 里汇总 |
+
+## 容易踩的点
+
+- `jacket.gateOpen` 大于 0 时，塑封、贴纸和 Obi 视为已拆除，不会出现在图里。
+- 插页在内袋后面。`insert.out` 要比内袋的抽出比例大，才看得到插页。
+- 抽得很多时，唱片可能跑出画面。可以减小 `recordOut`，或者把 `camera.zoom` 调到 1 以下。
+- 只改 `number.place` 时，编号的位置、字高、角度会回到该位置的默认值；只改 `number.finish` 时，颜色会回到该工艺的默认色。要固定这些值，就同时写上对应字段。
+- 背面编号的 `number.x` 以从背后看为准，向右为正。
+- Obi 图是一张展开图，从左到右依次为背面、书脊、正面。
+- 批量出编号图：`node cli/groove-mock.mjs numbers spec.json --from 1 --to 50 --dir out/`。

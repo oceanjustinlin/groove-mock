@@ -1,0 +1,21 @@
+{
+  "name": "groove-mock-cli",
+  "version": "0.1.0",
+  "description": "Render vinyl record mockups from a JSON scene spec by driving the Groove Mock page in headless Chrome.",
+  "type": "module",
+  "private": true,
+  "license": "UNLICENSED",
+  "scripts": {
+    "test": "node --test test/provenance.test.mjs"
+  },
+  "bin": {
+    "groove-mock": "./groove-mock.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "playwright-core": "1.63.0",
+    "three": "0.169.0"
+  }
+}

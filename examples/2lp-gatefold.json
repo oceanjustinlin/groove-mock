@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "jacket": {"type": "gatefold", "finish": "satin", "gateOpen": 0},
+  "records": {
+    "count": 2,
+    "disc1": {"vinyl": "black", "sleeveOut": 30, "recordOut": 35},
+    "disc2": {"vinyl": "color", "color": "#d64b3a", "sleeveOut": 55, "recordOut": 40}
+  },
+  "obi": {"on": true, "width": 32},
+  "wrap": {"on": true},
+  "sticker": {"on": true, "shape": "circle"},
+  "number": {"on": true, "current": 88, "total": 500, "place": "front", "finish": "foil"},
+  "camera": {"view": "quarter", "zoom": 0.9},
+  "output": {"background": "#ebe8e1", "width": 2400, "height": 1500}
+}
