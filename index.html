@@ -88,6 +88,9 @@ button,input,select{font:inherit;color:inherit}
 .switch input{accent-color:var(--accent);width:16px;height:16px}
 input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line);border-radius:6px;background:none;cursor:pointer}
 .note{margin:0;font-size:12px;color:var(--muted)}
+.picker{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.picker button{aspect-ratio:1;border:1px solid var(--line);border-radius:50%;padding:0;background:var(--bg) center/cover no-repeat;cursor:pointer;font-size:11px;color:var(--muted)}
+.picker button[aria-checked="true"]{outline:2px solid var(--accent);outline-offset:2px}
 .sub[hidden]{display:none!important}
 .sub{display:grid;gap:10px}
 
@@ -230,6 +233,20 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
               <input type="color" id="vinyl-color" value="#c8392b" aria-label="第 1 张胶色">
             </div>
           </div>
+          <div class="row"><span class="lbl">纹路</span><span class="note" id="pattern-name">纯色</span></div>
+          <div class="picker" id="pattern-pick" role="radiogroup" aria-label="第 1 张纹路"></div>
+          <div class="sub" id="pattern-sub" hidden>
+            <p class="note" id="pattern-hint"></p>
+            <div class="row" id="pattern-colors"><span class="lbl" id="pattern-colors-lbl">纹路色</span>
+              <div class="row" style="justify-content:flex-end">
+                <input type="color" id="pattern-color" aria-label="第 1 张纹路色">
+                <input type="color" id="pattern-alt" aria-label="第 1 张第三块颜色">
+              </div>
+            </div>
+            <div class="slider" id="pattern-contrast-row"><label for="pattern-contrast">反差</label><input type="range" id="pattern-contrast" min="0" max="200" value="100"><output id="pattern-contrast-v">100%</output></div>
+            <div class="slider"><label for="pattern-rot">纹路角度</label><input type="range" id="pattern-rot" min="-180" max="180" value="0"><output id="pattern-rot-v">0°</output></div>
+            <div class="row" style="justify-content:flex-start"><button class="chip" id="pattern-cover">从封面取色</button></div>
+          </div>
           <div class="slider"><label for="sleeve-x">内袋抽出</label><input type="range" id="sleeve-x" min="0" max="100" value="35"><output id="sleeve-x-v">35%</output></div>
           <div class="slider"><label for="record-x">唱片抽出</label><input type="range" id="record-x" min="0" max="100" value="40"><output id="record-x-v">40%</output></div>
         </div>
@@ -245,6 +262,20 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
               <div class="seg" id="vinyl2-style"><button data-v="black" aria-pressed="true">黑胶</button><button data-v="color" aria-pressed="false">彩胶</button><button data-v="clear" aria-pressed="false">半透明</button></div>
               <input type="color" id="vinyl2-color" value="#d9a441" aria-label="第 2 张胶色">
             </div>
+          </div>
+          <div class="row"><span class="lbl">纹路</span><span class="note" id="pattern2-name">纯色</span></div>
+          <div class="picker" id="pattern2-pick" role="radiogroup" aria-label="第 2 张纹路"></div>
+          <div class="sub" id="pattern2-sub" hidden>
+            <p class="note" id="pattern2-hint"></p>
+            <div class="row" id="pattern2-colors"><span class="lbl" id="pattern2-colors-lbl">纹路色</span>
+              <div class="row" style="justify-content:flex-end">
+                <input type="color" id="pattern2-color" aria-label="第 2 张纹路色">
+                <input type="color" id="pattern2-alt" aria-label="第 2 张第三块颜色">
+              </div>
+            </div>
+            <div class="slider" id="pattern2-contrast-row"><label for="pattern2-contrast">反差</label><input type="range" id="pattern2-contrast" min="0" max="200" value="100"><output id="pattern2-contrast-v">100%</output></div>
+            <div class="slider"><label for="pattern2-rot">纹路角度</label><input type="range" id="pattern2-rot" min="-180" max="180" value="0"><output id="pattern2-rot-v">0°</output></div>
+            <div class="row" style="justify-content:flex-start"><button class="chip" id="pattern2-cover">从封面取色</button></div>
           </div>
           <div class="slider"><label for="sleeve2-x">内袋抽出</label><input type="range" id="sleeve2-x" min="0" max="100" value="60"><output id="sleeve2-x-v">60%</output></div>
           <div class="slider"><label for="record2-x">唱片抽出</label><input type="range" id="record2-x" min="0" max="100" value="30"><output id="record2-x-v">30%</output></div>
@@ -362,6 +393,8 @@ const EN={
   '胶色':'Vinyl','黑胶':'Black','彩胶':'Colour','半透明':'Clear','第 1 张胶色':'Disc 1 vinyl colour','内袋抽出':'Sleeve out','唱片抽出':'Record out',
   '第 2 张':'Disc 2','C / D 面 · 放在第 1 张后面':'Sides C / D · behind disc 1','上传 C 面标签':'Upload side C label','上传 D 面标签':'Upload side D label',
   'C 面标签':'Side C label','D 面标签':'Side D label','第 2 张胶色':'Disc 2 vinyl colour',
+  '纹路':'Pattern','第 1 张纹路':'Disc 1 pattern','第 2 张纹路':'Disc 2 pattern','纹路色':'Pattern colour','第 1 张纹路色':'Disc 1 pattern colour','第 2 张纹路色':'Disc 2 pattern colour',
+  '第 1 张第三块颜色':'Disc 1 third region colour','第 2 张第三块颜色':'Disc 2 third region colour','反差':'Contrast','纹路角度':'Pattern angle','从封面取色':'Colours from cover',
   '内袋抽出：内袋连同唱片一起从封套开口拉出。唱片抽出：唱片再从内袋里往外拉。':'Sleeve out pulls the inner sleeve, record inside, out of the jacket. Record out then slides the record out of the sleeve.',
   'Insert 插页':'Insert','304 × 304 mm · 双面':'304 × 304 mm · double-sided','放入插页':'Include insert','上传插页正面':'Upload insert front','上传插页背面':'Upload insert back',
   '抽出':'Out','插页在内袋后面，抽得比内袋多才看得到。':'The insert sits behind the inner sleeve; pull it out further than the sleeve to see it.',
@@ -393,8 +426,8 @@ translateStatic();
 const state = {
   finish:'satin', sleeveOn:true, sleeveColor:'#f3f1ea', sleeveX:.35, recordX:.40, recordRot:0,
   vinyl:'black', vinylColor:'#c8392b', vinyl2:'black', vinyl2Color:'#d9a441', wrapOn:true, wrinkle:1, gloss:1,
-  pattern:'none', patternColor:'#1b1b1b', patternAlt:'#2a6f4e', patternContrast:1, patternRot:0,
-  pattern2:'none', pattern2Color:'#1b1b1b', pattern2Alt:'#2a6f4e', pattern2Contrast:1, pattern2Rot:0,
+  pattern:'none', patternColor:'#1b1b1b', patternAlt:'#2a6f4e', patternContrast:1, patternRot:0, patternFromCover:false,
+  pattern2:'none', pattern2Color:'#1b1b1b', pattern2Alt:'#2a6f4e', pattern2Contrast:1, pattern2Rot:0, pattern2FromCover:false,
   stickerOn:true, stickerShape:'circle', stickerSize:7.6, stickerX:8.8, stickerY:9.2, stickerRot:0,
   numOn:true, numCur:123, numTotal:1000, numPrefix:'No.', numFormat:'slash', numFont:'auto', numPlace:'back', numFinish:'stamp', numColor:'#25336f',
   numX:10.5, numY:-13.6, numSize:.5, numRot:-3,
@@ -675,12 +708,47 @@ function derivePattern(m,base,color,alt,contrast){
   const[Lb]=B,Cb=Math.hypot(B[1],B[2]),hb=Math.atan2(B[2],B[1]);
   return derive.map(p=>{const dL=p.dL*contrast;let L=Lb+dL>=.1?Lb+dL:Lb-dL;L=Math.min(.98,Math.max(.05,L));
     const C=Cb<.02?Cb:Math.max(0,Cb+p.dC*contrast);return oklabToHex([L,C*Math.cos(hb),C*Math.sin(hb)])})}
+// Colours from the front cover: k-means in OKLab on a 64 px copy, then (base, pattern, third) candidates
+// ranked so the base is a large, colourful area and the pattern colour contrasts with it. Each call moves
+// to the next candidate; disc 2 starts one further on, so a 2LP does not get two identical discs.
+const labDist2=(a,b)=>(a[0]-b[0])**2+(a[1]-b[1])**2+(a[2]-b[2])**2;
+function coverClusters(K=6){const N=64,c=canvas(N,N),g=c.getContext('2d',{willReadFrequently:true});g.drawImage(tex.front.image,0,0,N,N);
+  const px=g.getImageData(0,0,N,N).data,pts=[];
+  for(let i=0;i<px.length;i+=4)pts.push(hexToOklab('#'+[px[i],px[i+1],px[i+2]].map(v=>v.toString(16).padStart(2,'0')).join('')));
+  const mean=[0,1,2].map(k=>pts.reduce((a,p)=>a+p[k],0)/pts.length);
+  // Deterministic seeding: the most typical pixel, then repeatedly the pixel farthest from every centre.
+  const cs=[pts.reduce((a,p)=>labDist2(p,mean)<labDist2(a,mean)?p:a)];
+  while(cs.length<K){let best=pts[0],bd=-1;for(const p of pts){const d=Math.min(...cs.map(c=>labDist2(p,c)));if(d>bd){bd=d;best=p}}cs.push(best)}
+  let assign=[];
+  for(let it=0;it<8;it++){assign=pts.map(p=>{let bi=0,bd=Infinity;cs.forEach((c,k)=>{const d=labDist2(p,c);if(d<bd){bd=d;bi=k}});return bi});
+    for(let k=0;k<K;k++){const mine=pts.filter((_,j)=>assign[j]===k);if(mine.length)cs[k]=[0,1,2].map(q=>mine.reduce((a,p)=>a+p[q],0)/mine.length)}}
+  return cs.map((lab,k)=>({lab,share:assign.filter(a=>a===k).length/pts.length,hex:oklabToHex(lab)})).filter(c=>c.share>.02)}
+function coverCandidates(m,cl){
+  const chroma=c=>Math.hypot(c.lab[1],c.lab[2]),dist=(a,b)=>Math.sqrt(labDist2(a.lab,b.lab)),far=(a,b)=>dist(a,b)>=.12;
+  const baseScore=c=>c.share*(1+4*chroma(c)),mode=m.palette.mode,n=mode==='tonal'?1:mode==='regions'&&m.accents===2?3:2,out=[];
+  for(const b of cl){if(n===1){out.push({score:baseScore(b),cols:[b.hex]});continue}
+    for(const a of cl){if(a===b||!far(a,b))continue;const sc=baseScore(b)*dist(a,b)*Math.sqrt(a.share);
+      if(n===2){out.push({score:sc,cols:[b.hex,a.hex]});continue}
+      for(const t of cl)if(t!==a&&t!==b&&far(t,a)&&far(t,b))out.push({score:sc*dist(t,a)*dist(t,b)*Math.sqrt(t.share),cols:[b.hex,a.hex,t.hex]})}}
+  // A near-monochrome cover still gets a pair: its main colour with an off-white or near-black.
+  if(!out.length&&cl.length){const b=cl.reduce((x,y)=>baseScore(y)>baseScore(x)?y:x),pop=b.lab[0]>.6?'#1b1b1b':'#f2efe6';out.push({score:0,cols:[b.hex,pop,b.lab[0]>.6?'#f2efe6':'#1b1b1b'].slice(0,n)})}
+  return out.sort((x,y)=>y.score-x.score)}
+const coverTurn=[0,1];
+// keep: which of base / style / color / alt the caller has fixed and must not be overwritten.
+function applyCover(i,{advance=true,keep={}}={}){const s=i===1?'':'2',m=maskById(state['pattern'+s]);if(!m)return false;
+  const list=coverCandidates(m,coverClusters());if(!list.length)return false;
+  const[base,color,alt]=list[coverTurn[i-1]%list.length].cols;if(advance)coverTurn[i-1]++;
+  if(!keep.base)state[`vinyl${s}Color`]=base;
+  if(!keep.style&&state['vinyl'+s]==='black')state['vinyl'+s]='color';
+  if(color&&!keep.color)state[`pattern${s}Color`]=color;
+  if(alt&&!keep.alt)state[`pattern${s}Alt`]=alt;
+  return true}
 const VINYL_BLACK='#0b0b0c',CLEAR_OPACITY=.62;
 // Composite base + accents in sRGB bytes (what the bake preview shows). Clear vinyl also gets an alpha map:
 // the base stays see-through and accents turn opaque where they cover it, like splatter in clear vinyl.
-function patternTextures(img,base,colors,rotDeg,clear){
-  const N=img.width,c=canvas(N,N),g=c.getContext('2d',{willReadFrequently:true});
-  g.translate(N/2,N/2);g.rotate(-THREE.MathUtils.degToRad(rotDeg));g.drawImage(img,-N/2,-N/2);
+function compositePattern(img,base,colors,rotDeg,clear,N=img.width){
+  const c=canvas(N,N),g=c.getContext('2d',{willReadFrequently:true});
+  g.translate(N/2,N/2);g.rotate(-THREE.MathUtils.degToRad(rotDeg));g.drawImage(img,-N/2,-N/2,N,N);
   const d=g.getImageData(0,0,N,N),px=d.data;
   // THREE.Color parses hex as sRGB and stores linear values; read them back as sRGB bytes.
   const toBytes=h=>{const v=new THREE.Color(h).convertLinearToSRGB();return[v.r,v.g,v.b].map(x=>Math.round(x*255))};
@@ -689,9 +757,12 @@ function patternTextures(img,base,colors,rotDeg,clear){
     for(let k=0;k<acc.length;k++){const a=px[i+k]/255;if(!a)continue;r+=(acc[k][0]-r)*a;gg+=(acc[k][1]-gg)*a;bb+=(acc[k][2]-bb)*a;cover=Math.max(cover,a)}
     px[i]=r;px[i+1]=gg;px[i+2]=bb;px[i+3]=255;
     if(ad){const v=(CLEAR_OPACITY+(1-CLEAR_OPACITY)*cover)*255;ad.data[i]=ad.data[i+1]=ad.data[i+2]=v;ad.data[i+3]=255}}
-  g.setTransform(1,0,0,1,0,0);g.putImageData(d,0,0);
-  let alpha=null;if(ad){ac.getContext('2d').putImageData(ad,0,0);alpha=new THREE.CanvasTexture(ac);alpha.colorSpace=THREE.NoColorSpace;alpha.anisotropy=maxAniso}
-  return{map:colorTex(c),alpha}}
+  g.setTransform(1,0,0,1,0,0);g.putImageData(d,0,0);if(ad)ac.getContext('2d').putImageData(ad,0,0);
+  return{color:c,alpha:ac}}
+function patternTextures(img,base,colors,rotDeg,clear){
+  const{color,alpha}=compositePattern(img,base,colors,rotDeg,clear);
+  let at=null;if(alpha){at=new THREE.CanvasTexture(alpha);at.colorSpace=THREE.NoColorSpace;at.anisotropy=maxAniso}
+  return{map:colorTex(color),alpha:at}}
 const patternToken=[0,0];
 async function applyPatternTo(i,mats,style,color){
   const s=i===1?'':'2',id=state['pattern'+s],token=++patternToken[i-1],m=maskById(id);
@@ -1002,7 +1073,8 @@ function syncUI(){
     else if(c.kind==='toggle'){el.checked=!!v;if(c.sub)$(c.sub).hidden=!v}
     else el.value=v}
   $('lp2-sub').hidden=state.lpCount!==2;$('gate-sub').hidden=!isGate();$('jacket-spec').textContent=specText();
-  for(const b of document.querySelectorAll('[data-view]'))b.setAttribute('aria-pressed',b.dataset.view===state.view)}
+  for(const b of document.querySelectorAll('[data-view]'))b.setAttribute('aria-pressed',b.dataset.view===state.view);
+  syncPatterns()}
 
 seg('finish','finish',applyFinish);
 seg('jacket-type','jacketType',applyJacketType);
@@ -1018,6 +1090,40 @@ for(const [cid,sid,key] of[['vinyl-color','vinyl-style','vinyl'],['vinyl2-color'
 $('bg-color').addEventListener('input',e=>{state.bgColor=e.target.value;state.bg='color';for(const x of $('bg-mode').children)x.setAttribute('aria-pressed',x.dataset.v==='color');applyBg()});
 $('sleeve-color').addEventListener('input',e=>{state.sleeveColor=e.target.value;sleeveMat.color.set(tex.sleeve?'#ffffff':e.target.value)});
 field('vinyl-color','vinylColor');field('vinyl2-color','vinyl2Color');field('bg-color','bgColor');field('sleeve-color','sleeveColor');
+// Pattern panel: a thumbnail picker per disc, then only the controls the pattern's palette mode uses.
+const FAMILY={split:['分色','Split'],splatter:['泼溅','Splatter'],starburst:['爆发','Starburst'],blob:['色块','Blob'],pinwheel:['风车','Pinwheel'],ripple:['波纹','Ripple'],swirl:['旋涡','Swirl']};
+const MODE_NAME={regions:['分色','Split'],accent:['主次','Main + accent'],tonal:['同色系','Tonal']};
+const patternLabel=m=>m?`${tr(...(FAMILY[m.family]??[m.family,m.family]))} · ${m.id} · ${tr(...MODE_NAME[m.palette.mode])}`:tr('纯色','Solid');
+const splitThumbs=new Map();
+function thumbUrl(m){if(m.thumb)return'vinyl-masks/'+m.thumb;
+  if(!splitThumbs.has(m.id))splitThumbs.set(m.id,compositePattern(splitMask(m.id,160),m.base,derivePattern(m,m.base,m.colors[0],m.colors[1],1),0,false).color.toDataURL('image/jpeg',.82));
+  return splitThumbs.get(m.id)}
+function buildPicker(s){const root=$(`pattern${s}-pick`);root.textContent='';
+  for(const m of[null,...MASKS]){const b=document.createElement('button');b.type='button';b.setAttribute('role','radio');b.dataset.id=m?.id??'none';
+    b.title=patternLabel(m);b.setAttribute('aria-label',b.title);
+    if(m)b.style.backgroundImage=`url("${thumbUrl(m)}")`;else b.textContent=tr('无','None');root.append(b)}}
+// Same defaults as a spec that names only pattern.id: the pattern's own palette, contrast back to 100%.
+function pickPattern(i,id){const s=i===1?'':'2',m=maskById(id);state['pattern'+s]=m?id:'none';
+  if(m){const mode=m.palette.mode;if(mode!=='tonal')state[`pattern${s}Color`]=m.colors[0];if(mode==='regions'&&m.accents===2)state[`pattern${s}Alt`]=m.colors[1];
+    state[`pattern${s}Contrast`]=1;if(m.base)state[`vinyl${s}Color`]=m.base}
+  applyVinyl();syncUI()}
+function syncPatterns(){for(const i of[1,2]){const s=i===1?'':'2',m=maskById(state['pattern'+s]),mode=m?.palette.mode;
+  for(const b of $(`pattern${s}-pick`).children)b.setAttribute('aria-checked',String(b.dataset.id===(m?.id??'none')));
+  $(`pattern${s}-name`).textContent=patternLabel(m);$(`pattern${s}-sub`).hidden=!m;if(!m)continue;
+  $(`pattern${s}-colors`).hidden=mode==='tonal';$(`pattern${s}-alt`).hidden=!(mode==='regions'&&m.accents===2);$(`pattern${s}-contrast-row`).hidden=mode!=='tonal';
+  $(`pattern${s}-colors-lbl`).textContent=mode==='regions'?tr('其余几块','Other regions'):tr('纹路色','Pattern colour');
+  $(`pattern${s}-hint`).textContent=mode==='regions'?tr('胶色是第一块，这里选其余几块的颜色。','The vinyl colour is the first region; pick the others here.')
+    :mode==='accent'?tr('胶色是底色，这里选纹路色，其余色层自动搭配。','The vinyl colour is the base. Pick the pattern colour; the other layers follow it.')
+    :tr('纹路是胶色的深浅变化，用反差调强弱。','The pattern is shades of the vinyl colour; Contrast sets how strong it is.')}}
+// Sliders and colour pickers fire on every move; recomposite at most once per frame.
+let vinylQueued=false;
+function queueVinyl(){if(vinylQueued)return;vinylQueued=true;requestAnimationFrame(()=>{vinylQueued=false;applyVinyl()})}
+for(const i of[1,2]){const s=i===1?'':'2';buildPicker(s);
+  $(`pattern${s}-pick`).addEventListener('click',e=>{const b=e.target.closest('button');if(b)pickPattern(i,b.dataset.id)});
+  for(const [id,key] of[[`pattern${s}-color`,`pattern${s}Color`],[`pattern${s}-alt`,`pattern${s}Alt`]]){$(id).addEventListener('input',e=>{state[key]=e.target.value;queueVinyl()});field(id,key)}
+  slider(`pattern${s}-contrast`,`pattern${s}Contrast`,'pct',queueVinyl);
+  slider(`pattern${s}-rot`,`pattern${s}Rot`,'deg',queueVinyl);
+  $(`pattern${s}-cover`).addEventListener('click',()=>{if(applyCover(i)){applyVinyl();syncUI()}else alertNote(tr('封面颜色太单一，没取到可用的配色。','The cover has too few distinct colours to suggest a palette.'))})}
 toggle('sleeve-on','sleeveOn');
 toggle('wrap-on','wrapOn','wrap-sub');
 toggle('obi-on','obiOn','obi-sub');
@@ -1109,7 +1215,8 @@ const SPEC_FIELDS=[
     colorF(`records.disc${i}.pattern.color`,`pattern${s}Color`,`第 ${i} 张纹路色：主次类为纹路颜色，分色类为第二块颜色；同色系不使用${note}`),
     colorF(`records.disc${i}.pattern.color2`,`pattern${s}Alt`,`第 ${i} 张分色第三块颜色，仅 split-tri 使用${note}`),
     numF(`records.disc${i}.pattern.contrast`,`pattern${s}Contrast`,0,200,.01,`第 ${i} 张同色系纹路的反差（%），100 为这款纹路的原始深浅差；仅同色系使用${note}`),
-    numF(`records.disc${i}.pattern.rotation`,`pattern${s}Rot`,-180,180,1,`第 ${i} 张纹路相对标签的旋转角度（度，逆时针为正）${note}`)]}),
+    numF(`records.disc${i}.pattern.rotation`,`pattern${s}Rot`,-180,180,1,`第 ${i} 张纹路相对标签的旋转角度（度，逆时针为正）${note}`),
+    boolF(`records.disc${i}.pattern.fromCover`,`pattern${s}FromCover`,`第 ${i} 张从封面（images.front）自动取底色和纹路色，需要同时给 pattern.id；同时写了 color、pattern.color、pattern.color2 或 vinyl 的，以写明的为准。2LP 的第 2 张会取下一组配色${note}`)]}),
   boolF('insert.on','insertOn','是否放入双面插页'),
   numF('insert.out','insertX',0,100,.01,'插页抽出比例（%）。插页在内袋后面，需要比内袋抽得多才看得到'),
   boolF('obi.on','obiOn','是否显示 Obi 侧标'),
@@ -1250,6 +1357,10 @@ async function applySpec(spec){
   if(fontFile!==undefined){
     try{await setNumberFont(await (await fetch(fontFile)).arrayBuffer(),'spec font');const fv=getPath(spec,'number.font');if(fv!==undefined&&SPEC_FIELDS.find(f=>f.key==='numFont').values.includes(fv))state.numFont=fv}
     catch(e){warnings.push(`number.fontFile 读取失败：${e.message}`)}}
+  for(const i of[1,2]){const s=i===1?'':'2',pre=`records.disc${i}`;if(!state[`pattern${s}FromCover`])continue;
+    if(!maskById(state['pattern'+s])){warnings.push(`${pre}.pattern.fromCover 需要同时选择 pattern.id`);continue}
+    coverTurn[i-1]=i-1;
+    if(!applyCover(i,{advance:false,keep:{base:has(`${pre}.color`),style:has(`${pre}.vinyl`),color:has(`${pre}.pattern.color`),alt:has(`${pre}.pattern.color2`)}}))warnings.push(`${pre}.pattern.fromCover：封面颜色太单一，没取到可用配色`)}
   if(state.numFont==='custom'&&!userFontFace){warnings.push('number.font=custom 但没有可用的 number.fontFile，已改用 auto');state.numFont='auto'}
   refreshAll();
   try{await vinylReady}catch(e){warnings.push(`彩胶纹路蒙版读取失败：${e.message}，已按纯色渲染`)}
@@ -1279,7 +1390,7 @@ async function renderToBlob(w,h){
   finally{renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));resize()}}
 
 // ---------- Boot ----------
-$('jacket-spec').textContent=specText();applyFinish();applyVinyl();buildWrap(state.wrinkle);numTexture();buildObi();buildSticker();pose();applyBg();resize();setView('quarter');
+$('jacket-spec').textContent=specText();applyFinish();applyVinyl();syncPatterns();buildWrap(state.wrinkle);numTexture();buildObi();buildSticker();pose();applyBg();resize();setView('quarter');
 new ResizeObserver(resize).observe(stage);
 // Redraw sample art once web fonts arrive so the placeholder type renders correctly.
 function redrawSamples(){
@@ -1292,7 +1403,8 @@ function redrawSamples(){
 const fontsSettled=(document.fonts?.ready??Promise.resolve()).then(redrawSamples);
 $('lang-btn').addEventListener('click',()=>{lang=lang==='en'?'zh':'en';try{localStorage.setItem('gm-lang',lang)}catch(e){}
   translateStatic();$('jacket-spec').textContent=specText();if(!userFontFace)$('num-font-custom').textContent=tr('自定义（未上传）','Custom (none uploaded)');
-  else $('num-font-custom').textContent=$('num-font-custom').textContent.replace(/^(自定义|Custom) · /,tr('自定义 · ','Custom · '));redrawSamples()});
+  else $('num-font-custom').textContent=$('num-font-custom').textContent.replace(/^(自定义|Custom) · /,tr('自定义 · ','Custom · '));redrawSamples();
+  for(const s of['','2'])buildPicker(s);syncPatterns()});
 const nextFrame=()=>new Promise(r=>requestAnimationFrame(()=>r()));
 const ready=fontsSettled.then(nextFrame).then(nextFrame);
 const toDataUrl=blob=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>rej(r.error);r.readAsDataURL(blob)});
