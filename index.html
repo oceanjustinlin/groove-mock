@@ -393,6 +393,8 @@ translateStatic();
 const state = {
   finish:'satin', sleeveOn:true, sleeveColor:'#f3f1ea', sleeveX:.35, recordX:.40, recordRot:0,
   vinyl:'black', vinylColor:'#c8392b', vinyl2:'black', vinyl2Color:'#d9a441', wrapOn:true, wrinkle:1, gloss:1,
+  pattern:'none', patternC1:'#1b1b1b', patternC2:'#d9a441', patternC3:'#4c9f70', patternRot:0,
+  pattern2:'none', pattern2C1:'#1b1b1b', pattern2C2:'#d9a441', pattern2C3:'#4c9f70', pattern2Rot:0,
   stickerOn:true, stickerShape:'circle', stickerSize:7.6, stickerX:8.8, stickerY:9.2, stickerRot:0,
   numOn:true, numCur:123, numTotal:1000, numPrefix:'No.', numFormat:'slash', numFont:'auto', numPlace:'back', numFinish:'stamp', numColor:'#25336f',
   numX:10.5, numY:-13.6, numSize:.5, numRot:-3,
@@ -626,14 +628,54 @@ const labelMatB=new THREE.MeshStandardMaterial({map:tex.labelB,roughness:.62});
 const labelMatC=new THREE.MeshStandardMaterial({map:tex.labelC,roughness:.62});
 const labelMatD=new THREE.MeshStandardMaterial({map:tex.labelD,roughness:.62});
 const holeMat=new THREE.MeshStandardMaterial({color:0x6b665c,roughness:.9,side:THREE.DoubleSide});
-function applyVinylTo(mats,style,color){
-  const black=style==='black',clear=style==='clear',col=new THREE.Color(black?'#0b0b0c':color);
-  for(const m of[mats.face,mats.edge]){m.color.copy(col);m.transparent=clear;m.opacity=clear?.62:1;m.depthWrite=!clear;m.needsUpdate=true}
-  mats.face.envMapIntensity=black?.32:.22;
+// Pattern vinyl: baked masks from vinyl-masks/ (tools/bake-vinyl-masks.py). Each mask is an RGB image
+// whose channels are the coverage of accent colours 1..3, cropped so the disc fills the square, which
+// matches the record face UVs. A missing manifest (e.g. the page opened from file://) leaves only plain vinyl.
+const MASKS=await fetch('vinyl-masks/manifest.json').then(r=>r.ok?r.json():{masks:[]}).then(j=>j.masks).catch(()=>[]);
+const maskById=id=>MASKS.find(m=>m.id===id);
+const maskCache=new Map();
+function loadMask(id){
+  if(!maskCache.has(id))maskCache.set(id,fetch('vinyl-masks/'+maskById(id).file).then(r=>{if(!r.ok)throw new Error(`HTTP ${r.status}`);return r.blob()}).then(b=>createImageBitmap(b,{colorSpaceConversion:'none',premultiplyAlpha:'none'}))
+    .catch(e=>{maskCache.delete(id);throw e}));
+  return maskCache.get(id)}
+const VINYL_BLACK='#0b0b0c',CLEAR_OPACITY=.62;
+// Composite base + accents in sRGB bytes (what the bake preview shows). Clear vinyl also gets an alpha map:
+// the base stays see-through and accents turn opaque where they cover it, like splatter in clear vinyl.
+function patternTextures(img,base,colors,rotDeg,clear){
+  const N=img.width,c=canvas(N,N),g=c.getContext('2d',{willReadFrequently:true});
+  g.translate(N/2,N/2);g.rotate(-THREE.MathUtils.degToRad(rotDeg));g.drawImage(img,-N/2,-N/2);
+  const d=g.getImageData(0,0,N,N),px=d.data;
+  // THREE.Color parses hex as sRGB and stores linear values; read them back as sRGB bytes.
+  const toBytes=h=>{const v=new THREE.Color(h).convertLinearToSRGB();return[v.r,v.g,v.b].map(x=>Math.round(x*255))};
+  const b=toBytes(base),acc=colors.map(toBytes),ac=clear?canvas(N,N):null,ad=ac?.getContext('2d').createImageData(N,N);
+  for(let i=0;i<px.length;i+=4){let r=b[0],gg=b[1],bb=b[2],cover=0;
+    for(let k=0;k<acc.length;k++){const a=px[i+k]/255;if(!a)continue;r+=(acc[k][0]-r)*a;gg+=(acc[k][1]-gg)*a;bb+=(acc[k][2]-bb)*a;cover=Math.max(cover,a)}
+    px[i]=r;px[i+1]=gg;px[i+2]=bb;px[i+3]=255;
+    if(ad){const v=(CLEAR_OPACITY+(1-CLEAR_OPACITY)*cover)*255;ad.data[i]=ad.data[i+1]=ad.data[i+2]=v;ad.data[i+3]=255}}
+  g.setTransform(1,0,0,1,0,0);g.putImageData(d,0,0);
+  let alpha=null;if(ad){ac.getContext('2d').putImageData(ad,0,0);alpha=new THREE.CanvasTexture(ac);alpha.colorSpace=THREE.NoColorSpace;alpha.anisotropy=maxAniso}
+  return{map:colorTex(c),alpha}}
+const patternToken=[0,0];
+async function applyPatternTo(i,mats,style,color){
+  const s=i===1?'':'2',id=state['pattern'+s],token=++patternToken[i-1],m=maskById(id);
+  const drop=()=>{for(const t of[mats.face.map,mats.face.alphaMap])t?.dispose();mats.face.map=mats.face.alphaMap=null;mats.face.needsUpdate=true};
+  // Until the mask lands (or if it never does) the face keeps the plain colour and opacity set by applyVinylTo.
+  if(!m){drop();return}
+  const img=await loadMask(id);if(token!==patternToken[i-1])return;
+  const colors=[1,2,3].slice(0,m.accents).map(k=>state[`pattern${s}C${k}`]);
+  const t=patternTextures(img,style==='black'?VINYL_BLACK:color,colors,state[`pattern${s}Rot`],style==='clear');
+  drop();mats.face.map=t.map;mats.face.alphaMap=t.alpha;mats.face.color.set(0xffffff);if(t.alpha)mats.face.opacity=1;mats.face.needsUpdate=true}
+function applyVinylTo(i,mats,style,color){
+  const black=style==='black',clear=style==='clear',col=new THREE.Color(black?VINYL_BLACK:color),patterned=!!maskById(state[i===1?'pattern':'pattern2']);
+  for(const m of[mats.face,mats.edge]){m.color.copy(col);m.transparent=clear;m.opacity=clear?CLEAR_OPACITY:1;m.depthWrite=!clear;m.needsUpdate=true}
+  mats.face.envMapIntensity=black&&!patterned?.32:.22;
+  return applyPatternTo(i,mats,style,color);
 }
+// Resolves once both discs carry their pattern textures; spec rendering waits on it.
+let vinylReady=Promise.resolve();
 function applyVinyl(){
-  applyVinylTo(vinyl1,state.vinyl,state.vinylColor);applyVinylTo(vinyl2,state.vinyl2,state.vinyl2Color);
-}
+  vinylReady=Promise.all([applyVinylTo(1,vinyl1,state.vinyl,state.vinylColor),applyVinylTo(2,vinyl2,state.vinyl2,state.vinyl2Color)]);
+  vinylReady.catch(e=>console.warn('vinyl pattern',e));return vinylReady}
 const sleeveMat=new THREE.MeshStandardMaterial({color:state.sleeveColor,roughness:.88,side:THREE.DoubleSide,bumpMap:bump,bumpScale:.25});
 
 // Shrink wrap: alpha comes from the film's own reflections, so the film stays invisible where it reflects
@@ -1025,7 +1067,10 @@ const SPEC_FIELDS=[
     enumF(`records.disc${i}.vinyl`,`vinyl${s}`,['black','color','clear'],`第 ${i} 张胶色类型：black 黑胶，color 彩胶，clear 半透明${note}`),
     colorF(`records.disc${i}.color`,`vinyl${s}Color`,`第 ${i} 张彩胶或半透明的颜色${note}`),
     numF(`records.disc${i}.sleeveOut`,`sleeve${s}X`,0,100,.01,`第 ${i} 张内袋连同唱片从封套开口抽出的比例（%）${note}`),
-    numF(`records.disc${i}.recordOut`,`record${s}X`,0,100,.01,`第 ${i} 张唱片再从内袋里抽出的比例（%）${note}`)]}),
+    numF(`records.disc${i}.recordOut`,`record${s}X`,0,100,.01,`第 ${i} 张唱片再从内袋里抽出的比例（%）${note}`),
+    enumF(`records.disc${i}.pattern.id`,`pattern${s}`,['none',...MASKS.map(m=>m.id)],`第 ${i} 张彩胶纹路：none 为纯色，其余为蒙版 ID（${MASKS.map(m=>`${m.id} ${m.role==='layout'?'分色布局':'叠加效果'}，${m.accents} 色`).join('；')}）。底色仍由 vinyl/color 决定，black 底也可以叠纹路；只给 id 时，color1–3 和 color 回到这款纹路的默认配色${note}`),
+    ...[1,2,3].map(k=>colorF(`records.disc${i}.pattern.color${k}`,`pattern${s}C${k}`,`第 ${i} 张纹路第 ${k} 个色层的颜色，超出该纹路色层数时无效${note}`)),
+    numF(`records.disc${i}.pattern.rotation`,`pattern${s}Rot`,-180,180,1,`第 ${i} 张纹路相对标签的旋转角度（度，逆时针为正）${note}`)]}),
   boolF('insert.on','insertOn','是否放入双面插页'),
   numF('insert.out','insertX',0,100,.01,'插页抽出比例（%）。插页在内袋后面，需要比内袋抽得多才看得到'),
   boolF('obi.on','obiOn','是否显示 Obi 侧标'),
@@ -1141,6 +1186,11 @@ async function applySpec(spec){
   // Same conveniences as the panel: a new place brings its own default position, a new finish its default ink.
   if(has('number.place')){const d=NUM_DEFAULTS[state.numPlace];if(!has('number.x'))state.numX=d.x;if(!has('number.y'))state.numY=d.y;if(!has('number.size'))state.numSize=d.size;if(!has('number.rotation'))state.numRot=d.rot}
   if(has('number.finish')&&!has('number.color'))state.numColor=NUM_INK[state.numFinish];
+  for(const i of[1,2]){const s=i===1?'':'2',m=maskById(state['pattern'+s]),pre=`records.disc${i}`;if(!m)continue;
+    if(has(`${pre}.pattern.id`)){m.colors.forEach((c,k)=>{if(!has(`${pre}.pattern.color${k+1}`))state[`pattern${s}C${k+1}`]=c});
+      if(!has(`${pre}.color`)&&m.base)state[`vinyl${s}Color`]=m.base}
+    for(let k=m.accents+1;k<=3;k++)if(has(`${pre}.pattern.color${k}`))warnings.push(`${pre}.pattern.color${k} 无效：${m.id} 只有 ${m.accents} 个色层`);
+    if(i===2&&state.lpCount!==2&&has(`${pre}.pattern.id`))warnings.push(`${pre}.pattern 仅在 records.count=2 时可见`)}
   const bg=getPath(spec,'output.background');
   if(bg!==undefined){if(bg==='transparent')state.bg='transparent';else if(typeof bg==='string'&&/^#[0-9a-f]{6}$/i.test(bg)){state.bg='color';state.bgColor=bg.toLowerCase()}else warnings.push('output.background 需要 "transparent" 或 #rrggbb，已忽略')}
   for(const [p,key,min,max,int] of[['output.width','outW',256,4096,true],['output.height','outH',256,4096,true],['camera.zoom','camZoom',.3,4],['camera.azimuth','camAz',-180,180],['camera.elevation','camEl',-60,60],['camera.panX','camPanX',-600,600],['camera.panY','camPanY',-400,400]]){
@@ -1158,6 +1208,7 @@ async function applySpec(spec){
     catch(e){warnings.push(`number.fontFile 读取失败：${e.message}`)}}
   if(state.numFont==='custom'&&!userFontFace){warnings.push('number.font=custom 但没有可用的 number.fontFile，已改用 auto');state.numFont='auto'}
   refreshAll();
+  try{await vinylReady}catch(e){warnings.push(`彩胶纹路蒙版读取失败：${e.message}，已按纯色渲染`)}
   await document.fonts?.load(numFontCss(200),numberText()).catch(()=>{});numTexture();
   return{warnings}}
 

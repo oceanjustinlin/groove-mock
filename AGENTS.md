@@ -45,6 +45,7 @@ cd cli && npm install
 | 双开及内页 | `jacket.type: "gatefold"`，`images.innerLeft` / `innerRight`，`jacket.gateOpen` 为 0–180 |
 | 2LP | `records.count: 2`，`records.disc2.*`，标签用 `images.labelC` / `labelD` |
 | 胶色 | `records.disc1.vinyl`：black / color / clear，`records.disc1.color` |
+| 彩胶纹路 | `records.discN.pattern.id`（可选值见 `schema`，来自 `vinyl-masks/manifest.json`），`color1`–`color3` 为各色层颜色，`rotation` 为旋转角度。底色仍由 `vinyl` / `color` 决定，`clear` 底上纹路不透明 |
 | 抽出程度 | `records.discN.sleeveOut`（内袋出封套），`records.discN.recordOut`（唱片出内袋），`insert.out` |
 | 塑封、贴纸、Obi | `wrap.*`、`sticker.*`、`obi.*`，图片为 `images.sticker` / `images.obi` |
 | 限量编号 | `number.current` / `total` / `format` / `place` / `finish` / `font`，自定义字体用 `number.fontFile` |
