@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "jacket": {
+    "type": "single",
+    "finish": "gloss"
+  },
+  "records": {
+    "count": 2,
+    "labelRotation": -20,
+    "disc1": {
+      "vinyl": "clear",
+      "color": "#e3a03a",
+      "sleeveOut": 28,
+      "recordOut": 45
+    },
+    "disc2": {
+      "vinyl": "color",
+      "color": "#2f6fd6",
+      "sleeveOut": 75,
+      "recordOut": 60
+    }
+  },
+  "obi": {
+    "on": false
+  },
+  "wrap": {
+    "on": false
+  },
+  "sticker": {
+    "on": false
+  },
+  "number": {
+    "on": false
+  },
+  "camera": {
+    "view": "quarter",
+    "zoom": 0.74,
+    "elevation": 6,
+    "panX": 10
+  },
+  "output": {
+    "background": "#eeece8",
+    "width": 2000,
+    "height": 1250
+  },
+  "meta": {
+    "title": "README: translucent and coloured vinyl variants (built-in sample artwork)"
+  }
+}

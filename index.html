@@ -339,7 +339,7 @@ const state = {
   numX:10.5, numY:-13.6, numSize:.5, numRot:-3,
   jacketType:'single', gateOpen:0, lpCount:1, sleeve2X:.6, record2X:.3, obiOn:true, obiWidth:3.2, insertOn:true, insertX:0,
   bg:'transparent', bgColor:'#e6e3dc', scale:2, view:'quarter',
-  camZoom:1, camAz:0, camEl:0, outW:2400, outH:1600   // used by the agent API / CLI
+  camZoom:1, camAz:0, camEl:0, camPanX:0, camPanY:0, outW:2400, outH:1600   // used by the agent API / CLI
 };
 const isGate=()=>state.jacketType==='gatefold';
 const frontZ=()=>isGate()?J.d/2+J.board:J.d/2;          // outer face of the front cover
@@ -1007,7 +1007,7 @@ const toSpecValue=(f,v)=>f.type==='number'?Math.round(v/f.k*100)/100:v;
 function specFromState(){
   const s={version:1};
   for(const f of SPEC_FIELDS)setPath(s,f.path,toSpecValue(f,state[f.key]));
-  s.camera={view:state.view,zoom:state.camZoom,azimuth:state.camAz,elevation:state.camEl};
+  s.camera={view:state.view,zoom:state.camZoom,azimuth:state.camAz,elevation:state.camEl,panX:state.camPanX,panY:state.camPanY};
   s.output={background:state.bg==='transparent'?'transparent':state.bgColor,width:state.outW,height:state.outH};
   return s}
 function buildSchema(){
@@ -1025,7 +1025,9 @@ function buildSchema(){
     view:{enum:CAMERA_VIEWS,default:'quarter',description:'quarter 斜侧，front 正面，side 侧面'},
     zoom:{type:'number',minimum:.3,maximum:4,default:1,description:'缩放倍数，>1 拉近'},
     azimuth:{type:'number',minimum:-180,maximum:180,default:0,description:'在预设基础上水平环绕（度，正值向右转）'},
-    elevation:{type:'number',minimum:-60,maximum:60,default:0,description:'在预设基础上抬高视角（度，正值从上往下看）'}}};
+    elevation:{type:'number',minimum:-60,maximum:60,default:0,description:'在预设基础上抬高视角（度，正值从上往下看）'},
+    panX:{type:'number',minimum:-600,maximum:600,default:0,description:'平移画面中心（mm，场景坐标：正值朝唱片抽出的一侧，即从正面看的右边）'},
+    panY:{type:'number',minimum:-400,maximum:400,default:0,description:'平移画面中心（mm，正值向上）'}}};
   root.properties.meta={type:'object',description:'渲染器不读取的说明信息，供 agent 和人登记素材来源',properties:{
     title:{type:'string',description:'这套模型图的名称'},
     assets:{type:'object',additionalProperties:false,description:'每张贴图的来源登记，键与 images 相同',
@@ -1038,7 +1040,7 @@ function buildSchema(){
     height:{type:'integer',minimum:256,maximum:4096,default:DEFAULT_STATE.outH,description:'输出高度（px）'}}};
   return root}
 
-const SPEC_EXTRA=['version','meta','number.fontFile','output.background','output.width','output.height','camera.view','camera.zoom','camera.azimuth','camera.elevation',...Object.keys(IMAGE_SLOTS).map(k=>'images.'+k)];
+const SPEC_EXTRA=['version','meta','number.fontFile','output.background','output.width','output.height','camera.view','camera.zoom','camera.azimuth','camera.elevation','camera.panX','camera.panY',...Object.keys(IMAGE_SLOTS).map(k=>'images.'+k)];
 async function applySpec(spec){
   if(!spec||typeof spec!=='object'||Array.isArray(spec))throw new Error('spec 必须是 JSON 对象');
   const warnings=[],known=new Set([...SPEC_FIELDS.map(f=>f.path),...SPEC_EXTRA]),has=p=>getPath(spec,p)!==undefined;
@@ -1058,7 +1060,7 @@ async function applySpec(spec){
   if(has('number.finish')&&!has('number.color'))state.numColor=NUM_INK[state.numFinish];
   const bg=getPath(spec,'output.background');
   if(bg!==undefined){if(bg==='transparent')state.bg='transparent';else if(typeof bg==='string'&&/^#[0-9a-f]{6}$/i.test(bg)){state.bg='color';state.bgColor=bg.toLowerCase()}else warnings.push('output.background 需要 "transparent" 或 #rrggbb，已忽略')}
-  for(const [p,key,min,max,int] of[['output.width','outW',256,4096,true],['output.height','outH',256,4096,true],['camera.zoom','camZoom',.3,4],['camera.azimuth','camAz',-180,180],['camera.elevation','camEl',-60,60]]){
+  for(const [p,key,min,max,int] of[['output.width','outW',256,4096,true],['output.height','outH',256,4096,true],['camera.zoom','camZoom',.3,4],['camera.azimuth','camAz',-180,180],['camera.elevation','camEl',-60,60],['camera.panX','camPanX',-600,600],['camera.panY','camPanY',-400,400]]){
     const v=getPath(spec,p);if(v===undefined)continue;const c=clampNum(p,v,min,max,int);if(c!==null)state[key]=c}
   const view=getPath(spec,'camera.view');
   if(view!==undefined){if(CAMERA_VIEWS.includes(view))state.view=view;else warnings.push(`camera.view=${JSON.stringify(view)} 无效，可选值：${CAMERA_VIEWS.join(' / ')}`)}
@@ -1090,6 +1092,7 @@ function applyCamera(){
   sph.theta+=THREE.MathUtils.degToRad(state.camAz);
   sph.phi=THREE.MathUtils.clamp(sph.phi-THREE.MathUtils.degToRad(state.camEl),.05,Math.PI-.05);
   sph.radius/=state.camZoom;
+  const pan=new THREE.Vector3(state.camPanX/10,state.camPanY/10,0);controls.target.add(pan);
   camera.position.copy(controls.target).add(new THREE.Vector3().setFromSpherical(sph));controls.update()}
 async function renderToBlob(w,h){
   renderer.setPixelRatio(1);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();

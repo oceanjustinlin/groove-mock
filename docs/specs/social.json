@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "jacket": {"type": "single"},
+  "records": {
+    "count": 2,
+    "disc1": {"vinyl": "black", "sleeveOut": 32, "recordOut": 38},
+    "disc2": {"vinyl": "color", "color": "#d64b3a", "sleeveOut": 56, "recordOut": 40}
+  },
+  "number": {"on": true, "current": 88, "total": 500, "place": "front", "finish": "foil"},
+  "camera": {"view": "quarter", "zoom": 1.05},
+  "output": {"background": "transparent", "width": 1600, "height": 1000},
+  "meta": {"title": "Social preview source render (transparent background)"}
+}

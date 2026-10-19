@@ -48,7 +48,7 @@ cd cli && npm install
 | 抽出程度 | `records.discN.sleeveOut`（内袋出封套），`records.discN.recordOut`（唱片出内袋），`insert.out` |
 | 塑封、贴纸、Obi | `wrap.*`、`sticker.*`、`obi.*`，图片为 `images.sticker` / `images.obi` |
 | 限量编号 | `number.current` / `total` / `format` / `place` / `finish` / `font`，自定义字体用 `number.fontFile` |
-| 构图 | `camera.view`：quarter / front / side，再用 `zoom`、`azimuth`、`elevation` 微调 |
+| 构图 | `camera.view`：quarter / front / side，再用 `zoom`、`azimuth`、`elevation` 微调，用 `panX` / `panY`（mm）平移画面中心；拍背面用 `view: front` + `azimuth: 180` + `panX: -90` |
 | 输出 | `output.width` / `height`（px，最大 4096），`output.background`：`"transparent"` 或 `#rrggbb` |
 | 素材来源 | `meta.assets.<贴图位>.source`，渲染器不读，`render` 会在结果的 `assets` 里汇总 |
 

@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "jacket": {
+    "type": "gatefold",
+    "finish": "satin",
+    "gateOpen": 165
+  },
+  "records": {
+    "count": 2,
+    "disc1": {
+      "vinyl": "black",
+      "sleeveOut": 30,
+      "recordOut": 30
+    },
+    "disc2": {
+      "vinyl": "clear",
+      "color": "#4a8fd9",
+      "sleeveOut": 52,
+      "recordOut": 36
+    }
+  },
+  "number": {
+    "on": false
+  },
+  "camera": {
+    "view": "front",
+    "zoom": 0.94
+  },
+  "output": {
+    "background": "#e8ebee",
+    "width": 2400,
+    "height": 1200
+  },
+  "meta": {
+    "title": "README: open gatefold spread with 2LP (built-in sample artwork)"
+  }
+}

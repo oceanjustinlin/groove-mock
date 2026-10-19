@@ -1,0 +1,173 @@
+# Groove Mock：黑胶唱片 3D 模型图生成工具
+
+[English](README.md) · **简体中文**
+
+Groove Mock 用来渲染接近实拍效果的**黑胶唱片 3D 模型图**，支持单开封套、双开封套、2LP、塑封膜、hype sticker、Obi 侧标和限量编号。你可以在浏览器里手动调整出图，也可以写一份 JSON 场景描述（spec），交给命令行工具出图。这条命令行链路也适合 Codex、Claude Code 等 AI agent 操作。
+
+![2LP 黑胶模型图：套着塑封膜，有首版贴纸、Obi 侧标和烫金编号，一张黑胶、一张红胶从内袋抽出](docs/images/hero.jpg)
+
+<sub>本页所有配图都由 Groove Mock 用内置示例图渲染，对应的 spec 在 [`docs/specs/`](docs/specs/)。</sub>
+
+## 能做什么
+
+| 双开内页 | 封套背面 | 彩胶 |
+|---|---|---|
+| ![打开的双开封套，露出内页跨页、一张黑胶和一张半透明蓝胶](docs/images/gatefold-open.jpg) | ![套着塑封膜的封套背面，有曲目表、Obi 侧标和印章编号](docs/images/back-cover.jpg) | ![两张彩胶从单开封套里抽出，一张半透明琥珀色，一张实色蓝胶](docs/images/vinyl-variants.jpg) |
+| 内页贴图，开合角度可调 | Obi 侧标、塑封反光、印章编号 | 黑胶、彩胶、半透明，每张单独设置 |
+
+- **封套**：单开或双开，按 12 寸实物尺寸（314 × 314 mm）建模；纸张有哑光、缎面、亮面三种；可贴正面、背面、书脊和双开内页。
+- **唱片**：单 LP 或 2LP，音槽带曲目间隙；A/B/C/D 面标签；每张唱片可选黑胶、彩胶或半透明；内袋和双面插页都能从封套开口抽出。
+- **零售细节**：带褶皱和影棚反光的塑封膜；贴在膜上的圆形或长方形 hype sticker；日式 Obi 侧标；限量编号（印刷、印章、烫金、手写四种工艺，字体可选，也可上传）。
+- **输出**：PNG 最大 4096 px，背景可选透明或纯色；有预设视角，并支持环绕、缩放和平移。
+
+常见用途：预售公告、店铺和 Bandcamp 商品图、厂牌目录、社交媒体宣传、压片提案。
+
+## 两种用法
+
+**浏览器编辑器**：`index.html` 是单页编辑器，可以上传素材、切换封套形式、抽出唱片、转动视角，然后导出 PNG。图片只在浏览器本地处理，不会上传。
+
+**命令行和 agent**：`cli/groove-mock.mjs` 在后台用 Chrome 打开同一个页面，通过 `window.grooveMock` 接口驱动它，所以命令行出的图和编辑器完全一致。所有参数都是 JSON spec 里的字段，并有对应的 JSON Schema。agent 的操作方式就是：写 spec，出图，看图，调参数，再出图。
+
+```mermaid
+flowchart LR
+  A[素材 + JSON spec] --> B[groove-mock render]
+  B --> C[无头 Chrome<br>与编辑器同一个渲染器]
+  C --> D[PNG 模型图]
+  D -->|agent 看图后调整| A
+```
+
+## 环境要求
+
+- Node.js 20 或以上。
+- Google Chrome，或者 Playwright 的 Chromium。
+- 第一次安装 npm 依赖时需要联网。
+
+## 安装
+
+```bash
+npm ci --prefix cli
+```
+
+默认使用本机的 Chrome。没有 Chrome 时：
+
+```bash
+cd cli
+npx playwright-core install chromium
+cd ..
+```
+
+之后给命令加上 `--browser chromium`。
+
+## 快速开始
+
+```bash
+mkdir -p output
+node cli/groove-mock.mjs schema -o output/schema.json
+node cli/groove-mock.mjs slots examples/2lp-gatefold.json
+node cli/groove-mock.mjs render examples/2lp-gatefold.json -o output/example.png --json --strict
+```
+
+这个例子用的是渲染器内置的示例图，不需要任何真实专辑封面。
+
+自己新建一个场景：
+
+```bash
+node cli/groove-mock.mjs init -o output/spec.json
+```
+
+图片和 spec 放在同一个目录，路径写相对 spec 的路径。每张自定义贴图都要在 `meta.assets.<贴图位>.source` 登记来源，可选值为 `user`、`generated`、`typeset`、`composite`、`sample`。生图素材还要记录提示词。
+
+```json
+{
+  "images": {"front": "cover.jpg"},
+  "records": {"count": 2, "disc2": {"vinyl": "color", "color": "#d64b3a"}},
+  "number": {"current": 88, "total": 500, "place": "front", "finish": "foil"},
+  "camera": {"view": "quarter", "zoom": 0.9},
+  "output": {"background": "transparent", "width": 2400, "height": 1600},
+  "meta": {
+    "assets": {
+      "front": {"source": "user", "note": "厂牌提供的封面"}
+    }
+  }
+}
+```
+
+单位和编辑器一致：长度用 mm，抽出程度用 %，角度用度。
+
+## 命令
+
+完整参数见 `node cli/groove-mock.mjs --help` 和 [`cli/README.md`](cli/README.md)。
+
+| 命令 | 作用 |
+|---|---|
+| `schema` | 输出 JSON Schema，列出每个字段的单位、范围和默认值 |
+| `init` | 生成一份默认 spec |
+| `slots [spec.json]` | 按场景列出各贴图位的像素尺寸、可见区域、遮挡，以及建议用户提供、生图还是排版 |
+| `render spec.json` | 渲染一张 PNG |
+| `numbers spec.json --from 1 --to 50` | 按号段批量渲染编号图 |
+
+常用选项：`--set path=value` 临时覆盖字段，不用改文件；`--json` 输出一行结果；`--strict` 遇到场景警告或素材来源警告时拒绝出图。
+
+退出码：`0` 完成，`1` 执行出错，`2` 在 `--strict` 下有警告。
+
+## 素材不全时
+
+如果只有封面，[`AGENTS.md`](AGENTS.md) 说明了 agent 如何补齐其他素材：
+
+1. 用 `slots` 盘点贴图位。
+2. 从封面提取风格卡。
+3. 按 [`prompts/image-prompts.md`](prompts/image-prompts.md) 用生图模型生成不带文字的底图。
+4. 用代码排版曲目等文字。
+5. 出图检查，并在 `meta.assets` 里登记每张素材的来源。
+
+这条链路不会生成真实发行的封面；生成的配套素材都会标注为示意设计。
+
+## 浏览器页面与网络依赖
+
+可以用本地静态服务器打开页面，例如在项目根目录执行：
+
+```bash
+python3 -m http.server 8000 --bind 127.0.0.1
+```
+
+然后访问 `http://127.0.0.1:8000`。
+
+浏览器页面从固定版本的 CDN 加载 three.js，需要联网。命令行工具改用本地安装的 three.js。Google Fonts 仍会尝试联网加载，失败时退回系统字体，文字外观可能不同。命令行工具会临时监听回环地址，运行环境需要允许启动本地服务和浏览器。
+
+## 重新生成 README 配图
+
+```bash
+node docs/build-images.mjs
+```
+
+这条命令会渲染 `docs/specs/` 里的所有 spec，把 JPEG 写到 `docs/images/`，并生成 1280 × 640 的 `social-preview.png`。
+
+## 验证
+
+```bash
+node --check cli/groove-mock.mjs
+npm test --prefix cli
+npm audit --prefix cli --omit=dev
+```
+
+集成测试会启动真实的无头浏览器，检查严格模式的退出码以及是否写出文件。要改用 Chromium，运行 `GROOVE_TEST_BROWSER=chromium npm test --prefix cli`。
+
+## 常见问题
+
+**可以用自己的专辑封面吗？** 可以。在浏览器里上传，或者在 spec 里引用都行，图片只留在本机。
+
+**需要 GPU 吗？** 不需要。有 GPU 时，命令行每张图约 4–9 秒；没有时会自动改用软件渲染，大约慢 4 倍。
+
+**能导出透明背景吗？** 能。把 `output.background` 设为 `"transparent"`，阴影会保留。
+
+**支持哪些规格？** 12 寸 LP 的单开和双开封套，一张或两张唱片。大理石纹胶、飞溅胶、图案盘在规划中。
+
+## 仓库范围
+
+这是一个独立的 Git 仓库，跟踪源码、文档、锁文件、示例场景，以及用内置示例图渲染的 README 配图。`output/`、依赖目录、本地工具配置、环境变量文件和运行报告都被忽略，只留在本机。
+
+`output/` 里的交付物不会随源码推送。分发图片前，请先确认其中素材和字体的授权范围，再选择合适的存放方式。
+
+## 许可
+
+项目原始代码和文档保留所有权，未授予开源许可。源码公开供参考，复用或再分发需要另行获得许可。见 [`LICENSE`](LICENSE)；第三方软件、字体与素材的范围见 [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)。

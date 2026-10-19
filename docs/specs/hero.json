@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "jacket": {
+    "type": "single",
+    "finish": "satin"
+  },
+  "records": {
+    "count": 2,
+    "disc1": {
+      "vinyl": "black",
+      "sleeveOut": 32,
+      "recordOut": 38
+    },
+    "disc2": {
+      "vinyl": "color",
+      "color": "#d64b3a",
+      "sleeveOut": 56,
+      "recordOut": 40
+    }
+  },
+  "obi": {
+    "on": true
+  },
+  "wrap": {
+    "on": true
+  },
+  "sticker": {
+    "on": true
+  },
+  "number": {
+    "on": true,
+    "current": 88,
+    "total": 500,
+    "place": "front",
+    "finish": "foil"
+  },
+  "camera": {
+    "view": "quarter",
+    "zoom": 0.86
+  },
+  "output": {
+    "background": "#ece9e2",
+    "width": 2400,
+    "height": 1350
+  },
+  "meta": {
+    "title": "README hero: 2LP with shrink wrap, hype sticker, obi and foil number (built-in sample artwork)"
+  }
+}

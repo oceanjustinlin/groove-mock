@@ -1,22 +1,54 @@
-# Groove Mock
+# Groove Mock — 3D Vinyl Record Mockup Generator
 
-黑胶唱片包装的 3D 模型工具。浏览器页面 `index.html` 提供可视化控制，CLI 使用同一个渲染器，读取 JSON 场景并导出 PNG。
+**English** · [简体中文](README.zh-CN.md)
 
-支持单开与双开封套、1LP / 2LP、唱片与内袋抽出、插页、塑封、贴纸、Obi、编号及透明背景。素材缺失时，可按 `AGENTS.md` 和 `prompts/image-prompts.md` 的链路补齐。
+Groove Mock renders photorealistic **3D vinyl record mockups**: LP jackets, gatefolds, 2LP sets, shrink wrap, hype stickers, obi strips and limited-edition numbers. Use it in the browser to build a release visual by hand, or drive the same renderer from a JSON scene spec through a CLI that AI coding agents can operate.
 
-## 环境与安装
+![3D vinyl mockup of a 2LP release in shrink wrap with a hype sticker, obi strip, foil edition number, black and red vinyl pulled from inner sleeves](docs/images/hero.jpg)
 
-- Node.js 20 或以上版本。
-- Google Chrome；也可单独安装 Playwright Chromium。
-- 首次安装 npm 依赖需要联网。
+<sub>All images in this README are rendered by Groove Mock from its built-in sample artwork. Specs live in [`docs/specs/`](docs/specs/).</sub>
 
-在项目根目录运行：
+## What it renders
+
+| Gatefold spreads | Back covers | Coloured vinyl |
+|---|---|---|
+| ![Open gatefold LP mockup showing the inner spread, a black record and a translucent blue record](docs/images/gatefold-open.jpg) | ![Back cover of an LP jacket in shrink wrap with tracklist, obi strip and stamped edition number](docs/images/back-cover.jpg) | ![Two coloured vinyl records, translucent amber and solid blue, pulled out of a single LP jacket](docs/images/vinyl-variants.jpg) |
+| Inner artwork and an adjustable opening angle | Obi strip, shrink wrap glare and a stamped edition number | Black, coloured or translucent, set per disc |
+
+- **Jackets:** single sleeve or gatefold at real 12″ dimensions (314 × 314 mm), matte, satin or gloss paper, printed front, back, spine and inner spread.
+- **Records:** 1LP or 2LP, grooves with track gaps, A/B/C/D labels, black, coloured or translucent vinyl per disc, inner sleeves and a double-sided insert that slide out of the jacket.
+- **Retail details:** crinkled shrink wrap with studio reflections, a round or rectangular hype sticker on the wrap, a Japanese-style obi strip, and limited-edition numbers (print, rubber stamp, hot foil or handwriting, any font).
+- **Output:** PNG up to 4096 px with a transparent or solid background, preset camera angles plus orbit, zoom and pan.
+
+Typical uses: pre-order announcements, store and Bandcamp listings, label catalogues, social posts and pitch decks for a pressing.
+
+## Two ways to use it
+
+**Browser editor.** `index.html` is a single-page editor: upload artwork, switch formats, pull records out, orbit the camera and export a PNG. Images are processed locally in the browser and are not uploaded anywhere.
+
+**CLI and agents.** `cli/groove-mock.mjs` opens the same page in headless Chrome and drives it through `window.grooveMock`, so the CLI output matches the editor exactly. Every option is a field in a JSON scene spec with a published JSON Schema, which makes the tool easy for AI agents such as Codex or Claude Code to operate: write a spec, render, look at the PNG, adjust, render again.
+
+```mermaid
+flowchart LR
+  A[Artwork + JSON spec] --> B[groove-mock render]
+  B --> C[Headless Chrome<br>same renderer as the editor]
+  C --> D[PNG mockup]
+  D -->|agent reviews the image| A
+```
+
+## Requirements
+
+- Node.js 20 or later.
+- Google Chrome, or Playwright's Chromium.
+- Network access for the first `npm` install.
+
+## Install
 
 ```bash
 npm ci --prefix cli
 ```
 
-默认使用本机 Chrome。没有 Chrome 时：
+The CLI uses your installed Chrome by default. Without Chrome:
 
 ```bash
 cd cli
@@ -24,9 +56,9 @@ npx playwright-core install chromium
 cd ..
 ```
 
-之后给 CLI 命令加 `--browser chromium`。
+Then add `--browser chromium` to CLI commands.
 
-## 快速开始
+## Quick start
 
 ```bash
 mkdir -p output
@@ -35,45 +67,76 @@ node cli/groove-mock.mjs slots examples/2lp-gatefold.json
 node cli/groove-mock.mjs render examples/2lp-gatefold.json -o output/example.png --json --strict
 ```
 
-这个例子使用渲染器内置的程序化示例，不需要下载真实专辑封面。
+The example uses the renderer's built-in sample artwork, so no album art is needed.
 
-自行创建场景：
+To start your own scene:
 
 ```bash
 node cli/groove-mock.mjs init -o output/spec.json
 ```
 
-把图片与 spec 放在同一个工作目录，贴图路径写相对 spec 的路径。为每张自定义贴图填写 `meta.assets.<贴图位>.source`；可选来源有 `user`、`generated`、`typeset`、`composite`、`sample`。生图素材还应记录提示词。
+Keep the images next to the spec and reference them by relative path. Register the source of every custom image under `meta.assets.<slot>.source`: `user`, `generated`, `typeset`, `composite` or `sample`. For generated images, also record the prompt.
 
 ```json
 {
   "images": {"front": "cover.jpg"},
+  "records": {"count": 2, "disc2": {"vinyl": "color", "color": "#d64b3a"}},
+  "number": {"current": 88, "total": 500, "place": "front", "finish": "foil"},
+  "camera": {"view": "quarter", "zoom": 0.9},
+  "output": {"background": "transparent", "width": 2400, "height": 1600},
   "meta": {
     "assets": {
-      "front": {"source": "user", "note": "使用者提供的封面"}
+      "front": {"source": "user", "note": "Cover supplied by the label"}
     }
   }
 }
 ```
 
-## 命令与退出码
+Units follow the editor: millimetres for lengths, percent for how far things are pulled out, degrees for angles.
 
-详细参数见 `node cli/groove-mock.mjs --help` 和 `cli/README.md`。
+## Commands
 
-- `schema`：字段、范围和默认值。
-- `slots [spec.json]`：当前场景的贴图位、尺寸和遮挡。
-- `render spec.json`：渲染单张 PNG。
-- `numbers spec.json --from 1 --to 50`：批量编号。
-- `--strict`：遇到场景或来源登记警告时拒绝出图，退出码为 2。
-- 退出码 0 表示完成；1 表示执行错误。
+Run `node cli/groove-mock.mjs --help` for every option. See also [`cli/README.md`](cli/README.md).
 
-## 浏览器页面与网络依赖
+| Command | What it does |
+|---|---|
+| `schema` | Prints the JSON Schema: every field with its unit, range and default |
+| `init` | Writes a spec with default values |
+| `slots [spec.json]` | Lists artwork slots for that scene: pixel size, visible area, what covers it, and whether to supply, generate or typeset it |
+| `render spec.json` | Renders one PNG |
+| `numbers spec.json --from 1 --to 50` | Renders one image per edition number |
 
-可以用本地静态服务器打开页面，例如在项目根目录执行 `python3 -m http.server 8000 --bind 127.0.0.1`，再访问 `http://127.0.0.1:8000`。
+Useful options: `--set path=value` overrides a field without editing the file, `--json` prints a one-line result, and `--strict` refuses to render when the spec or the source register produces warnings.
 
-直接打开浏览器页面时，three.js 从固定版本 CDN 加载，需要联网。CLI 优先用已安装的本地 three.js 替代 CDN 请求；Google Fonts 仍会尝试联网加载，失败后回退到系统字体，文字外观可能不同。CLI 会临时监听回环地址，运行环境需要允许启动本地服务与浏览器。
+Exit codes: `0` done, `1` error, `2` warnings under `--strict`.
 
-## 验证
+## Filling in missing artwork
+
+When only a front cover is available, [`AGENTS.md`](AGENTS.md) describes how an agent completes the rest. It inventories slots with `slots`, extracts a style card from the cover, generates text-free backgrounds with an image model using [`prompts/image-prompts.md`](prompts/image-prompts.md), typesets text such as tracklists in code, renders, reviews and records every asset's source in `meta.assets`.
+
+Groove Mock never generates a real release's front cover, and generated companion artwork is labelled as illustrative.
+
+## Browser editor and network use
+
+Serve the page locally, for example from the project root:
+
+```bash
+python3 -m http.server 8000 --bind 127.0.0.1
+```
+
+Then open `http://127.0.0.1:8000`.
+
+In the browser, three.js loads from a pinned CDN version, so the page needs network access. The CLI serves three.js from the locally installed package instead. Google Fonts are still requested; if that fails, system fonts are used and type may look different. The CLI briefly listens on the loopback address, so the environment must allow a local server and a browser to start.
+
+## Rebuilding the README images
+
+```bash
+node docs/build-images.mjs
+```
+
+This renders every spec in `docs/specs/`, writes JPEGs to `docs/images/`, and builds the 1280 × 640 `social-preview.png`.
+
+## Verification
 
 ```bash
 node --check cli/groove-mock.mjs
@@ -81,14 +144,24 @@ npm test --prefix cli
 npm audit --prefix cli --omit=dev
 ```
 
-集成测试会启动真实无头浏览器，检查严格模式的退出码和是否写出文件。默认使用 Chrome；使用 Chromium 时运行 `GROOVE_TEST_BROWSER=chromium npm test --prefix cli`。
+The integration test starts a real headless browser and checks strict-mode exit codes and whether files are written. To use Chromium, run `GROOVE_TEST_BROWSER=chromium npm test --prefix cli`.
 
-## 仓库范围
+## FAQ
 
-这是一个独立 Git 仓库。只跟踪源码、文档、锁文件与权属明确的示例场景。`output/`、依赖目录、本地工具配置、环境变量文件和运行报告均被忽略，留在使用者本机。
+**Can I use my own album artwork?** Yes. Pass it in the browser or reference it in a spec. Images stay on your machine.
 
-`output/` 中的交付物不会随源码推送。需要分发图片时，应单独检查素材和字体的可分发范围，再选择合适的制品存储方式。
+**Does it need a GPU?** No. The CLI uses the GPU when one is available (about 4–9 s per image) and falls back to software WebGL otherwise, which is roughly four times slower.
 
-## 许可
+**Can I get a transparent background?** Yes. Set `output.background` to `"transparent"` and the shadow is kept.
 
-当前按私有源码管理，项目原始内容保留所有权，未授予开源许可。见 `LICENSE`；第三方软件、字体与素材范围见 `THIRD_PARTY_NOTICES.md`。
+**Which formats are covered?** 12″ LP single jackets and gatefolds, with one or two records. Marbled, splatter and picture discs are on the roadmap.
+
+## Repository scope
+
+This is a standalone Git repository. It tracks source code, documentation, lockfiles, example scenes and README images rendered from the built-in sample artwork. `output/`, dependencies, local tool settings, environment files and run reports are ignored and stay on your machine.
+
+Deliverables in `output/` are not pushed with the source. Before distributing images, check the rights to the artwork and fonts they contain, then choose suitable storage.
+
+## License
+
+The project's original code and documentation are all rights reserved; no open-source license is granted. The source is visible for reference, but reuse or redistribution needs permission. See [`LICENSE`](LICENSE); third-party software, fonts and artwork are covered in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
