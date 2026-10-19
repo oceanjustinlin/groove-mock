@@ -4,6 +4,8 @@
 
 Groove Mock renders photorealistic **3D vinyl record mockups**: LP jackets, gatefolds, 2LP sets, shrink wrap, hype stickers, obi strips and limited-edition numbers. Use it in the browser to build a release visual by hand, or drive the same renderer from a JSON scene spec through a CLI that AI coding agents can operate.
 
+**[Try it in your browser →](https://oceanjustinlin.github.io/groove-mock/)** No install or sign-up needed; your artwork never leaves your machine.
+
 ![3D vinyl mockup of a 2LP release in shrink wrap with a hype sticker, obi strip, foil edition number, black and red vinyl pulled from inner sleeves](docs/images/hero.jpg)
 
 <sub>All images in this README are rendered by Groove Mock from its built-in sample artwork. Specs live in [`docs/specs/`](docs/specs/).</sub>
@@ -118,7 +120,9 @@ Groove Mock never generates a real release's front cover, and generated companio
 
 ## Browser editor and network use
 
-Serve the page locally, for example from the project root:
+The editor is published at <https://oceanjustinlin.github.io/groove-mock/> on every push to `main` that touches the page (`.github/workflows/pages.yml` runs `node site/build.mjs`, which adds the document head, search and sharing metadata, favicon, robots.txt and sitemap).
+
+To run it locally, serve the page, for example from the project root:
 
 ```bash
 python3 -m http.server 8000 --bind 127.0.0.1

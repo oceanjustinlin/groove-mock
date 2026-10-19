@@ -23,3 +23,6 @@ Thumbs.db
 
 # Ad-hoc render output beside example specs
 /examples/*.png
+
+# GitHub Pages build output (node site/build.mjs)
+/_site/
