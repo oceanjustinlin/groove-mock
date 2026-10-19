@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "masks": [
+    {
+      "id": "blob-03",
+      "family": "blob",
+      "role": "layout",
+      "file": "blob-03.png",
+      "size": 1024,
+      "accents": 1,
+      "base": "#e0ddd8",
+      "colors": [
+        "#fb3e45"
+      ],
+      "labelRadius": 0.27,
+      "source": {
+        "kind": "generated",
+        "master": "VinylLab/assets/masks/blob-03",
+        "file": "image-1783782130755.png"
+      },
+      "status": "draft"
+    },
+    {
+      "id": "splatter-07",
+      "family": "splatter",
+      "role": "effect",
+      "file": "splatter-07.png",
+      "size": 1024,
+      "accents": 1,
+      "base": "#d2e5f1",
+      "colors": [
+        "#569cdc"
+      ],
+      "labelRadius": 0.31,
+      "source": {
+        "kind": "generated",
+        "master": "VinylLab/assets/masks/splatter-07",
+        "file": "source.png"
+      },
+      "status": "draft"
+    },
+    {
+      "id": "swirl-02",
+      "family": "swirl",
+      "role": "layout",
+      "file": "swirl-02.png",
+      "size": 1024,
+      "accents": 2,
+      "base": "#c5d1da",
+      "colors": [
+        "#5264a9",
+        "#819acd"
+      ],
+      "labelRadius": 0.34,
+      "source": {
+        "kind": "generated",
+        "master": "VinylLab/assets/masks/swirl-02",
+        "file": "codex-clipboard-cf6cb0b4-0a41-4de0-a553-0f222781d362.png"
+      },
+      "status": "draft"
+    }
+  ]
+}

@@ -26,3 +26,7 @@ Thumbs.db
 
 # GitHub Pages build output (node site/build.mjs)
 /_site/
+
+# Private research notes (asset surveys, competitor analysis); keep out of the public repo
+/docs/research/
+/docs/vinyl-mask-library-research.md
