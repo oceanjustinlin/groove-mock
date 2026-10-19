@@ -43,7 +43,7 @@ cd cli && npm install
 |---|---|
 | 换封面、背面、书脊 | `images.front` / `images.back` / `images.spine` |
 | 双开及内页 | `jacket.type: "gatefold"`，`images.innerLeft` / `innerRight`，`jacket.gateOpen` 为 0–180 |
-| 2LP | `records.count: 2`，`records.disc2.*`，标签用 `images.labelC` / `labelD` |
+| 2LP | `records.count: 2`，`records.disc2.*`，标签用 `images.labelC` / `labelD`。第 2 张默认沿用第 1 张的胶色和纹路（`records.disc2.sameAsDisc1: true`）；写了 `disc2` 的 `vinyl` / `color` / `pattern` 就视为分别设置 |
 | 胶色 | `records.disc1.vinyl`：black / color / clear，`records.disc1.color` |
 | 彩胶纹路 | `records.discN.pattern.id`（可选值和分类见 `schema`）。底色是 `records.discN.color`。分色类（`split-*`）：`pattern.color` 为第二块，`split-tri` 用 `pattern.color2` 为第三块；主次类：`pattern.color` 为纹路色，其余色层自动推算；同色系：只用底色，`pattern.contrast` 调反差。`rotation` 旋转纹路，`clear` 底上纹路不透明。`pattern.fromCover: true` 从 `images.front` 自动取底色和纹路色，写明的颜色优先 |
 | 抽出程度 | `records.discN.sleeveOut`（内袋出封套），`records.discN.recordOut`（唱片出内袋），`insert.out` |
