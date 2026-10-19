@@ -17,8 +17,13 @@ Groove Mock 用来渲染接近实拍效果的**黑胶唱片 3D 模型图**，支
 | ![打开的双开封套，露出内页跨页、一张黑胶和一张半透明蓝胶](docs/images/gatefold-open.jpg) | ![套着塑封膜的封套背面，有曲目表、Obi 侧标和印章编号](docs/images/back-cover.jpg) | ![两张彩胶从单开封套里抽出，一张半透明琥珀色，一张实色蓝胶](docs/images/vinyl-variants.jpg) |
 | 内页贴图，开合角度可调 | Obi 侧标、塑封反光、印章编号 | 黑胶、彩胶、半透明，每张单独设置 |
 
+![2LP 模型图：一张半透明奶油色底、蓝色飞溅的唱片和一张橙白风车纹唱片从单开封套里抽出](docs/images/vinyl-patterns.jpg)
+
+<sub>彩胶纹路：一张半透明飞溅胶、一张风车纹胶，spec 见 [`docs/specs/patterns.json`](docs/specs/patterns.json)。</sub>
+
 - **封套**：单开或双开，按 12 寸实物尺寸（314 × 314 mm）建模；纸张有哑光、缎面、亮面三种；可贴正面、背面、书脊和双开内页。
 - **唱片**：单 LP 或 2LP，音槽带曲目间隙；A/B/C/D 面标签；每张唱片可选黑胶、彩胶或半透明；内袋和双面插页都能从封套开口抽出。
+- **胶色和纹路**：纯黑胶，或者彩胶（透明度 0–80%）。彩胶可以加纹路：飞溅、色块、漩涡、风车、波纹、星芒，或者二分、三分、四分的分色。颜色可以自己选，也可以从封面取色。2LP 的第 2 张默认和第 1 张一样，也可以单独设置。
 - **零售细节**：带褶皱和影棚反光的塑封膜；贴在膜上的圆形或长方形 hype sticker；日式 Obi 侧标；限量编号（印刷、印章、烫金、手写四种工艺，字体可选，也可上传）。
 - **输出**：PNG 最大 4096 px，背景可选透明或纯色；有预设视角，并支持环绕、缩放和平移。
 
@@ -82,7 +87,13 @@ node cli/groove-mock.mjs init -o output/spec.json
 ```json
 {
   "images": {"front": "cover.jpg"},
-  "records": {"count": 2, "disc2": {"vinyl": "color", "color": "#d64b3a"}},
+  "records": {
+    "count": 2,
+    "disc1": {"vinyl": "color", "color": "#f2d9a6", "transparency": 45,
+              "pattern": {"id": "splatter-05", "color": "#1f3fa8"}},
+    "disc2": {"sameAsDisc1": false, "vinyl": "color", "color": "#e2572f",
+              "pattern": {"id": "pinwheel-02", "color": "#f4e7c9"}}
+  },
   "number": {"current": 88, "total": 500, "place": "front", "finish": "foil"},
   "camera": {"view": "quarter", "zoom": 0.9},
   "output": {"background": "transparent", "width": 2400, "height": 1600},
@@ -95,6 +106,8 @@ node cli/groove-mock.mjs init -o output/spec.json
 ```
 
 单位和编辑器一致：长度用 mm，抽出程度用 %，角度用度。
+
+胶色按张设置，写在 `records.disc1` 和 `records.disc2` 里。`vinyl` 为 `black`（纯黑胶，不透明，不叠纹路）或 `color`（彩胶，用 `color` 和 `transparency`，透明度 0–80%）。`pattern.id` 在彩胶上加纹路，底色是 `color`。分色类（`split-half`、`split-tri`、`split-quad`）用 `pattern.color` 作第二块，`split-tri` 再用 `pattern.color2` 作第三块。其他大多数纹路用 `pattern.color` 作纹路色，其余色层自动推算；同色系纹路（`ripple-01`、`starburst-04`）只用底色的深浅变化，`pattern.contrast` 调反差。`pattern.rotation` 旋转纹路；`pattern.fromCover: true` 从 `images.front` 取色，写明的颜色优先。有透明度时只有底色透明，纹路不透明。第 2 张默认沿用第 1 张（`records.disc2.sameAsDisc1: true`）；写了它的胶色、颜色或纹路字段，就视为单独设置。完整的纹路列表用 `schema` 查看。旧值 `"clear"` 仍然可用，等于 `color` 加 38% 透明度。
 
 ## 命令
 
@@ -164,7 +177,7 @@ npm audit --prefix cli --omit=dev
 
 **能导出透明背景吗？** 能。把 `output.background` 设为 `"transparent"`，阴影会保留。
 
-**支持哪些规格？** 12 寸 LP 的单开和双开封套，一张或两张唱片。大理石纹胶、飞溅胶、图案盘在规划中。
+**支持哪些规格？** 12 寸 LP 的单开和双开封套，一张或两张唱片。彩胶支持飞溅、色块、漩涡、风车、波纹、星芒纹路，以及二分、三分、四分的分色。大理石纹、烟雾纹、液态效果和图案盘还在规划中。
 
 ## 仓库范围
 

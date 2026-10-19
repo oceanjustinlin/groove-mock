@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "jacket": {
+    "type": "single",
+    "finish": "gloss"
+  },
+  "records": {
+    "count": 2,
+    "labelRotation": -20,
+    "disc1": {
+      "vinyl": "color",
+      "color": "#f2d9a6",
+      "transparency": 45,
+      "pattern": {
+        "id": "splatter-05",
+        "color": "#1f3fa8"
+      },
+      "sleeveOut": 28,
+      "recordOut": 45
+    },
+    "disc2": {
+      "sameAsDisc1": false,
+      "vinyl": "color",
+      "color": "#e2572f",
+      "pattern": {
+        "id": "pinwheel-02",
+        "color": "#f4e7c9"
+      },
+      "sleeveOut": 75,
+      "recordOut": 60
+    }
+  },
+  "obi": {
+    "on": false
+  },
+  "wrap": {
+    "on": false
+  },
+  "sticker": {
+    "on": false
+  },
+  "number": {
+    "on": false
+  },
+  "camera": {
+    "view": "quarter",
+    "zoom": 0.74,
+    "elevation": 6,
+    "panX": 10
+  },
+  "output": {
+    "background": "#eeece8",
+    "width": 2000,
+    "height": 1250
+  },
+  "meta": {
+    "title": "README: translucent splatter and pinwheel pattern vinyl (built-in sample artwork)"
+  }
+}

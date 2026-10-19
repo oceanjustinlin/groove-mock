@@ -16,7 +16,7 @@ const OUT = path.join(DOCS, 'images');
 const {chromium} = createRequire(path.join(ROOT, 'cli', 'package.json'))('playwright-core');
 
 // README images: [spec name, output file]. JPEG keeps the README light.
-const SHOTS = [['hero', 'hero.jpg'], ['gatefold-open', 'gatefold-open.jpg'], ['back', 'back-cover.jpg'], ['vinyl', 'vinyl-variants.jpg']];
+const SHOTS = [['hero', 'hero.jpg'], ['gatefold-open', 'gatefold-open.jpg'], ['back', 'back-cover.jpg'], ['vinyl', 'vinyl-variants.jpg'], ['patterns', 'vinyl-patterns.jpg']];
 
 const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'groove-mock-docs-'));
 const render = name => {
