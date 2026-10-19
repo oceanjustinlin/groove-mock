@@ -17,8 +17,13 @@ Groove Mock renders photorealistic **3D vinyl record mockups**: LP jackets, gate
 | ![Open gatefold LP mockup showing the inner spread, a black record and a translucent blue record](docs/images/gatefold-open.jpg) | ![Back cover of an LP jacket in shrink wrap with tracklist, obi strip and stamped edition number](docs/images/back-cover.jpg) | ![Two coloured vinyl records, translucent amber and solid blue, pulled out of a single LP jacket](docs/images/vinyl-variants.jpg) |
 | Inner artwork and an adjustable opening angle | Obi strip, shrink wrap glare and a stamped edition number | Black, coloured or translucent, set per disc |
 
+![2LP mockup with a translucent cream record with blue splatter and an orange and cream pinwheel record pulled out of a single LP jacket](docs/images/vinyl-patterns.jpg)
+
+<sub>Pattern vinyl: a translucent splatter disc and a pinwheel disc, from [`docs/specs/patterns.json`](docs/specs/patterns.json).</sub>
+
 - **Jackets:** single sleeve or gatefold at real 12″ dimensions (314 × 314 mm), matte, satin or gloss paper, printed front, back, spine and inner spread.
 - **Records:** 1LP or 2LP, grooves with track gaps, A/B/C/D labels, black, coloured or translucent vinyl per disc, inner sleeves and a double-sided insert that slide out of the jacket.
+- **Vinyl colours and patterns:** plain black, or a coloured disc with 0–80% transparency. Coloured discs can carry a pattern: splatter, blob, swirl, pinwheel, ripple or starburst, or split colours in halves, thirds or quarters. Pick the colours yourself or take them from the cover. On a 2LP, disc 2 matches disc 1 unless you style it separately.
 - **Retail details:** crinkled shrink wrap with studio reflections, a round or rectangular hype sticker on the wrap, a Japanese-style obi strip, and limited-edition numbers (print, rubber stamp, hot foil or handwriting, any font).
 - **Output:** PNG up to 4096 px with a transparent or solid background, preset camera angles plus orbit, zoom and pan.
 
@@ -82,7 +87,13 @@ Keep the images next to the spec and reference them by relative path. Register t
 ```json
 {
   "images": {"front": "cover.jpg"},
-  "records": {"count": 2, "disc2": {"vinyl": "color", "color": "#d64b3a"}},
+  "records": {
+    "count": 2,
+    "disc1": {"vinyl": "color", "color": "#f2d9a6", "transparency": 45,
+              "pattern": {"id": "splatter-05", "color": "#1f3fa8"}},
+    "disc2": {"sameAsDisc1": false, "vinyl": "color", "color": "#e2572f",
+              "pattern": {"id": "pinwheel-02", "color": "#f4e7c9"}}
+  },
   "number": {"current": 88, "total": 500, "place": "front", "finish": "foil"},
   "camera": {"view": "quarter", "zoom": 0.9},
   "output": {"background": "transparent", "width": 2400, "height": 1600},
@@ -95,6 +106,8 @@ Keep the images next to the spec and reference them by relative path. Register t
 ```
 
 Units follow the editor: millimetres for lengths, percent for how far things are pulled out, degrees for angles.
+
+Vinyl is set per disc under `records.disc1` and `records.disc2`. `vinyl` is `black` (plain, opaque, no pattern) or `color`, which uses `color` and `transparency` (0–80%). `pattern.id` adds a pattern on top of a coloured disc, with `color` as the base. Split patterns (`split-half`, `split-tri`, `split-quad`) use `pattern.color` for the second section and `pattern.color2` for the third in `split-tri`. Most other patterns use `pattern.color` as the pattern colour and derive the remaining tones; the tonal ones (`ripple-01`, `starburst-04`) only shade the base colour, with `pattern.contrast` setting how strong. `pattern.rotation` turns the pattern, and `pattern.fromCover: true` takes the colours from `images.front`, with any colours you write winning. With transparency, only the base colour turns see-through; the pattern stays opaque. Disc 2 copies disc 1 by default (`records.disc2.sameAsDisc1: true`); writing any of its vinyl, colour or pattern fields styles it separately. Run `schema` for the full list of pattern ids. The older value `"clear"` still works and means `color` with 38% transparency.
 
 ## Commands
 
@@ -158,7 +171,7 @@ The integration test starts a real headless browser and checks strict-mode exit 
 
 **Can I get a transparent background?** Yes. Set `output.background` to `"transparent"` and the shadow is kept.
 
-**Which formats are covered?** 12″ LP single jackets and gatefolds, with one or two records. Marbled, splatter and picture discs are on the roadmap.
+**Which formats are covered?** 12″ LP single jackets and gatefolds, with one or two records. Coloured vinyl comes in splatter, blob, swirl, pinwheel, ripple and starburst patterns, plus split colours in halves, thirds or quarters. Marbled, smoke and liquid effects and picture discs are on the roadmap.
 
 ## Repository scope
 
