@@ -74,6 +74,8 @@ await fs.rm(OUT, {recursive: true, force: true});
 await fs.mkdir(OUT, {recursive: true});
 await fs.writeFile(path.join(OUT, 'index.html'), html);
 await fs.copyFile(path.join(ROOT, 'site', 'favicon.svg'), path.join(OUT, 'favicon.svg'));
+// Vinyl pattern masks, manifest and picker thumbnails, fetched by the page at runtime.
+await fs.cp(path.join(ROOT, 'vinyl-masks'), path.join(OUT, 'vinyl-masks'), {recursive: true});
 await fs.copyFile(path.join(ROOT, 'docs', 'images', 'social-preview.png'), path.join(OUT, 'social-preview.png'));
 await fs.writeFile(path.join(OUT, 'robots.txt'), `User-agent: *\nAllow: /\n\nSitemap: ${SITE_URL}sitemap.xml\n`);
 await fs.writeFile(path.join(OUT, 'sitemap.xml'),
