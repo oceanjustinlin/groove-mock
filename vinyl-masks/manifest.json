@@ -2,6 +2,33 @@
   "version": 1,
   "masks": [
     {
+      "id": "blob-01",
+      "family": "blob",
+      "role": "layout",
+      "file": "blob-01.png",
+      "size": 1024,
+      "accents": 1,
+      "base": "#ada698",
+      "colors": [
+        "#86785b"
+      ],
+      "labelRadius": 0.3,
+      "source": {
+        "kind": "generated",
+        "master": "VinylLab/assets/masks/blob-01",
+        "file": "source.png"
+      },
+      "status": "draft",
+      "bake": {
+        "crop": 0.975,
+        "floor": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    {
       "id": "blob-03",
       "family": "blob",
       "role": "layout",
@@ -18,7 +45,126 @@
         "master": "VinylLab/assets/masks/blob-03",
         "file": "image-1783782130755.png"
       },
-      "status": "draft"
+      "status": "draft",
+      "bake": {
+        "crop": 0.975,
+        "floor": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "id": "pinwheel-02",
+      "family": "pinwheel",
+      "role": "layout",
+      "file": "pinwheel-02.png",
+      "size": 1024,
+      "accents": 2,
+      "base": "#510d1f",
+      "colors": [
+        "#eeeef2",
+        "#c965b6"
+      ],
+      "labelRadius": 0.34,
+      "source": {
+        "kind": "generated",
+        "master": "VinylLab/assets/masks/pinwheel-02",
+        "file": "codex-clipboard-9fb73e34-cf54-4517-94f2-be8540ea091c.png"
+      },
+      "status": "draft",
+      "bake": {
+        "crop": 0.92,
+        "floor": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "id": "ripple-01",
+      "family": "ripple",
+      "role": "layout",
+      "file": "ripple-01.png",
+      "size": 1024,
+      "accents": 1,
+      "base": "#401419",
+      "colors": [
+        "#ac3a2f"
+      ],
+      "labelRadius": 0.33,
+      "source": {
+        "kind": "generated",
+        "master": "VinylLab/assets/masks/ripple-01",
+        "file": "source.jpg"
+      },
+      "status": "review",
+      "bake": {
+        "crop": 0.975,
+        "floor": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "id": "splatter-04",
+      "family": "splatter",
+      "role": "effect",
+      "file": "splatter-04.png",
+      "size": 1024,
+      "accents": 2,
+      "base": "#d6d0bf",
+      "colors": [
+        "#1d1813",
+        "#927c5d"
+      ],
+      "labelRadius": 0.3,
+      "source": {
+        "kind": "generated",
+        "master": "VinylLab/assets/masks/splatter-04",
+        "file": "Deltron-3030-Deltron-3030-Exclusive-Color-Vinyl-LP-2611370-2_1024x1024.webp"
+      },
+      "status": "draft",
+      "bake": {
+        "crop": 0.975,
+        "floor": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "id": "splatter-05",
+      "family": "splatter",
+      "role": "effect",
+      "file": "splatter-05.png",
+      "size": 1024,
+      "accents": 2,
+      "base": "#f0f3f4",
+      "colors": [
+        "#d8ccd5",
+        "#968b96"
+      ],
+      "labelRadius": 0.35,
+      "source": {
+        "kind": "generated",
+        "master": "VinylLab/assets/masks/splatter-05",
+        "file": "the-notorious-b-i-g-ready-to-die-red-and-white-black-splatter-vinyl-us-2-lp-vinyl-record-double-819942d_1280x1286.webp"
+      },
+      "status": "draft",
+      "bake": {
+        "crop": 0.975,
+        "floor": [
+          0.086,
+          0.0,
+          0.0
+        ]
+      }
     },
     {
       "id": "splatter-07",
@@ -37,7 +183,98 @@
         "master": "VinylLab/assets/masks/splatter-07",
         "file": "source.png"
       },
-      "status": "draft"
+      "status": "draft",
+      "bake": {
+        "crop": 0.975,
+        "floor": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "id": "splatter-08",
+      "family": "splatter",
+      "role": "effect",
+      "file": "splatter-08.png",
+      "size": 1024,
+      "accents": 1,
+      "base": "#e9dbd6",
+      "colors": [
+        "#f58a85"
+      ],
+      "labelRadius": 0.33,
+      "source": {
+        "kind": "generated",
+        "master": "VinylLab/assets/masks/splatter-08",
+        "file": "codex-clipboard-f47e5952-44e1-4a85-942c-7937af9ad80e.png"
+      },
+      "status": "draft",
+      "bake": {
+        "crop": 0.975,
+        "floor": [
+          0.016,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "id": "starburst-04",
+      "family": "starburst",
+      "role": "effect",
+      "file": "starburst-04.png",
+      "size": 1024,
+      "accents": 2,
+      "base": "#384060",
+      "colors": [
+        "#312b3c",
+        "#9e9fa1"
+      ],
+      "labelRadius": 0.32,
+      "source": {
+        "kind": "generated",
+        "master": "VinylLab/assets/masks/starburst-04",
+        "file": "codex-clipboard-b76611ca-bbdf-4f8e-bb25-981fc36c09f0.png"
+      },
+      "status": "review",
+      "bake": {
+        "crop": 0.975,
+        "floor": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "id": "starburst-06",
+      "family": "starburst",
+      "role": "effect",
+      "file": "starburst-06.png",
+      "size": 1024,
+      "accents": 2,
+      "base": "#1b376a",
+      "colors": [
+        "#4575af",
+        "#94bfde"
+      ],
+      "labelRadius": 0.34,
+      "source": {
+        "kind": "generated",
+        "master": "VinylLab/assets/masks/starburst-06",
+        "file": "source.jpg"
+      },
+      "status": "draft",
+      "bake": {
+        "crop": 0.975,
+        "floor": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
     },
     {
       "id": "swirl-02",
@@ -57,7 +294,15 @@
         "master": "VinylLab/assets/masks/swirl-02",
         "file": "codex-clipboard-cf6cb0b4-0a41-4de0-a553-0f222781d362.png"
       },
-      "status": "draft"
+      "status": "review",
+      "bake": {
+        "crop": 0.975,
+        "floor": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
     }
   ]
 }
