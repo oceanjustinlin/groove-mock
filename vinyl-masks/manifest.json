@@ -6,12 +6,17 @@
       "family": "blob",
       "role": "layout",
       "file": "blob-01.png",
+      "thumb": "thumbs/blob-01.jpg",
       "size": 1024,
       "accents": 1,
       "base": "#ada698",
       "colors": [
         "#86785b"
       ],
+      "palette": {
+        "mode": "accent",
+        "derive": []
+      },
       "labelRadius": 0.3,
       "source": {
         "kind": "generated",
@@ -33,12 +38,17 @@
       "family": "blob",
       "role": "layout",
       "file": "blob-03.png",
+      "thumb": "thumbs/blob-03.jpg",
       "size": 1024,
       "accents": 1,
       "base": "#e0ddd8",
       "colors": [
         "#fb3e45"
       ],
+      "palette": {
+        "mode": "accent",
+        "derive": []
+      },
       "labelRadius": 0.27,
       "source": {
         "kind": "generated",
@@ -60,6 +70,7 @@
       "family": "pinwheel",
       "role": "layout",
       "file": "pinwheel-02.png",
+      "thumb": "thumbs/pinwheel-02.jpg",
       "size": 1024,
       "accents": 2,
       "base": "#510d1f",
@@ -67,6 +78,15 @@
         "#eeeef2",
         "#c965b6"
       ],
+      "palette": {
+        "mode": "accent",
+        "derive": [
+          {
+            "t": 0.4704,
+            "dL": 0.0116
+          }
+        ]
+      },
       "labelRadius": 0.34,
       "source": {
         "kind": "generated",
@@ -88,12 +108,22 @@
       "family": "ripple",
       "role": "layout",
       "file": "ripple-01.png",
+      "thumb": "thumbs/ripple-01.jpg",
       "size": 1024,
       "accents": 1,
       "base": "#401419",
       "colors": [
         "#ac3a2f"
       ],
+      "palette": {
+        "mode": "tonal",
+        "derive": [
+          {
+            "dL": 0.2472,
+            "dC": 0.0826
+          }
+        ]
+      },
       "labelRadius": 0.33,
       "source": {
         "kind": "generated",
@@ -115,6 +145,7 @@
       "family": "splatter",
       "role": "effect",
       "file": "splatter-04.png",
+      "thumb": "thumbs/splatter-04.jpg",
       "size": 1024,
       "accents": 2,
       "base": "#d6d0bf",
@@ -122,6 +153,15 @@
         "#1d1813",
         "#927c5d"
       ],
+      "palette": {
+        "mode": "accent",
+        "derive": [
+          {
+            "t": 0.5991,
+            "dL": -0.0005
+          }
+        ]
+      },
       "labelRadius": 0.3,
       "source": {
         "kind": "generated",
@@ -143,6 +183,7 @@
       "family": "splatter",
       "role": "effect",
       "file": "splatter-05.png",
+      "thumb": "thumbs/splatter-05.jpg",
       "size": 1024,
       "accents": 2,
       "base": "#f0f3f4",
@@ -150,6 +191,15 @@
         "#d8ccd5",
         "#968b96"
       ],
+      "palette": {
+        "mode": "accent",
+        "derive": [
+          {
+            "t": -1.9209,
+            "dL": -0.0068
+          }
+        ]
+      },
       "labelRadius": 0.35,
       "source": {
         "kind": "generated",
@@ -171,12 +221,17 @@
       "family": "splatter",
       "role": "effect",
       "file": "splatter-07.png",
+      "thumb": "thumbs/splatter-07.jpg",
       "size": 1024,
       "accents": 1,
       "base": "#d2e5f1",
       "colors": [
         "#569cdc"
       ],
+      "palette": {
+        "mode": "accent",
+        "derive": []
+      },
       "labelRadius": 0.31,
       "source": {
         "kind": "generated",
@@ -198,12 +253,17 @@
       "family": "splatter",
       "role": "effect",
       "file": "splatter-08.png",
+      "thumb": "thumbs/splatter-08.jpg",
       "size": 1024,
       "accents": 1,
       "base": "#e9dbd6",
       "colors": [
         "#f58a85"
       ],
+      "palette": {
+        "mode": "accent",
+        "derive": []
+      },
       "labelRadius": 0.33,
       "source": {
         "kind": "generated",
@@ -225,6 +285,7 @@
       "family": "starburst",
       "role": "effect",
       "file": "starburst-04.png",
+      "thumb": "thumbs/starburst-04.jpg",
       "size": 1024,
       "accents": 2,
       "base": "#384060",
@@ -232,6 +293,19 @@
         "#312b3c",
         "#9e9fa1"
       ],
+      "palette": {
+        "mode": "tonal",
+        "derive": [
+          {
+            "dL": -0.076,
+            "dC": -0.0247
+          },
+          {
+            "dL": 0.3234,
+            "dC": -0.0528
+          }
+        ]
+      },
       "labelRadius": 0.32,
       "source": {
         "kind": "generated",
@@ -253,6 +327,7 @@
       "family": "starburst",
       "role": "effect",
       "file": "starburst-06.png",
+      "thumb": "thumbs/starburst-06.jpg",
       "size": 1024,
       "accents": 2,
       "base": "#1b376a",
@@ -260,6 +335,15 @@
         "#4575af",
         "#94bfde"
       ],
+      "palette": {
+        "mode": "accent",
+        "derive": [
+          {
+            "t": -1.0825,
+            "dL": 0.0025
+          }
+        ]
+      },
       "labelRadius": 0.34,
       "source": {
         "kind": "generated",
@@ -281,6 +365,7 @@
       "family": "swirl",
       "role": "layout",
       "file": "swirl-02.png",
+      "thumb": "thumbs/swirl-02.jpg",
       "size": 1024,
       "accents": 2,
       "base": "#c5d1da",
@@ -288,6 +373,15 @@
         "#5264a9",
         "#819acd"
       ],
+      "palette": {
+        "mode": "accent",
+        "derive": [
+          {
+            "t": 0.4835,
+            "dL": 0.0043
+          }
+        ]
+      },
       "labelRadius": 0.34,
       "source": {
         "kind": "generated",
