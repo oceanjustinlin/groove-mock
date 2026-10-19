@@ -114,6 +114,7 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
       <button class="chip" data-view="front" aria-pressed="false">正面</button>
       <button class="chip" data-view="side" aria-pressed="false">侧面</button>
     </div>
+    <button class="chip" id="lang-btn" lang="en" aria-label="Switch language">EN</button>
     <button class="primary" id="export-btn">导出 PNG</button>
   </header>
 
@@ -331,6 +332,64 @@ const SLV = {s:30.6, hole:4.5, z:0.09};                   // paper inner sleeve
 const GROUND_Y = -WRAP.pad - J.h/2;
 
 const $ = id => document.getElementById(id);
+
+// ---------- Language ----------
+// The markup is written in Chinese; EN maps each visible string to English. ?lang=en|zh wins, then the
+// viewer's last choice, then the browser language. Runtime strings go through tr(zh,en).
+const EN={
+  '12″ LP · 封套 314 × 314 mm · 唱片 Ø302 mm':'12″ LP · Jacket 314 × 314 mm · Disc Ø302 mm',
+  '视角':'View','斜侧':'Angled','正面':'Front','侧面':'Side','导出 PNG':'Export PNG','3D 预览':'3D preview',
+  '正在准备工作台…':'Setting up the workbench…','无法启动 3D 预览':'Can’t start the 3D preview',
+  '请使用支持 WebGL 2 的最新版浏览器，并开启硬件加速。':'Use an up-to-date browser with WebGL 2 and hardware acceleration turned on.',
+  '拖动旋转 · 滚轮缩放 · 右键拖动平移':'Drag to rotate · Scroll to zoom · Right-drag to pan',
+  '设置':'Settings','封套':'Jacket','类型':'Type','单开':'Single','双开':'Gatefold','示例':'Sample',
+  '上传封套正面':'Upload jacket front','上传封套背面':'Upload jacket back','上传书脊':'Upload spine',
+  '背面':'Back','书脊':'Spine','上传内页左':'Upload inner left','上传内页右':'Upload inner right','内页左':'Inner left','内页右':'Inner right',
+  '打开角度':'Open angle','打开后，塑封膜、贴纸和侧标会一起拆掉。':'Opening it removes the shrink wrap, sticker and obi.',
+  '纸张工艺':'Paper finish','哑光':'Matte','缎面':'Satin','亮面':'Gloss',
+  'Obi 侧标':'Obi strip','包住书脊一侧':'Wraps the spine edge','显示侧标':'Show obi','上传侧标展开图':'Upload unfolded obi','展开图':'Unfolded',
+  '上传一张竖长条图，从左到右依次是：背面、书脊、正面。正面和背面宽度相同。':'Upload a tall strip laid out left to right as back, spine, front. Front and back are the same width.',
+  '正面宽度':'Front width','限量编号':'Edition number','显示编号':'Show number','编号':'Number','当前编号':'Current number','限量总数':'Edition size',
+  '前缀':'Prefix','格式':'Format','中文':'Chinese','字体':'Font','跟随工艺':'Match finish','无衬线 · Archivo':'Sans · Archivo','等宽 · Plex Mono':'Mono · Plex Mono',
+  '衬线 · Noto Serif':'Serif · Noto Serif','打字机 · Special Elite':'Typewriter · Special Elite','手写 · Caveat':'Handwritten · Caveat',
+  '中文黑体 · Noto Sans':'Chinese sans · Noto Sans','自定义（未上传）':'Custom (none uploaded)','上传字体':'Upload font','上传字体文件':'Upload font file',
+  '位置':'Position','贴纸':'Sticker','工艺':'Finish','印刷':'Print','印章':'Stamp','烫金':'Foil','手写':'Hand','编号颜色':'Number colour',
+  '水平':'Horizontal','垂直':'Vertical','字高':'Height','角度':'Angle',
+  '切换位置时，坐标会回到该位置的默认值。烫金在转动视角时会反光。只含英文的字体遇到中文时，会用黑体补齐。上传的字体只在本地使用。':'Switching position resets the coordinates to that position’s defaults. Foil catches the light as you turn the view. Latin-only fonts fall back to a Chinese sans for CJK characters. Uploaded fonts stay on your device.',
+  '唱片与内袋':'Records & sleeves','33⅓ RPM · 标签 Ø100':'33⅓ RPM · Label Ø100','数量':'Count','单 LP':'1LP','标签角度':'Label angle',
+  '显示内袋':'Show inner sleeve','上传内袋印刷图':'Upload inner sleeve art','印刷图':'Artwork','内袋颜色':'Sleeve colour',
+  '第 1 张':'Disc 1','A / B 面':'Sides A / B','上传 A 面标签':'Upload side A label','上传 B 面标签':'Upload side B label','A 面标签':'Side A label','B 面标签':'Side B label',
+  '胶色':'Vinyl','黑胶':'Black','彩胶':'Colour','半透明':'Clear','第 1 张胶色':'Disc 1 vinyl colour','内袋抽出':'Sleeve out','唱片抽出':'Record out',
+  '第 2 张':'Disc 2','C / D 面 · 放在第 1 张后面':'Sides C / D · behind disc 1','上传 C 面标签':'Upload side C label','上传 D 面标签':'Upload side D label',
+  'C 面标签':'Side C label','D 面标签':'Side D label','第 2 张胶色':'Disc 2 vinyl colour',
+  '内袋抽出：内袋连同唱片一起从封套开口拉出。唱片抽出：唱片再从内袋里往外拉。':'Sleeve out pulls the inner sleeve, record inside, out of the jacket. Record out then slides the record out of the sleeve.',
+  'Insert 插页':'Insert','304 × 304 mm · 双面':'304 × 304 mm · double-sided','放入插页':'Include insert','上传插页正面':'Upload insert front','上传插页背面':'Upload insert back',
+  '抽出':'Out','插页在内袋后面，抽得比内袋多才看得到。':'The insert sits behind the inner sleeve; pull it out further than the sleeve to see it.',
+  '塑封膜':'Shrink wrap','套上塑封膜':'Shrink-wrapped','褶皱':'Wrinkles','反光':'Sheen','唱片抽出时，开口一侧的膜会被视为已拆开。':'When a record is pulled out, the wrap on the open edge counts as torn.',
+  '贴在塑封膜上':'Sits on the shrink wrap','显示贴纸':'Show sticker','上传贴纸':'Upload sticker','贴纸图':'Sticker art','圆形':'Circle','长方形':'Rectangle','尺寸':'Size',
+  '输出':'Output','背景':'Background','透明':'Transparent','纯色':'Solid','背景颜色':'Background colour','分辨率':'Resolution',
+  '图片只在你的浏览器里处理，不会上传。':'Images are processed in your browser and never uploaded.',
+  'PNG 已生成':'PNG ready','导出的模型图':'Exported mockup','如果点"下载"没有反应，请右键（手机长按）图片另存。':'If Download does nothing, right-click (long-press on phones) the image and save it.',
+  '下载':'Download','关闭':'Close'};
+const LANGS=['zh','en'];
+let lang=(()=>{const q=new URLSearchParams(location.search).get('lang');if(LANGS.includes(q))return q;
+  try{const v=localStorage.getItem('gm-lang');if(LANGS.includes(v))return v}catch(e){}
+  return(navigator.languages?.[0]||navigator.language||'').toLowerCase().startsWith('zh')?'zh':'en'})();
+const tr=(zh,en)=>lang==='en'?en:zh;
+// Remember each node's Chinese source once, so switching back and forth is lossless.
+const I18N_ATTRS=['aria-label','alt'],zhText=new Map(),zhAttr=new Map();
+for(const root of document.querySelectorAll('.app,.modal')){
+  const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+  for(let n;(n=w.nextNode());){const k=n.nodeValue.trim();if(EN[k])zhText.set(n,n.nodeValue)}
+  for(const el of root.querySelectorAll(I18N_ATTRS.map(a=>`[${a}]`).join(',')))
+    for(const a of I18N_ATTRS){const k=el.getAttribute(a);if(k&&EN[k])zhAttr.set(el,{...zhAttr.get(el),[a]:k})}}
+function translateStatic(){
+  for(const[n,zh]of zhText)n.nodeValue=lang==='en'?zh.replace(zh.trim(),EN[zh.trim()]):zh;
+  for(const[el,attrs]of zhAttr)for(const[a,zh]of Object.entries(attrs))el.setAttribute(a,lang==='en'?EN[zh]:zh);
+  document.documentElement.lang=lang==='en'?'en':'zh-CN';
+  const b=$('lang-btn');b.textContent=lang==='en'?'中文':'EN';b.lang=lang==='en'?'zh':'en';
+  b.setAttribute('aria-label',lang==='en'?'切换到中文':'Switch to English')}
+translateStatic();
 const state = {
   finish:'satin', sleeveOn:true, sleeveColor:'#f3f1ea', sleeveX:.35, recordX:.40, recordRot:0,
   vinyl:'black', vinylColor:'#c8392b', vinyl2:'black', vinyl2Color:'#d9a441', wrapOn:true, wrinkle:1, gloss:1,
@@ -345,7 +404,7 @@ const isGate=()=>state.jacketType==='gatefold';
 const frontZ=()=>isGate()?J.d/2+J.board:J.d/2;          // outer face of the front cover
 const jacketDepth=()=>frontZ()+J.d/2;
 const gateOpened=()=>isGate()&&state.gateOpen>.5;
-const specText=()=>`${isGate()?'双开':'单开'} · ${state.lpCount===2?'2LP':'单 LP'} · 书脊 ${+(jacketDepth()*10).toFixed(1)} mm`;
+const specText=()=>`${isGate()?tr('双开','Gatefold'):tr('单开','Single')} · ${state.lpCount===2?'2LP':tr('单 LP','1LP')} · ${tr('书脊','Spine')} ${+(jacketDepth()*10).toFixed(1)} mm`;
 
 // ---------- Seeded random ----------
 function rng(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
@@ -366,7 +425,7 @@ function sampleFront(){const s=2048,c=canvas(s,s),g=c.getContext('2d');
   g.fillStyle='#efe9d8';g.font=`800 ${s*.11}px ${DISPLAY}`;g.textBaseline='alphabetic';
   g.fillText('NIGHT',s*.07,s*.18);g.fillText('PRESSING',s*.07,s*.29);
   g.font=`500 ${s*.026}px ${MONO}`;g.fillText('GM-001  ·  12″ LP  ·  33⅓ RPM',s*.07,s*.345);
-  g.font=`500 ${s*.024}px ${BODY}`;g.fillStyle='rgba(239,233,216,.7)';g.fillText('示例封面 · 上传图片后替换',s*.07,s*.94);
+  g.font=`500 ${s*.024}px ${BODY}`;g.fillStyle='rgba(239,233,216,.7)';g.fillText(tr('示例封面 · 上传图片后替换','SAMPLE COVER · UPLOAD TO REPLACE'),s*.07,s*.94);
   return c}
 function sampleBack(){const s=2048,c=canvas(s,s),g=c.getContext('2d');
   g.fillStyle='#e9e3d2';g.fillRect(0,0,s,s);g.fillStyle='#1f3b2d';
@@ -375,7 +434,7 @@ function sampleBack(){const s=2048,c=canvas(s,s),g=c.getContext('2d');
   g.font=`500 ${s*.03}px ${MONO}`;
   tracks.forEach(([n,t,d],i)=>{const y=s*(.24+i*.065)+(i>3?s*.04:0);g.fillText(n,s*.08,y);g.fillText(t,s*.17,y);g.fillText(d,s*.8,y)});
   g.fillRect(s*.08,s*.86,s*.2,s*.06);g.fillStyle='#e9e3d2';for(let i=0;i<34;i++)g.fillRect(s*.085+i*s*.0055,s*.865,s*(i%3?.0018:.0032),s*.05);
-  g.fillStyle='#1f3b2d';g.font=`500 ${s*.022}px ${BODY}`;g.fillText('示例背面 · 上传图片后替换',s*.36,s*.9);
+  g.fillStyle='#1f3b2d';g.font=`500 ${s*.022}px ${BODY}`;g.fillText(tr('示例背面 · 上传图片后替换','SAMPLE BACK · UPLOAD TO REPLACE'),s*.36,s*.9);
   return c}
 function sampleSpine(){const w=64,h=4096,c=canvas(w,h),g=c.getContext('2d');
   g.fillStyle='#1f3b2d';g.fillRect(0,0,w,h);g.save();g.translate(w/2,0);g.rotate(Math.PI/2);
@@ -388,7 +447,7 @@ function sampleLabel(side){const s=1024,c=canvas(s,s),g=c.getContext('2d'),m=s/2
   g.font=`800 ${s*.075}px ${DISPLAY}`;g.fillText('NIGHT PRESSING',m,s*.27);
   g.font=`800 ${s*.13}px ${DISPLAY}`;g.fillText('SIDE '+side,m,s*.8);
   g.font=`500 ${s*.04}px ${MONO}`;g.fillText('33⅓ RPM · STEREO · GM-001',m,s*.35);
-  g.font=`500 ${s*.036}px ${BODY}`;g.fillText('示例标签',m,s*.66);
+  g.font=`500 ${s*.036}px ${BODY}`;g.fillText(tr('示例标签','SAMPLE LABEL'),m,s*.66);
   return c}
 function sampleSticker(shape){const w=1024,h=shape==='rect'?640:1024,c=canvas(w,h),g=c.getContext('2d');
   g.fillStyle='#f7cf1d';g.beginPath();
@@ -396,9 +455,9 @@ function sampleSticker(shape){const w=1024,h=shape==='rect'?640:1024,c=canvas(w,
   g.fill();g.strokeStyle='rgba(120,92,10,.35)';g.lineWidth=6;g.stroke();
   g.fillStyle='#1a1e1b';g.textAlign='center';g.textBaseline='middle';
   const k=shape==='rect'?.8:1;
-  g.font=`700 ${150*k}px ${BODY}`;g.fillText('首版限定',w/2,h*.36);
+  g.font=`700 ${150*k}px ${BODY}`;g.fillText(tr('首版限定','1ST PRESS'),w/2,h*.36);
   g.font=`700 ${80*k}px ${DISPLAY}`;g.fillText('180g VINYL',w/2,h*.58);
-  g.font=`500 ${58*k}px ${BODY}`;g.fillText('附歌词插页',w/2,h*.74);
+  g.font=`500 ${58*k}px ${BODY}`;g.fillText(tr('附歌词插页','LYRIC INSERT'),w/2,h*.74);
   return c}
 
 function textLines(g,x,y,w,rows,lh,color,seed){const r=rng(seed);g.fillStyle=color;for(let i=0;i<rows;i++){if(r()<.12)continue;g.fillRect(x,y+i*lh,w*(.55+r()*.45),lh*.38)}}
@@ -407,20 +466,20 @@ function sampleInnerLeft(){const s=2048,c=canvas(s,s),g=c.getContext('2d');
   g.strokeStyle='rgba(236,229,210,.18)';g.lineWidth=s*.003;for(let i=0;i<40;i++){g.beginPath();g.arc(s*.42,s*.4,s*(.04+i*.018),0,Math.PI*2);g.stroke()}
   g.fillStyle='#efe9d8';g.font=`800 ${s*.05}px ${DISPLAY}`;g.fillText('CREDITS',s*.08,s*.8);
   textLines(g,s*.08,s*.83,s*.5,6,s*.022,'rgba(239,233,216,.75)',4);
-  g.font=`500 ${s*.022}px ${BODY}`;g.fillStyle='rgba(239,233,216,.6)';g.fillText('示例内页 · 左',s*.08,s*.96);return c}
+  g.font=`500 ${s*.022}px ${BODY}`;g.fillStyle='rgba(239,233,216,.6)';g.fillText(tr('示例内页 · 左','SAMPLE INNER · LEFT'),s*.08,s*.96);return c}
 function sampleInnerRight(){const s=2048,c=canvas(s,s),g=c.getContext('2d');
   g.fillStyle='#e9e3d2';g.fillRect(0,0,s,s);g.fillStyle='#1f3b2d';g.font=`800 ${s*.05}px ${DISPLAY}`;g.fillText('LYRICS',s*.08,s*.12);
   for(let col=0;col<2;col++){const x=s*(.08+col*.46);g.font=`700 ${s*.024}px ${MONO}`;g.fillStyle='#1f3b2d';g.fillText(col?'B1 Run-out':'A1 Lacquer Cut',x,s*.2);textLines(g,x,s*.23,s*.38,30,s*.024,'rgba(31,59,45,.55)',7+col)}
-  g.font=`500 ${s*.022}px ${BODY}`;g.fillStyle='#1f3b2d';g.fillText('示例内页 · 右',s*.08,s*.96);return c}
+  g.font=`500 ${s*.022}px ${BODY}`;g.fillStyle='#1f3b2d';g.fillText(tr('示例内页 · 右','SAMPLE INNER · RIGHT'),s*.08,s*.96);return c}
 function sampleInsert(side){const s=2048,c=canvas(s,s),g=c.getContext('2d');
   if(side==='front'){g.fillStyle='#f4f1e8';g.fillRect(0,0,s,s);g.fillStyle='#b8322a';g.fillRect(0,0,s,s*.16);
     g.fillStyle='#f4f1e8';g.font=`800 ${s*.06}px ${DISPLAY}`;g.fillText('NIGHT PRESSING',s*.07,s*.1);
-    g.fillStyle='#1a1e1b';g.font=`700 ${s*.03}px ${BODY}`;g.fillText('歌词与制作名单',s*.07,s*.23);
+    g.fillStyle='#1a1e1b';g.font=`700 ${s*.03}px ${BODY}`;g.fillText(tr('歌词与制作名单','LYRICS & CREDITS'),s*.07,s*.23);
     for(let col=0;col<3;col++)textLines(g,s*(.07+col*.3),s*.28,s*.25,26,s*.024,'rgba(26,30,27,.5)',20+col);
-    g.font=`500 ${s*.022}px ${BODY}`;g.fillStyle='#1a1e1b';g.fillText('示例插页 · 正面',s*.07,s*.96)}
+    g.font=`500 ${s*.022}px ${BODY}`;g.fillStyle='#1a1e1b';g.fillText(tr('示例插页 · 正面','SAMPLE INSERT · FRONT'),s*.07,s*.96)}
   else{g.fillStyle='#1a1e1b';g.fillRect(0,0,s,s);for(let i=0;i<9;i++){g.fillStyle=`hsl(${18+i*4} 60% ${30+i*6}%)`;g.fillRect(s*.07+i*s*.095,s*.12,s*.08,s*.62)}
     g.fillStyle='#f4f1e8';g.font=`800 ${s*.045}px ${DISPLAY}`;g.fillText('RECORDED AT NIGHT',s*.07,s*.84);
-    g.font=`500 ${s*.022}px ${BODY}`;g.fillText('示例插页 · 背面',s*.07,s*.96)}
+    g.font=`500 ${s*.022}px ${BODY}`;g.fillText(tr('示例插页 · 背面','SAMPLE INSERT · BACK'),s*.07,s*.96)}
   return c}
 // Obi unfolded, left to right: back | spine | front.
 function vtext(g,str,x,y,size){g.save();g.textAlign='center';g.textBaseline='top';g.font=`700 ${size}px ${BODY}`;[...str].forEach((ch,i)=>g.fillText(ch,x,y+i*size*1.08));g.restore()}
@@ -432,7 +491,7 @@ function sampleObi(w,h){const c=canvas(w,h),g=c.getContext('2d'),{a,b}=obiLayout
   g.fillStyle='#b8322a';vtext(g,'附中文歌词',xb+fw/2,h*.74,Math.min(fw*.2,h*.03));
   g.fillStyle='#1a1e1b';g.font=`500 ${Math.min(fw*.13,h*.02)}px ${MONO}`;g.textAlign='center';g.fillText('GM-001',xb+fw/2,h*.97);
   g.save();g.translate(xa+(xb-xa)/2,h*.06);g.rotate(Math.PI/2);g.fillStyle='#fff';g.font=`700 ${Math.max(8,(xb-xa)*.55)}px ${DISPLAY}`;g.textBaseline='middle';g.fillText('NIGHT PRESSING · GM-001',0,0);g.restore();
-  g.fillStyle='#1a1e1b';vtext(g,'示例侧标',bw/2,h*.06,Math.min(bw*.22,h*.03));
+  g.fillStyle='#1a1e1b';vtext(g,tr('示例侧标','SAMPLE'),bw/2,h*.06,Math.min(bw*.22,h*.03));
   g.fillRect(bw*.25,h*.82,bw*.5,h*.1);g.fillStyle='#f5f2ea';for(let i=0;i<14;i++)g.fillRect(bw*.27,h*.825+i*h*.0068,bw*.46,h*(i%3?.0018:.003));
   return c}
 
@@ -843,7 +902,7 @@ async function setSlotImage(slot,img,thumbUrl){
 for(const slot of Object.keys(SLOTS)){
   $('up-'+slot).addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;
     try{await setSlotImage(slot,await createImageBitmap(file),URL.createObjectURL(file))}
-    catch(err){alertNote(`没能读取这张图片（${file.name}）。请换成 PNG、JPG 或 WebP 再试。`)}
+    catch(err){alertNote(tr(`没能读取这张图片（${file.name}）。请换成 PNG、JPG 或 WebP 再试。`,`Couldn’t read this image (${file.name}). Try a PNG, JPG or WebP.`))}
     e.target.value='';});
 }
 function alertNote(msg){$('modal-title').textContent=msg;$('modal-img').hidden=true;$('modal-dl').hidden=true;$('modal-size').textContent='';$('modal').hidden=false}
@@ -905,11 +964,11 @@ let userFontFace=null;
 async function setNumberFont(buffer,name){
   const face=new FontFace('GM User Font',buffer);await face.load();
   if(userFontFace)document.fonts.delete(userFontFace);document.fonts.add(face);userFontFace=face;
-  const opt=$('num-font-custom');opt.disabled=false;opt.textContent='自定义 · '+name.replace(/\.[^.]+$/,'').slice(0,16);
+  const opt=$('num-font-custom');opt.disabled=false;opt.textContent=tr('自定义 · ','Custom · ')+name.replace(/\.[^.]+$/,'').slice(0,16);
   state.numFont='custom';$('num-font').value='custom'}
 $('up-font').addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;
   try{await setNumberFont(await file.arrayBuffer(),file.name);numTexture()}
-  catch(err){alertNote(`没能读取这个字体文件（${file.name}）。请换成 TTF、OTF、WOFF 或 WOFF2 再试。`)}
+  catch(err){alertNote(tr(`没能读取这个字体文件（${file.name}）。请换成 TTF、OTF、WOFF 或 WOFF2 再试。`,`Couldn’t read this font file (${file.name}). Try a TTF, OTF, WOFF or WOFF2.`))}
   e.target.value=''});
 seg('num-finish','numFinish',()=>{state.numColor=NUM_INK[state.numFinish];$('num-color').value=state.numColor;numTexture()});
 seg('num-place','numPlace',()=>{const d=NUM_DEFAULTS[state.numPlace];setSlider('num-x',Math.round(d.x*10));setSlider('num-y',Math.round(d.y*10));setSlider('num-size',Math.round(d.size*10));setSlider('num-rot',d.rot)});
@@ -930,15 +989,15 @@ for(const b of document.querySelectorAll('[data-view]'))b.addEventListener('clic
 // ---------- Export ----------
 let lastUrl;
 $('export-btn').addEventListener('click',async()=>{
-  const btn=$('export-btn');btn.disabled=true;btn.textContent='生成中…';
+  const btn=$('export-btn');btn.disabled=true;btn.textContent=tr('生成中…','Rendering…');
   try{const w=stage.clientWidth,h=stage.clientHeight,k=Math.min(state.scale,4096/Math.max(w,h)),tw=Math.round(w*k),th=Math.round(h*k);
     renderer.setPixelRatio(1);renderer.setSize(tw,th,false);camera.aspect=tw/th;camera.updateProjectionMatrix();renderer.render(scene,camera);
     const blob=await new Promise((res,rej)=>renderer.domElement.toBlob(b=>b?res(b):rej(new Error('toBlob')),'image/png'));
     if(lastUrl)URL.revokeObjectURL(lastUrl);lastUrl=URL.createObjectURL(blob);
-    $('modal-title').textContent='PNG 已生成';$('modal-img').hidden=false;$('modal-dl').hidden=false;
+    $('modal-title').textContent=tr('PNG 已生成','PNG ready');$('modal-img').hidden=false;$('modal-dl').hidden=false;
     $('modal-img').src=lastUrl;$('modal-dl').href=lastUrl;$('modal-size').textContent=`${tw} × ${th} px · ${(blob.size/1048576).toFixed(1)} MB`;$('modal').hidden=false;
-  }catch(e){alertNote('导出失败，请把分辨率调到 1× 再试。')}
-  finally{renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));resize();btn.disabled=false;btn.textContent='导出 PNG'}
+  }catch(e){alertNote(tr('导出失败，请把分辨率调到 1× 再试。','Export failed. Set the resolution to 1× and try again.'))}
+  finally{renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));resize();btn.disabled=false;btn.textContent=tr('导出 PNG','Export PNG')}
 });
 $('modal-close').addEventListener('click',()=>$('modal').hidden=true);
 $('modal').addEventListener('click',e=>{if(e.target===$('modal'))$('modal').hidden=true});
@@ -1125,16 +1184,20 @@ async function renderToBlob(w,h){
   finally{renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));resize()}}
 
 // ---------- Boot ----------
-applyFinish();applyVinyl();buildWrap(state.wrinkle);numTexture();buildObi();buildSticker();pose();applyBg();resize();setView('quarter');
+$('jacket-spec').textContent=specText();applyFinish();applyVinyl();buildWrap(state.wrinkle);numTexture();buildObi();buildSticker();pose();applyBg();resize();setView('quarter');
 new ResizeObserver(resize).observe(stage);
 // Redraw sample art once web fonts arrive so the placeholder type renders correctly.
-const fontsSettled=(document.fonts?.ready??Promise.resolve()).then(()=>{
+function redrawSamples(){
   const redo={front:sampleFront,back:sampleBack,spine:sampleSpine,labelA:()=>sampleLabel('A'),labelB:()=>sampleLabel('B'),labelC:()=>sampleLabel('C'),labelD:()=>sampleLabel('D'),innerLeft:sampleInnerLeft,innerRight:sampleInnerRight,insertFront:()=>sampleInsert('front'),insertBack:()=>sampleInsert('back')};
   for(const[slot,fn]of Object.entries(redo)){const el=document.querySelector(`[data-slot="${slot}"]`);if(el.classList.contains('filled'))continue;setTex(slot,colorTex(fn()),...SLOTS[slot].mats());thumb(slot,tex[slot].image.toDataURL('image/jpeg',.6))}
   if(!userObi.img)obiTexture();
   numTexture();
   if(!userSticker.img){stickerTexture();thumb('sticker',tex.sticker.image.toDataURL('image/jpeg',.6))}
-});
+}
+const fontsSettled=(document.fonts?.ready??Promise.resolve()).then(redrawSamples);
+$('lang-btn').addEventListener('click',()=>{lang=lang==='en'?'zh':'en';try{localStorage.setItem('gm-lang',lang)}catch(e){}
+  translateStatic();$('jacket-spec').textContent=specText();if(!userFontFace)$('num-font-custom').textContent=tr('自定义（未上传）','Custom (none uploaded)');
+  else $('num-font-custom').textContent=$('num-font-custom').textContent.replace(/^(自定义|Custom) · /,tr('自定义 · ','Custom · '));redrawSamples()});
 const nextFrame=()=>new Promise(r=>requestAnimationFrame(()=>r()));
 const ready=fontsSettled.then(nextFrame).then(nextFrame);
 const toDataUrl=blob=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>rej(r.error);r.readAsDataURL(blob)});
