@@ -1,12 +1,17 @@
 #!/usr/bin/env python3
-"""Bake VinylLab mask masters into runtime vinyl pattern masks for Groove Mock.
+"""Bake mask masters into runtime vinyl pattern masks for Groove Mock.
 
-Masters stay outside the repo (16-bit field.png + RGB layers.png + meta.json per set). Each baked
-mask is an 8-bit RGB PNG whose R/G/B channels are the accent1..3 soft masks, cropped so the disc
-fills the square exactly: that matches the record face UVs in index.html (remapUV(face, r*2)).
+Masters stay outside the repo, one folder per mask id under --src, in either of two forms:
+- VinylLab sets: 16-bit field.png + RGB layers.png (R/G/B = accent1..3) + meta.json, where the
+  disc fills meta.disc_frac of the width and meta.cluster_colors holds the default palette.
+- Grayscale layers (e.g. image-to-image output): one single-channel PNG per accent, listed in the
+  CURATED entry's `layers`, square, with the pattern filling the whole canvas (the disc is the
+  inscribed circle). A grayscale file carries no colours, so the entry states `base` and `colors`.
+Each baked mask is an 8-bit RGB PNG whose R/G/B channels are the accent1..3 soft masks, cropped so the
+disc fills the square exactly: that matches the record face UVs in index.html (remapUV(face, r*2)).
 Alpha is never used for packing, because canvas premultiplies it and would wipe RGB where A = 0.
 
-  python3 tools/bake-vinyl-masks.py --src ~/Documents/VinylLab/assets/masks [--size 1024] [--preview DIR] [ids...]
+  python3 tools/bake-vinyl-masks.py --src <masters root, e.g. ~/Documents/VinylLab/assets/masks> [--size 1024] [--preview DIR] [ids...]
 
 Without ids, every entry in CURATED is baked. vinyl-masks/manifest.json is rewritten from the
 baked files on every run, so it never lists a mask that is not on disk.
@@ -27,6 +32,8 @@ OUT = ROOT / 'vinyl-masks'
 #   ragged shapes near it. Default CROP.
 # floor: subtract each channel's 5th-percentile haze, so a faint wash does not tint the whole disc.
 # status: draft = usable, review = shape may still carry lighting from the master.
+# layers / base / colors / source: grayscale masters only (see the module docstring); `source` may carry
+#   provenance such as {"prompt": ..., "model": ..., "date": ...} and is copied into the manifest.
 # palette: how the user colours it (index.html derives the rest from the parameters baked here):
 #   accent = base + one pattern colour; further accents keep their default relation to those two.
 #   tonal  = base only; every accent keeps its default lightness/chroma/hue offset from the base.
@@ -132,20 +139,69 @@ def apply_params(mode, base, color, params, contrast=1.0):
     return out
 
 
-def bake(src_dir: Path, mask_id: str, size: int):
-    meta = json.loads((src_dir / 'meta.json').read_text())
-    layers = Image.open(src_dir / 'layers.png').convert('RGB')
-    n = layers.width
-    if layers.height != n:
-        raise ValueError(f'{mask_id}: layers.png is not square ({layers.size})')
-    cfg = CURATED[mask_id]
-    crop = cfg.get('crop', CROP)
-    frac = float(meta['disc_frac']) * crop - SEAM_INSET
+def crop_resize(img: Image.Image, frac: float, size: int) -> np.ndarray:
+    """Centre square of `frac` x the image width, resampled to size x size, as floats in 0..1."""
+    n = img.width
     side = n * frac
     box = ((n - side) / 2, (n - side) / 2, (n + side) / 2, (n + side) / 2)
-    img = layers.resize((size, size), Image.LANCZOS, box=box)
+    return np.asarray(img.resize((size, size), Image.LANCZOS, box=box)).astype(np.float32) / 255
 
-    arr = np.asarray(img).astype(np.float32) / 255
+
+def load_vinyllab(src_dir: Path, mask_id: str, cfg: dict, size: int):
+    """A VinylLab set: RGB layers cropped to the safe disc. Returns (layers, base, colors, crop, extra)."""
+    meta = json.loads((src_dir / 'meta.json').read_text())
+    layers = Image.open(src_dir / 'layers.png').convert('RGB')
+    if layers.height != layers.width:
+        raise ValueError(f'{mask_id}: layers.png is not square ({layers.size})')
+    crop = cfg.get('crop', CROP)
+    arr = crop_resize(layers, float(meta['disc_frac']) * crop - SEAM_INSET, size)
+    colors = meta.get('cluster_colors') or []
+    if len(colors) < 2:
+        raise ValueError(f'{mask_id}: meta.json has no cluster_colors to use as the default palette')
+    extra = {'labelRadius': meta.get('label_radius'),
+             'source': {'kind': 'generated', 'master': f'VinylLab/assets/masks/{mask_id}', 'file': meta.get('source')}}
+    return arr, colors[0], colors[1:], crop, extra
+
+
+def load_gray(src_dir: Path, mask_id: str, cfg: dict, size: int):
+    """Grayscale layers, one file per accent, all the same square size; the pattern fills the canvas, so
+    nothing is cropped unless the entry asks for it. Returns (layers, base, colors, crop, extra)."""
+    files = cfg['layers']
+    if not 1 <= len(files) <= 3:
+        raise ValueError(f'{mask_id}: layers lists {len(files)} files; 1 to 3 are supported')
+    if 'base' not in cfg or len(cfg.get('colors', [])) != len(files):
+        raise ValueError(f'{mask_id}: a grayscale entry needs base plus one colour per layer ({len(files)})')
+    crop = cfg.get('crop', 1.0)
+    arr = np.zeros((size, size, 3), np.float32)
+    first = None
+    for c, name in enumerate(files):
+        img = Image.open(src_dir / name)
+        if img.width != img.height:
+            raise ValueError(f'{mask_id}/{name}: not square ({img.size}); fix the geometry, do not stretch it')
+        if first is None:
+            first = img.size
+        elif img.size != first:
+            raise ValueError(f'{mask_id}/{name}: {img.size} differs from the first layer {first}; layers must share one canvas')
+        if 'A' in img.getbands() and img.getchannel('A').getextrema()[0] < 255:
+            raise ValueError(f'{mask_id}/{name}: has transparent pixels; masks must be opaque')
+        if img.mode not in ('L', 'I;16', 'I'):
+            rgb = np.asarray(img.convert('RGB')).astype(np.int16)
+            tint = int((rgb.max(axis=2) - rgb.min(axis=2)).max())
+            if tint > 16:
+                print(f'warning: {mask_id}/{name} is not grayscale (channels differ by up to {tint}); using its luminance',
+                      file=sys.stderr)
+        # Resample in float ('F') on a 0..255 scale, so 16-bit masters keep their precision until packing.
+        deep = img.mode.startswith('I')
+        g = np.asarray(img if deep else img.convert('L')).astype(np.float32) * (255 / 65535 if deep else 1)
+        arr[..., c] = crop_resize(Image.fromarray(g, mode='F'), crop, size)
+    source = {'kind': 'generated', 'master': f'masters/{mask_id}', 'file': files, **cfg.get('source', {})}
+    return arr, cfg['base'], list(cfg['colors']), crop, {'labelRadius': None, 'source': source}
+
+
+def bake(src_dir: Path, mask_id: str, size: int):
+    cfg = CURATED[mask_id]
+    loader = load_gray if 'layers' in cfg else load_vinyllab
+    arr, base, colors, crop, extra = loader(src_dir, mask_id, cfg, size)
     yy, xx = np.mgrid[:size, :size]
     r = np.hypot(xx - size / 2 + .5, yy - size / 2 + .5) / (size / 2)
 
@@ -164,17 +220,16 @@ def bake(src_dir: Path, mask_id: str, size: int):
     img = Image.fromarray(arr)
     channels = [c for c in range(3) if arr[..., c].max() > 8]
     if not channels:
-        raise ValueError(f'{mask_id}: every layers.png channel is empty')
+        raise ValueError(f'{mask_id}: every layer is empty')
     if channels != list(range(len(channels))):
         raise ValueError(f'{mask_id}: accent channels are not contiguous from R ({channels})')
 
     OUT.mkdir(exist_ok=True)
     img.save(OUT / f'{mask_id}.png', optimize=True)
 
-    colors = meta.get('cluster_colors') or []
     mode = cfg['palette']
-    accents = colors[1:1 + len(channels)]
-    params = derive_params(mode, colors[0], accents)
+    accents = colors[:len(channels)]
+    params = derive_params(mode, base, accents)
     return {
         'id': mask_id,
         'family': mask_id.rsplit('-', 1)[0],
@@ -183,12 +238,12 @@ def bake(src_dir: Path, mask_id: str, size: int):
         'thumb': f'thumbs/{mask_id}.jpg',
         'size': size,
         'accents': len(channels),
-        # cluster_colors[0] is the base cluster, the rest follow the accent channel order.
-        'base': colors[0] if colors else None,
+        # The base colour, then one colour per accent channel in channel order.
+        'base': base,
         'colors': accents,
         'palette': {'mode': mode, 'derive': params},
-        'labelRadius': meta.get('label_radius'),
-        'source': {'kind': 'generated', 'master': f'VinylLab/assets/masks/{mask_id}', 'file': meta.get('source')},
+        'labelRadius': extra['labelRadius'],
+        'source': extra['source'],
         'status': cfg.get('status', 'draft'),
         'bake': {'crop': crop, 'floor': floors},
     }
@@ -239,7 +294,7 @@ def preview(mask_id: str, entry: dict, dest: Path):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('--src', type=Path, required=True, help='VinylLab assets/masks directory')
+    ap.add_argument('--src', type=Path, required=True, help='masters root: one folder per mask id')
     ap.add_argument('--size', type=int, default=1024, help='output edge in px (default 1024)')
     ap.add_argument('--preview', type=Path, help='also write flat two-palette previews here')
     ap.add_argument('ids', nargs='*', help='mask ids to bake (default: all curated)')
@@ -256,7 +311,8 @@ def main():
         entries = {e['id']: e for e in json.loads(manifest_path.read_text())['masks']}
     for mask_id in ids:
         d = args.src.expanduser() / mask_id
-        missing = [f for f in ('meta.json', 'layers.png') if not (d / f).exists()]
+        need = CURATED[mask_id].get('layers') or ('meta.json', 'layers.png')
+        missing = [f for f in need if not (d / f).exists()]
         if missing:
             sys.exit(f'{mask_id}: missing {", ".join(missing)} in {d}')
         entries[mask_id] = bake(d, mask_id, args.size)
