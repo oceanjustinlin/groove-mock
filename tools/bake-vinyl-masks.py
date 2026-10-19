@@ -20,12 +20,26 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / 'vinyl-masks'
 
-# Curated sets and their role. Roles come from inspection, not from the folder prefix:
+# Curated sets. Roles come from inspection, not from the folder prefix:
 # layout = colour regions on the base, effect = overlay on top of the base.
+# crop: fraction of the master's disc radius kept; the rest is cut off and the pattern scaled up to fill
+#   the disc, because the masters carry the photographed rim's reflection as a thin accent ring and
+#   ragged shapes near it. Default CROP.
+# floor: subtract each channel's 5th-percentile haze, so a faint wash does not tint the whole disc.
+# status: draft = usable, review = shape may still carry lighting from the master.
+CROP = 0.975
 CURATED = {
-    'splatter-07': 'effect',
-    'blob-03': 'layout',
-    'swirl-02': 'layout',
+    'splatter-04': {'role': 'effect'},
+    'splatter-05': {'role': 'effect', 'floor': True},
+    'splatter-07': {'role': 'effect'},
+    'splatter-08': {'role': 'effect', 'floor': True},
+    'starburst-04': {'role': 'effect', 'status': 'review'},
+    'starburst-06': {'role': 'effect'},
+    'blob-01': {'role': 'layout'},
+    'blob-03': {'role': 'layout'},
+    'pinwheel-02': {'role': 'layout', 'crop': 0.92},
+    'ripple-01': {'role': 'layout', 'status': 'review'},
+    'swirl-02': {'role': 'layout', 'status': 'review'},
 }
 
 # meta.disc_frac is the disc diameter as a fraction of the master's width. The masters extend the
@@ -39,12 +53,30 @@ def bake(src_dir: Path, mask_id: str, size: int):
     n = layers.width
     if layers.height != n:
         raise ValueError(f'{mask_id}: layers.png is not square ({layers.size})')
-    frac = float(meta['disc_frac']) - SEAM_INSET
+    cfg = CURATED[mask_id]
+    crop = cfg.get('crop', CROP)
+    frac = float(meta['disc_frac']) * crop - SEAM_INSET
     side = n * frac
     box = ((n - side) / 2, (n - side) / 2, (n + side) / 2, (n + side) / 2)
     img = layers.resize((size, size), Image.LANCZOS, box=box)
 
-    arr = np.asarray(img)
+    arr = np.asarray(img).astype(np.float32) / 255
+    yy, xx = np.mgrid[:size, :size]
+    r = np.hypot(xx - size / 2 + .5, yy - size / 2 + .5) / (size / 2)
+
+    floors = [0.0, 0.0, 0.0]
+    if cfg.get('floor'):
+        ring = (r > 0.4) & (r < 1)
+        for c in range(3):
+            f = float(np.percentile(arr[..., c][ring], 5))
+            if f > 0.005:
+                arr[..., c] = np.clip((arr[..., c] - f) / (1 - f), 0, 1)
+                floors[c] = round(f, 3)
+
+    # Corners outside the disc are never visible; blank them (keeping a filtering margin) to shrink the PNG.
+    arr[r > 1.01] = 0
+    arr = np.round(arr * 255).astype(np.uint8)
+    img = Image.fromarray(arr)
     channels = [c for c in range(3) if arr[..., c].max() > 8]
     if not channels:
         raise ValueError(f'{mask_id}: every layers.png channel is empty')
@@ -58,7 +90,7 @@ def bake(src_dir: Path, mask_id: str, size: int):
     return {
         'id': mask_id,
         'family': mask_id.rsplit('-', 1)[0],
-        'role': CURATED[mask_id],
+        'role': cfg['role'],
         'file': f'{mask_id}.png',
         'size': size,
         'accents': len(channels),
@@ -67,7 +99,8 @@ def bake(src_dir: Path, mask_id: str, size: int):
         'colors': colors[1:1 + len(channels)],
         'labelRadius': meta.get('label_radius'),
         'source': {'kind': 'generated', 'master': f'VinylLab/assets/masks/{mask_id}', 'file': meta.get('source')},
-        'status': 'draft',
+        'status': cfg.get('status', 'draft'),
+        'bake': {'crop': crop, 'floor': floors},
     }
 
 
@@ -124,7 +157,8 @@ def main():
         if args.preview:
             preview(mask_id, entries[mask_id], args.preview)
         kb = (OUT / entries[mask_id]['file']).stat().st_size / 1024
-        print(f'{mask_id}: {entries[mask_id]["role"]}, {entries[mask_id]["accents"]} accent(s), {kb:.0f} KB')
+        e = entries[mask_id]
+        print(f'{mask_id}: {e["role"]}, {e["accents"]} accent(s), floor {e["bake"]["floor"]}, {e["status"]}, {kb:.0f} KB')
 
     masks = [entries[k] for k in sorted(entries) if (OUT / entries[k]['file']).exists()]
     manifest_path.write_text(json.dumps({'version': 1, 'masks': masks}, ensure_ascii=False, indent=2) + '\n')
