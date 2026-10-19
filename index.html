@@ -285,7 +285,7 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
           <div class="slider"><label for="sticker-size">尺寸</label><input type="range" id="sticker-size" min="40" max="140" value="76"><output id="sticker-size-v">76 mm</output></div>
           <div class="slider"><label for="sticker-x">水平</label><input type="range" id="sticker-x" min="-120" max="120" value="88"><output id="sticker-x-v">88 mm</output></div>
           <div class="slider"><label for="sticker-y">垂直</label><input type="range" id="sticker-y" min="-120" max="120" value="92"><output id="sticker-y-v">92 mm</output></div>
-          <div class="slider"><label for="sticker-rot">角度</label><input type="range" id="sticker-rot" min="-45" max="45" value="-8"><output id="sticker-rot-v">-8°</output></div>
+          <div class="slider"><label for="sticker-rot">角度</label><input type="range" id="sticker-rot" min="-45" max="45" value="0"><output id="sticker-rot-v">0°</output></div>
         </div>
       </section>
 
@@ -334,7 +334,7 @@ const $ = id => document.getElementById(id);
 const state = {
   finish:'satin', sleeveOn:true, sleeveColor:'#f3f1ea', sleeveX:.35, recordX:.40, recordRot:0,
   vinyl:'black', vinylColor:'#c8392b', vinyl2:'black', vinyl2Color:'#d9a441', wrapOn:true, wrinkle:1, gloss:1,
-  stickerOn:true, stickerShape:'circle', stickerSize:7.6, stickerX:8.8, stickerY:9.2, stickerRot:-8,
+  stickerOn:true, stickerShape:'circle', stickerSize:7.6, stickerX:8.8, stickerY:9.2, stickerRot:0,
   numOn:true, numCur:123, numTotal:1000, numPrefix:'No.', numFormat:'slash', numFont:'auto', numPlace:'back', numFinish:'stamp', numColor:'#25336f',
   numX:10.5, numY:-13.6, numSize:.5, numRot:-3,
   jacketType:'single', gateOpen:0, lpCount:1, sleeve2X:.6, record2X:.3, obiOn:true, obiWidth:3.2, insertOn:true, insertX:0,
@@ -391,9 +391,9 @@ function sampleLabel(side){const s=1024,c=canvas(s,s),g=c.getContext('2d'),m=s/2
   g.font=`500 ${s*.036}px ${BODY}`;g.fillText('示例标签',m,s*.66);
   return c}
 function sampleSticker(shape){const w=1024,h=shape==='rect'?640:1024,c=canvas(w,h),g=c.getContext('2d');
-  g.fillStyle='#f3d649';g.beginPath();
+  g.fillStyle='#f7cf1d';g.beginPath();
   if(shape==='rect')g.roundRect(6,6,w-12,h-12,40);else g.arc(w/2,h/2,w/2-6,0,Math.PI*2);
-  g.fill();g.strokeStyle='#1a1e1b';g.lineWidth=10;g.stroke();
+  g.fill();g.strokeStyle='rgba(120,92,10,.35)';g.lineWidth=6;g.stroke();
   g.fillStyle='#1a1e1b';g.textAlign='center';g.textBaseline='middle';
   const k=shape==='rect'?.8:1;
   g.font=`700 ${150*k}px ${BODY}`;g.fillText('首版限定',w/2,h*.36);
@@ -592,7 +592,11 @@ function wrapMaterial(){
       #include <opaque_fragment>`)};
   m.customProgramCacheKey=()=>'shrink-wrap-v1';return m}
 const wrapMat=wrapMaterial(),wrapMouthMat=wrapMaterial();
-const stickerMat=new THREE.MeshPhysicalMaterial({map:tex.sticker,roughness:.32,clearcoat:.6,clearcoatRoughness:.12,transparent:true,alphaTest:.02});
+// Coated paper: matte stock with a thin glossy varnish that catches the studio strips; die-cut edge comes
+// from the texture alpha, smoothed by alpha-to-coverage instead of a hard alpha test.
+const stickerMat=new THREE.MeshPhysicalMaterial({map:tex.sticker,roughness:.55,metalness:0,clearcoat:.8,clearcoatRoughness:.2,
+  bumpMap:bump,bumpScale:.12,envMap:studioEnv,envMapIntensity:.16,alphaTest:.5,alphaToCoverage:true,side:THREE.FrontSide});
+const stickerShadowMat=new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.28,depthWrite:false});
 
 // ---------- Geometry builders ----------
 function remapUV(geo,scaleX,scaleY=scaleX){const p=geo.attributes.position,uv=geo.attributes.uv;for(let i=0;i<p.count;i++)uv.setXY(i,p.getX(i)/scaleX+.5,p.getY(i)/scaleY+.5);return geo}
@@ -657,35 +661,55 @@ const record=makeRecord(labelMatA,labelMatB,vinyl1),record2=makeRecord(labelMatC
 
 // Shrink wrap shell: displaced box. Faces stay tight at the box edges (no cracks), wrinkle near edges and corners.
 const wrap=new THREE.Mesh(undefined,[wrapMouthMat,wrapMat,wrapMat,wrapMat,wrapMat,wrapMat]);wrap.renderOrder=2;scene.add(wrap);
+// Film displacement at (x, y) on the front face. Shared by the wrap mesh and the sticker that sits on it,
+// so a sticker follows the film's undulation instead of floating flat above it.
+const WRAP_WAVES=(()=>{const r=rng(21);return Array.from({length:22},()=>({a:r()*Math.PI,f:.3+r()*1.9,ph:r()*6.283,amp:.4+r()*.6}))})();
+function wrapDisp(x,y,strength){
+  const w=J.w+2*WRAP.pad,h=J.h+2*WRAP.pad,ex=w/2-Math.abs(x),ey=h/2-Math.abs(y),m=Math.min(ex,ey);
+  let s=0;for(const v of WRAP_WAVES)s+=v.amp*Math.sin((Math.cos(v.a)*x+Math.sin(v.a)*y)*v.f+v.ph);s/=Math.sqrt(WRAP_WAVES.length);
+  const cx=Math.sign(x)*w/2,cy=Math.sign(y)*h/2,ang=Math.atan2(y-cy,x-cx),crease=Math.pow(Math.abs(Math.sin(ang*7+x*.13)),5);
+  const edge=Math.exp(-m/1.5),corner=Math.exp(-Math.hypot(ex,ey)/3.2),tight=THREE.MathUtils.smoothstep(m,0,.35);
+  return strength*tight*(.018*s+edge*.05*(s*.5+.5)+corner*.11*crease)}
 function buildWrap(strength){
-  const w=J.w+2*WRAP.pad,h=J.h+2*WRAP.pad,d=jacketDepth()+WRAP.extra,g=new THREE.BoxGeometry(w,h,d,180,180,2),p=g.attributes.position,n=g.attributes.normal,r=rng(21);
-  const waves=Array.from({length:22},()=>({a:r()*Math.PI,f:.3+r()*1.9,ph:r()*6.283,amp:.4+r()*.6}));
+  const w=J.w+2*WRAP.pad,h=J.h+2*WRAP.pad,d=jacketDepth()+WRAP.extra,g=new THREE.BoxGeometry(w,h,d,180,180,2),p=g.attributes.position,n=g.attributes.normal;
   for(let i=0;i<p.count;i++){
     const nz=n.getZ(i);if(Math.abs(nz)<.5)continue;
-    const x=p.getX(i),y=p.getY(i),ex=w/2-Math.abs(x),ey=h/2-Math.abs(y),m=Math.min(ex,ey);
-    let s=0;for(const v of waves)s+=v.amp*Math.sin((Math.cos(v.a)*x+Math.sin(v.a)*y)*v.f+v.ph);s/=Math.sqrt(waves.length);
-    const cx=Math.sign(x)*w/2,cy=Math.sign(y)*h/2,ang=Math.atan2(y-cy,x-cx),crease=Math.pow(Math.abs(Math.sin(ang*7+x*.13)),5);
-    const edge=Math.exp(-m/1.5),corner=Math.exp(-Math.hypot(ex,ey)/3.2),tight=THREE.MathUtils.smoothstep(m,0,.35);
-    const disp=strength*tight*(.018*s+edge*.05*(s*.5+.5)+corner*.11*crease);
-    p.setZ(i,p.getZ(i)+Math.sign(nz)*disp);
+    p.setZ(i,p.getZ(i)+Math.sign(nz)*wrapDisp(p.getX(i),p.getY(i),strength));
   }
   g.computeVertexNormals();
   if(wrap.geometry)wrap.geometry.dispose();wrap.geometry=g;
 }
 
 // Hype sticker sits on the film's front face.
-const sticker=new THREE.Mesh(undefined,stickerMat);sticker.renderOrder=3;sticker.castShadow=false;scene.add(sticker);
+const sticker=new THREE.Mesh(undefined,stickerMat);sticker.castShadow=false;scene.add(sticker);
+const stickerShadow=new THREE.Mesh(undefined,stickerShadowMat);stickerShadow.renderOrder=3;sticker.add(stickerShadow);
+const stickerDims=()=>state.stickerShape==='rect'?[1.6,1]:[1,1];
 function buildSticker(){
-  let g;if(state.stickerShape==='rect'){const w=1.6,h=1,rr=.08,s=new THREE.Shape();s.roundRect?0:0;
-    s.moveTo(-w/2+rr,-h/2);s.lineTo(w/2-rr,-h/2);s.quadraticCurveTo(w/2,-h/2,w/2,-h/2+rr);s.lineTo(w/2,h/2-rr);s.quadraticCurveTo(w/2,h/2,w/2-rr,h/2);s.lineTo(-w/2+rr,h/2);s.quadraticCurveTo(-w/2,h/2,-w/2,h/2-rr);s.lineTo(-w/2,-h/2+rr);s.quadraticCurveTo(-w/2,-h/2,-w/2+rr,-h/2);
-    g=remapUV(new THREE.ShapeGeometry(s,12),w,h)}
-  else g=remapUV(new THREE.CircleGeometry(.5,96),1);
+  const [w,h]=stickerDims(),g=new THREE.PlaneGeometry(w,h,32,32);g.userData.base=g.attributes.position.array.slice();
   if(sticker.geometry)sticker.geometry.dispose();sticker.geometry=g;
+  if(stickerShadow.geometry)stickerShadow.geometry.dispose();stickerShadow.geometry=new THREE.PlaneGeometry(w*1.12,h*1.12);
 }
+// Bend the sticker onto the film under it (or keep it flat on the board when there is no wrap).
+function conformSticker(){
+  const g=sticker.geometry;if(!g?.userData.base)return;   // not built yet
+  const p=g.attributes.position,base=g.userData.base,S=state.stickerSize,a=THREE.MathUtils.degToRad(state.stickerRot),c=Math.cos(a),sn=Math.sin(a);
+  let lo=Infinity;
+  for(let i=0;i<p.count;i++){const u=base[i*3],v=base[i*3+1],d=state.wrapOn?wrapDisp(state.stickerX+S*(u*c-v*sn),state.stickerY+S*(u*sn+v*c),state.wrinkle):0;p.setZ(i,d);lo=Math.min(lo,d)}
+  p.needsUpdate=true;g.computeVertexNormals();
+  stickerShadow.position.set(.012,-.02,lo-.003);
+}
+// Soft shadow from the sticker's own outline, so any die-cut shape (or uploaded artwork) casts its shape.
+function stickerShadowTexture(src){
+  const W=512,H=Math.round(512*src.height/src.width),c=canvas(W,H),g=c.getContext('2d'),k=1/1.12;  // shadow plane is 12% larger
+  g.filter='blur(14px)';g.drawImage(src,W*(1-k)/2,H*(1-k)/2,W*k,H*k);g.filter='none';
+  g.globalCompositeOperation='source-in';g.fillStyle='#000';g.fillRect(0,0,W,H);
+  const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t}
 function stickerTexture(){
   const shape=state.stickerShape,c=userSticker.img?fitImage(userSticker.img,1024,shape==='rect'?640:1024):sampleSticker(shape);
-  if(userSticker.img&&shape==='circle'){const g=c.getContext('2d');g.globalCompositeOperation='destination-in';g.beginPath();g.arc(512,512,506,0,Math.PI*2);g.fill()}
+  if(userSticker.img){const g=c.getContext('2d');g.globalCompositeOperation='destination-in';g.beginPath();
+    if(shape==='circle')g.arc(512,512,506,0,Math.PI*2);else g.roundRect(0,0,c.width,c.height,48);g.fill()}
   setTex('sticker',colorTex(c),stickerMat);
+  const old=stickerShadowMat.map;stickerShadowMat.map=stickerShadowTexture(c);stickerShadowMat.needsUpdate=true;old?.dispose();
 }
 
 // ---------- Limited-edition number ----------
@@ -736,7 +760,7 @@ function placeNumber(){
   if(p==='back'){scene.add(numAnchor);numAnchor.position.set(0,0,-J.d/2-eps);numAnchor.rotation.y=Math.PI}
   else if(p==='front'){if(isGate()){coverMesh.add(numAnchor);numAnchor.position.set(0,0,J.board/2+eps)}else{scene.add(numAnchor);numAnchor.position.set(0,0,J.d/2+eps)}}
   else if(p==='obi'){const {F,eps:oe}=obiLayout();obi.add(numAnchor);numAnchor.position.set(-J.w/2+F/2,0,frontZ()+oe+eps)}
-  else{sticker.add(numAnchor);const k=1/state.stickerSize;numAnchor.scale.setScalar(k);numAnchor.position.set(0,0,eps*k)}
+  else{sticker.add(numAnchor);const k=1/state.stickerSize;numAnchor.scale.set(k,k,1);numAnchor.position.set(0,0,.03)}
   numAnchor.visible=state.numOn;
   numMesh.position.set(state.numX,state.numY,0);numMesh.rotation.z=THREE.MathUtils.degToRad(state.numRot);numMesh.scale.set(state.numSize*numAspect,state.numSize,1)}
 
@@ -766,8 +790,8 @@ function pose(){
   wrapStrength.value=state.gloss;wrapMat.normalScale.setScalar(.35*state.wrinkle);wrapMouthMat.normalScale.setScalar(.35*state.wrinkle);
   obi.visible=state.obiOn&&!opened;
   sticker.visible=state.stickerOn&&!opened;
-  sticker.position.set(state.stickerX,state.stickerY,state.wrapOn?wrapFront+.05+.03*state.wrinkle:frontZ()+.03);
-  sticker.scale.setScalar(state.stickerSize);sticker.rotation.z=THREE.MathUtils.degToRad(state.stickerRot);
+  sticker.position.set(state.stickerX,state.stickerY,(state.wrapOn?wrapFront:frontZ())+.008);
+  sticker.scale.set(state.stickerSize,state.stickerSize,1);sticker.rotation.z=THREE.MathUtils.degToRad(state.stickerRot);conformSticker();
   placeNumber();
 }
 function applyLpCount(){
