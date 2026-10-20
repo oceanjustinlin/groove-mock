@@ -101,21 +101,23 @@ body.resizing .stage canvas{pointer-events:none}
 .tile.filled .thumb{border-style:solid}
 .tile .tag{position:absolute;right:4px;top:4px;font-size:10px;background:var(--surface);color:var(--muted);border-radius:4px;padding:0 4px}
 .tile:focus-within .thumb{outline:2px solid var(--accent);outline-offset:2px}
-.row{display:flex;align-items:center;gap:10px;justify-content:space-between}
+/* Rows wrap instead of widening the panel: at narrow widths the control drops under its label. */
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;justify-content:space-between}
+.group>*,.sub>*,.disc>*{min-width:0}
+.row>.lbl:first-child+*{margin-left:auto}
 .row label,.lbl{font-size:13px;white-space:nowrap}
-.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
-.seg button{border:0;background:transparent;padding:4px 10px;cursor:pointer;font-size:13px;white-space:nowrap}
+/* Dividers are the 1px gap showing the border colour, so a group that wraps onto two lines keeps clean lines. */
+.seg{display:inline-flex;flex-wrap:wrap;max-width:100%;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{flex:1 0 auto;border:0;background:var(--surface);padding:4px 10px;cursor:pointer;font-size:13px;white-space:nowrap}
 #anim-preset button{padding:4px 8px}
-.seg button+button{border-left:1px solid var(--line)}
 .seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
 .slider{display:grid;grid-template-columns:72px minmax(0,1fr) 58px;align-items:center;gap:8px;font-size:13px}
 .slider input{width:100%;accent-color:var(--accent)}
-.field{border:1px solid var(--line);border-radius:6px;background:var(--surface);padding:3px 8px;font-family:var(--font-mono);font-size:13px;width:84px;font-variant-numeric:tabular-nums}
+.field{border:1px solid var(--line);border-radius:6px;background:var(--surface);padding:3px 8px;font-family:var(--font-mono);font-size:13px;width:84px;max-width:100%;min-width:0;font-variant-numeric:tabular-nums}
 .field.wide{width:120px}
 .field.select{width:158px;font-family:var(--font-body);padding:3px 4px}
 .chip.upload{font-size:12px;padding:4px 10px;white-space:nowrap}
 .vh{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none}
-.seg.wrap{flex-wrap:wrap}
 .slider output{font-family:var(--font-mono);font-size:12px;text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
 .switch{display:inline-flex;align-items:center;gap:6px;font-size:13px;cursor:pointer}
 .switch input{accent-color:var(--accent);width:16px;height:16px}
