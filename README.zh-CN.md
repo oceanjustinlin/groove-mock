@@ -120,7 +120,7 @@ node cli/record-mockup.mjs init -o output/spec.json
 | `slots [spec.json]` | 按场景列出各贴图位的像素尺寸、可见区域、遮挡，以及建议用户提供、生图还是排版 |
 | `render spec.json` | 渲染一张 PNG |
 | `numbers spec.json --from 1 --to 50` | 按号段批量渲染编号图 |
-| `video spec.json -o turn.mp4` | 按 spec 的 `animation` 渲染循环的转台或摆动视频，输出 MP4 或 GIF（16:9、1:1 或 9:16） |
+| `video spec.json -o turn.mp4` | 按 spec 的 `animation` 渲染循环视频，输出 MP4 或 GIF：转台、摆动、唱片自转、双开展开、抽出（16:9、1:1 或 9:16）。网页里视角旁的 ▶ 在工作台预览同一段动画 |
 
 常用选项：`--set path=value` 临时覆盖字段，不用改文件；`--json` 输出一行结果；`--strict` 遇到场景警告或素材来源警告时拒绝出图。
 

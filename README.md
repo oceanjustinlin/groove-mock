@@ -120,7 +120,7 @@ Run `node cli/record-mockup.mjs --help` for every option. See also [`cli/README.
 | `slots [spec.json]` | Lists artwork slots for that scene: pixel size, visible area, what covers it, and whether to supply, generate or typeset it |
 | `render spec.json` | Renders one PNG |
 | `numbers spec.json --from 1 --to 50` | Renders one image per edition number |
-| `video spec.json -o turn.mp4` | Renders a looping turntable or swing clip as MP4 or GIF, set by `animation` in the spec (16:9, 1:1 or 9:16) |
+| `video spec.json -o turn.mp4` | Renders a looping clip as MP4 or GIF, set by `animation` in the spec: turntable, swing, record spin, gatefold opening or pull-out (16:9, 1:1 or 9:16). The editor's ▶ button previews the same motion on the stage |
 
 Useful options: `--set path=value` overrides a field without editing the file, `--json` prints a one-line result, and `--strict` refuses to render when the spec or the source register produces warnings.
 
