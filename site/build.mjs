@@ -3,6 +3,8 @@
 // index.html stays a head-less fragment (the CLI and the Claude preview load it as is); this script wraps
 // it in a full document with search and sharing metadata, and adds the favicon, social card, robots.txt
 // and sitemap. Usage: node site/build.mjs   (SITE_URL overrides the public address)
+// SITE_PREVIEW=1 builds a preview (e.g. Cloudflare Pages per branch): noindex everywhere, no sitemap, and the
+// canonical link still points at the public site.
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -11,6 +13,7 @@ const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const OUT = path.join(ROOT, '_site');
 const SITE_URL = (process.env.SITE_URL || 'https://recordmockup.com/').replace(/\/?$/, '/');
 const REPO_URL = 'https://github.com/oceanjustinlin/record-mockup';
+const PREVIEW = process.env.SITE_PREVIEW === '1';
 
 const TITLE = 'Record Mockup — 3D Vinyl & LP Mockup Generator';
 const DESCRIPTION = 'Make photorealistic 3D vinyl record mockups in your browser: LP jackets, gatefolds, 2LP sets, ' +
@@ -44,7 +47,7 @@ const html = `<!doctype html>
 <title>${esc(TITLE)}</title>
 <meta name="description" content="${esc(DESCRIPTION)}">
 <meta name="keywords" content="vinyl mockup, LP mockup, record sleeve mockup, album cover mockup, gatefold mockup, 3D vinyl mockup, 黑胶模型图, 唱片封套样机">
-<link rel="canonical" href="${SITE_URL}">
+<link rel="canonical" href="${SITE_URL}">${PREVIEW ? '\n<meta name="robots" content="noindex,nofollow">' : ''}
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <meta name="theme-color" content="#eceee9">
 <meta property="og:type" content="website">
@@ -77,9 +80,15 @@ await fs.copyFile(path.join(ROOT, 'site', 'favicon.svg'), path.join(OUT, 'favico
 // Vinyl pattern masks, manifest and picker thumbnails, fetched by the page at runtime.
 await fs.cp(path.join(ROOT, 'vinyl-masks'), path.join(OUT, 'vinyl-masks'), {recursive: true});
 await fs.copyFile(path.join(ROOT, 'docs', 'images', 'social-preview.png'), path.join(OUT, 'social-preview.png'));
-await fs.writeFile(path.join(OUT, 'robots.txt'), `User-agent: *\nAllow: /\n\nSitemap: ${SITE_URL}sitemap.xml\n`);
-await fs.writeFile(path.join(OUT, 'sitemap.xml'),
-  `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
-  `  <url><loc>${SITE_URL}</loc><lastmod>${new Date().toISOString().slice(0, 10)}</lastmod></url>\n</urlset>\n`);
+if (PREVIEW) {
+  await fs.writeFile(path.join(OUT, 'robots.txt'), 'User-agent: *\nDisallow: /\n');
+  // Cloudflare Pages reads _headers; the header also covers files that carry no robots meta.
+  await fs.writeFile(path.join(OUT, '_headers'), '/*\n  X-Robots-Tag: noindex, nofollow\n');
+} else {
+  await fs.writeFile(path.join(OUT, 'robots.txt'), `User-agent: *\nAllow: /\n\nSitemap: ${SITE_URL}sitemap.xml\n`);
+  await fs.writeFile(path.join(OUT, 'sitemap.xml'),
+    `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
+    `  <url><loc>${SITE_URL}</loc><lastmod>${new Date().toISOString().slice(0, 10)}</lastmod></url>\n</urlset>\n`);
+}
 await fs.writeFile(path.join(OUT, '.nojekyll'), '');
-console.log(`Built ${path.relative(ROOT, OUT)}/ for ${SITE_URL}`);
+console.log(`Built ${path.relative(ROOT, OUT)}/ for ${SITE_URL}${PREVIEW ? ' (preview, noindex)' : ''}`);
