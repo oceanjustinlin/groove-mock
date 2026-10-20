@@ -66,6 +66,57 @@
       }
     },
     {
+      "id": "marble-01",
+      "family": "marble",
+      "role": "layout",
+      "file": "marble-01.png",
+      "thumb": "thumbs/marble-01.jpg",
+      "size": 1024,
+      "accents": 2,
+      "base": "#78acd7",
+      "colors": [
+        "#002885",
+        "#e8f6ff"
+      ],
+      "palette": {
+        "mode": "tonal",
+        "derive": [
+          {
+            "dL": -0.3956,
+            "dC": 0.0766
+          },
+          {
+            "dL": 0.2412,
+            "dC": -0.0644
+          }
+        ]
+      },
+      "labelRadius": null,
+      "source": {
+        "kind": "unlicensed-reference",
+        "master": "output/texture-gen/library/marble-01",
+        "file": [
+          "layer1.png",
+          "layer2.png"
+        ],
+        "operation": "photo variant + colour extraction",
+        "date": "2026-10-20",
+        "reference": "https://www.pinterest.com/pin/648377677607525707/",
+        "referenceSha256": "9fb279c49e0226f1dbd862e856af6c8e015c0da8e06f472dd235eb2381dc31fa",
+        "generatedSha256": "2972051cf3d632871ba41e36dd4583dce3f48f9855e2e8dbe087fd8da4f8a9d1",
+        "prompt": "附图是一张彩胶唱片照片，作为风格参考：浅天蓝色大理石胶（marble vinyl）：浅蓝底上有白色和深蓝色的细碎流纹，像冰裂纹一样交织。\n\n请生成一张新的产品照片：同一批次压出来的另一张唱片。材料和压片工艺完全相同，所以底胶颜色、颜料颜色、浓淡层次、纹路粗细、团块大小、疏密程度、沿半径方向被拉开的走向都和参考一致；但纹路的具体排布是全新的，每一处都在不同位置——不是参考的复制、旋转、镜像或局部修改。\n\n拍摄要求（为了之后能从照片里干净地提取颜料分布）：\n- 严格正俯拍，相机正对中心孔，无透视、无倾斜，唱片是正圆。\n- 唱片居中，直径约占画面边长的 92%，四周留一点纯色背景。\n- 背景是均匀的纯中灰色，无纹理、无阴影。\n- 光线均匀柔和、完全漫射：没有高光、没有反光条、没有暗角、没有渐变，盘面各处亮度一致。\n- 看不到沟槽纹路和划痕，盘面像哑光一样平整。\n- 中心标签是一张完全空白的哑光纸，与底胶颜色相近的浅色，没有任何文字、图案或 logo。\n- 没有手、封套、道具、文字或水印。"
+      },
+      "status": "draft",
+      "bake": {
+        "crop": 1.0,
+        "floor": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    {
       "id": "pinwheel-02",
       "family": "pinwheel",
       "role": "layout",
@@ -133,6 +184,186 @@
       "status": "review",
       "bake": {
         "crop": 0.975,
+        "floor": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "id": "smoke-01",
+      "family": "smoke",
+      "role": "effect",
+      "file": "smoke-01.png",
+      "thumb": "thumbs/smoke-01.jpg",
+      "size": 1024,
+      "accents": 1,
+      "base": "#bdbdc3",
+      "colors": [
+        "#323031"
+      ],
+      "palette": {
+        "mode": "tonal",
+        "derive": [
+          {
+            "dL": -0.4886,
+            "dC": -0.005
+          }
+        ]
+      },
+      "labelRadius": null,
+      "source": {
+        "kind": "unlicensed-reference",
+        "master": "output/texture-gen/library/smoke-01",
+        "file": [
+          "layer1.png"
+        ],
+        "operation": "photo variant + colour extraction",
+        "date": "2026-10-20",
+        "reference": "https://www.pinterest.com/pin/475129829451470170/",
+        "referenceSha256": "3670d98e6e26ea331f9829bca7bafc2e106a17e431fb0629eb1d76ab5926aecf",
+        "generatedSha256": "4f058509e5c80e0a5b153db27eae44fd44a0ae2e6f31967e25d9631a497e7c4c",
+        "prompt": "附图是一张彩胶唱片照片，作为风格参考：白色半透明底胶里混着黑色烟雾颜料（smoke vinyl）。\n\n请生成一张新的产品照片：同一批次压出来的另一张唱片。材料和压片工艺完全相同，所以底胶颜色、烟雾颜色、烟雾的浓淡层次、纹丝粗细、团块大小、稀疏程度、沿半径方向被拉开的走向都和参考一致；但烟雾的具体排布是全新的，每一处都在不同位置——不是参考的复制、旋转、镜像或局部修改。\n\n拍摄要求（为了之后能从照片里干净地提取颜料分布）：\n- 严格正俯拍，相机正对中心孔，无透视、无倾斜，唱片是正圆。\n- 唱片居中，直径约占画面边长的 92%，四周留一点纯色背景。\n- 背景是均匀的纯中灰色，无纹理、无阴影。\n- 光线均匀柔和、完全漫射：没有高光、没有反光条、没有暗角、没有渐变，盘面各处亮度一致。\n- 看不到沟槽纹路和划痕，盘面像哑光一样平整。\n- 中心标签是一张完全空白的哑光纸，与底胶颜色相近的浅色，没有任何文字、图案或 logo。\n- 没有手、封套、道具、文字或水印。"
+      },
+      "status": "draft",
+      "bake": {
+        "crop": 1.0,
+        "floor": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "id": "smoke-02",
+      "family": "smoke",
+      "role": "effect",
+      "file": "smoke-02.png",
+      "thumb": "thumbs/smoke-02.jpg",
+      "size": 1024,
+      "accents": 1,
+      "base": "#cec5b1",
+      "colors": [
+        "#7d7467"
+      ],
+      "palette": {
+        "mode": "tonal",
+        "derive": [
+          {
+            "dL": -0.262,
+            "dC": -0.0066
+          }
+        ]
+      },
+      "labelRadius": null,
+      "source": {
+        "kind": "unlicensed-reference",
+        "master": "output/texture-gen/library/smoke-02",
+        "file": [
+          "layer1.png"
+        ],
+        "operation": "photo variant + colour extraction",
+        "date": "2026-10-20",
+        "reference": "https://www.pinterest.com/pin/337488565839430032/",
+        "referenceSha256": "5862536036eff71a94eaca41bf6d90b3eb84e061be597f029bc8d5249db22257",
+        "generatedSha256": "babe8ce350ec3a03efc8758aadcc69959dc1ab7c45e2b83e6d52c5863918a9c5",
+        "prompt": "附图是一张彩胶唱片照片，作为风格参考：奶白色半透明底胶里混着黑色烟雾颜料（smoke vinyl）：较大的柔和深色云团，加上细长的烟丝。\n\n请生成一张新的产品照片：同一批次压出来的另一张唱片。材料和压片工艺完全相同，所以底胶颜色、颜料颜色、浓淡层次、纹路粗细、团块大小、疏密程度、沿半径方向被拉开的走向都和参考一致；但纹路的具体排布是全新的，每一处都在不同位置——不是参考的复制、旋转、镜像或局部修改。\n\n拍摄要求（为了之后能从照片里干净地提取颜料分布）：\n- 严格正俯拍，相机正对中心孔，无透视、无倾斜，唱片是正圆。\n- 唱片居中，直径约占画面边长的 92%，四周留一点纯色背景。\n- 背景是均匀的纯中灰色，无纹理、无阴影。\n- 光线均匀柔和、完全漫射：没有高光、没有反光条、没有暗角、没有渐变，盘面各处亮度一致。\n- 看不到沟槽纹路和划痕，盘面像哑光一样平整。\n- 中心标签是一张完全空白的哑光纸，与底胶颜色相近的浅色，没有任何文字、图案或 logo。\n- 没有手、封套、道具、文字或水印。"
+      },
+      "status": "draft",
+      "bake": {
+        "crop": 1.0,
+        "floor": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "id": "smoke-03",
+      "family": "smoke",
+      "role": "effect",
+      "file": "smoke-03.png",
+      "thumb": "thumbs/smoke-03.jpg",
+      "size": 1024,
+      "accents": 1,
+      "base": "#750d16",
+      "colors": [
+        "#2a090d"
+      ],
+      "palette": {
+        "mode": "tonal",
+        "derive": [
+          {
+            "dL": -0.1627,
+            "dC": -0.081
+          }
+        ]
+      },
+      "labelRadius": null,
+      "source": {
+        "kind": "unlicensed-reference",
+        "master": "output/texture-gen/library/smoke-03",
+        "file": [
+          "layer1.png"
+        ],
+        "operation": "photo variant + colour extraction",
+        "date": "2026-10-20",
+        "reference": "https://www.pinterest.com/pin/989666086837708902/",
+        "referenceSha256": "6d132852b227a2b483eba37abacac519d73665d08adfa17f2cad6908ca5d664a",
+        "generatedSha256": "2de879ab99df51aec9d078e4913e72b63ac978cd8e6d6105c1d395e506e38473",
+        "prompt": "附图是一张彩胶唱片照片，作为风格参考：透明深红色底胶里混着黑色烟雾颜料（smoke vinyl）：半透明的深色烟雾团和条纹，红色底透出来。\n\n请生成一张新的产品照片：同一批次压出来的另一张唱片。材料和压片工艺完全相同，所以底胶颜色、颜料颜色、浓淡层次、纹路粗细、团块大小、疏密程度、沿半径方向被拉开的走向都和参考一致；但纹路的具体排布是全新的，每一处都在不同位置——不是参考的复制、旋转、镜像或局部修改。\n\n拍摄要求（为了之后能从照片里干净地提取颜料分布）：\n- 严格正俯拍，相机正对中心孔，无透视、无倾斜，唱片是正圆。\n- 唱片居中，直径约占画面边长的 92%，四周留一点纯色背景。\n- 背景是均匀的纯中灰色，无纹理、无阴影。\n- 光线均匀柔和、完全漫射：没有高光、没有反光条、没有暗角、没有渐变，盘面各处亮度一致。\n- 看不到沟槽纹路和划痕，盘面像哑光一样平整。\n- 中心标签是一张完全空白的哑光纸，与底胶颜色相近的浅色，没有任何文字、图案或 logo。\n- 没有手、封套、道具、文字或水印。"
+      },
+      "status": "draft",
+      "bake": {
+        "crop": 1.0,
+        "floor": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "id": "smoke-04",
+      "family": "smoke",
+      "role": "effect",
+      "file": "smoke-04.png",
+      "thumb": "thumbs/smoke-04.jpg",
+      "size": 1024,
+      "accents": 1,
+      "base": "#024f4d",
+      "colors": [
+        "#03171c"
+      ],
+      "palette": {
+        "mode": "tonal",
+        "derive": [
+          {
+            "dL": -0.1965,
+            "dC": -0.0368
+          }
+        ]
+      },
+      "labelRadius": null,
+      "source": {
+        "kind": "unlicensed-reference",
+        "master": "output/texture-gen/library/smoke-04",
+        "file": [
+          "layer1.png"
+        ],
+        "operation": "photo variant + colour extraction",
+        "date": "2026-10-20",
+        "reference": "https://www.pinterest.com/pin/449445237833759225/",
+        "referenceSha256": "da7abd33e6e973d5e18a6dbc083fa7f522f7b5a5afb803ca4faf32f6bbcc6b41",
+        "generatedSha256": "f9ae6fdaec893aad0b5036ee6b57ffd876de18e3c6ffc77d472b52ba508670bf",
+        "prompt": "附图是一张彩胶唱片照片，作为风格参考：半透明翡翠绿底胶里混着墨绿近黑的烟雾颜料（smoke vinyl）：密集的细烟丝和流纹遍布全盘。\n\n请生成一张新的产品照片：同一批次压出来的另一张唱片。材料和压片工艺完全相同，所以底胶颜色、颜料颜色、浓淡层次、纹路粗细、团块大小、疏密程度、沿半径方向被拉开的走向都和参考一致；但纹路的具体排布是全新的，每一处都在不同位置——不是参考的复制、旋转、镜像或局部修改。\n\n拍摄要求（为了之后能从照片里干净地提取颜料分布）：\n- 严格正俯拍，相机正对中心孔，无透视、无倾斜，唱片是正圆。\n- 唱片居中，直径约占画面边长的 92%，四周留一点纯色背景。\n- 背景是均匀的纯中灰色，无纹理、无阴影。\n- 光线均匀柔和、完全漫射：没有高光、没有反光条、没有暗角、没有渐变，盘面各处亮度一致。\n- 看不到沟槽纹路和划痕，盘面像哑光一样平整。\n- 中心标签是一张完全空白的哑光纸，与底胶颜色相近的浅色，没有任何文字、图案或 logo。\n- 没有手、封套、道具、文字或水印。"
+      },
+      "status": "draft",
+      "bake": {
+        "crop": 1.0,
         "floor": [
           0.0,
           0.0,

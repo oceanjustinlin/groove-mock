@@ -1740,7 +1740,7 @@ $('bg-color').addEventListener('input',e=>{state.bgColor=e.target.value;state.bg
 $('sleeve-color').addEventListener('input',e=>{state.sleeveColor=e.target.value;sleeveMat.color.set(tex.sleeve?'#ffffff':e.target.value)});
 field('vinyl-color','vinylColor');field('vinyl2-color','vinyl2Color');field('bg-color','bgColor');field('sleeve-color','sleeveColor');
 // Pattern panel: a thumbnail picker per disc, then only the controls the pattern's palette mode uses.
-const FAMILY={split:['分色','Split'],splatter:['泼溅','Splatter'],starburst:['爆发','Starburst'],blob:['色块','Blob'],pinwheel:['风车','Pinwheel'],ripple:['波纹','Ripple'],swirl:['旋涡','Swirl']};
+const FAMILY={split:['分色','Split'],splatter:['泼溅','Splatter'],starburst:['爆发','Starburst'],blob:['色块','Blob'],pinwheel:['风车','Pinwheel'],ripple:['波纹','Ripple'],swirl:['旋涡','Swirl'],smoke:['烟雾','Smoke'],marble:['大理石','Marble']};
 const MODE_NAME={regions:['分色','Split'],accent:['主次','Main + accent'],tonal:['同色系','Tonal']};
 const patternLabel=m=>m?`${tr(...(FAMILY[m.family]??[m.family,m.family]))} · ${m.id} · ${tr(...MODE_NAME[m.palette.mode])}`:tr('纯色','Solid');
 const splitThumbs=new Map();
