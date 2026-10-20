@@ -1714,7 +1714,10 @@ function syncUI(){
   syncPatterns()}
 
 seg('finish','finish',applyFinish);
-seg('jacket-type','jacketType',()=>{applyJacketType();syncAnimPanel()});
+// Switching to a single jacket in the panel drops an opening clip back to turntable.
+seg('jacket-type','jacketType',()=>{applyJacketType();
+  if(!isGate()&&state.animPreset==='gatefold'){state.animPreset='turntable';for(const b of $('anim-preset').children)b.setAttribute('aria-pressed',b.dataset.v==='turntable');if(previewActive())fitPreview()}
+  syncAnimPanel()});
 seg('lp-count','lpCount',applyLpCount);
 seg('vinyl-style','vinyl',()=>{applyVinyl();syncPatterns()});
 seg('vinyl2-style','vinyl2',()=>{applyVinyl();syncPatterns()});
@@ -2214,9 +2217,9 @@ $('play-btn').addEventListener('click',()=>setPlaying(!preview.playing));
 $('play-reset').addEventListener('click',resetPreview);
 setPlaying(false);
 function syncAnimPanel(){
-  // Opening needs a gatefold: a single jacket hides the choice, and a clip set to it falls back to turntable.
-  const gate=$('anim-preset').querySelector('[data-v=gatefold]');gate.hidden=!isGate();
-  if(!isGate()&&state.animPreset==='gatefold'){state.animPreset='turntable';for(const b of $('anim-preset').children)b.setAttribute('aria-pressed',b.dataset.v==='turntable');if(previewActive())fitPreview()}
+  // Opening needs a gatefold, so a single jacket hides the choice. A spec that still asks for it keeps it
+  // (shown pressed, with the issue note), so the API and CLI can warn instead of quietly rendering a turntable.
+  const gate=$('anim-preset').querySelector('[data-v=gatefold]');gate.hidden=!isGate()&&state.animPreset!=='gatefold';
   const p=state.animPreset,issues=animIssues();
   $('anim-dir-row').hidden=p!=='turntable'&&p!=='swing';$('anim-angle-row').hidden=p!=='swing';
   const notes=issues.map(k=>tr(ANIM_ISSUES[k][1],ANIM_ISSUES[k][2]));
