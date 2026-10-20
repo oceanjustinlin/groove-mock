@@ -251,6 +251,7 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
           </div>
           <div class="slider"><label for="sleeve-x">内袋抽出</label><input type="range" id="sleeve-x" min="0" max="100" value="35"><output id="sleeve-x-v">35%</output></div>
           <div class="slider"><label for="record-x">唱片抽出</label><input type="range" id="record-x" min="0" max="100" value="40"><output id="record-x-v">40%</output></div>
+          <div class="slider"><label for="tracks">每面音轨</label><input type="range" id="tracks" min="1" max="20" value="6"><output id="tracks-v">6</output></div>
         </div>
 
         <div class="disc" id="lp2-sub" hidden>
@@ -286,6 +287,7 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
           </div>
           <div class="slider"><label for="sleeve2-x">内袋抽出</label><input type="range" id="sleeve2-x" min="0" max="100" value="60"><output id="sleeve2-x-v">60%</output></div>
           <div class="slider"><label for="record2-x">唱片抽出</label><input type="range" id="record2-x" min="0" max="100" value="30"><output id="record2-x-v">30%</output></div>
+          <div class="slider"><label for="tracks2">每面音轨</label><input type="range" id="tracks2" min="1" max="20" value="6"><output id="tracks2-v">6</output></div>
         </div>
         <p class="note">内袋抽出：内袋连同唱片一起从封套开口拉出。唱片抽出：唱片再从内袋里往外拉。</p>
       </section>
@@ -397,7 +399,7 @@ const EN={
   '唱片与内袋':'Records & sleeves','33⅓ RPM · 标签 Ø100':'33⅓ RPM · Label Ø100','数量':'Count','单 LP':'1LP','标签角度':'Label angle',
   '显示内袋':'Show inner sleeve','上传内袋印刷图':'Upload inner sleeve art','印刷图':'Artwork','内袋颜色':'Sleeve colour',
   '第 1 张':'Disc 1','A / B 面':'Sides A / B','上传 A 面标签':'Upload side A label','上传 B 面标签':'Upload side B label','A 面标签':'Side A label','B 面标签':'Side B label',
-  '胶色':'Vinyl','黑胶':'Black','彩胶':'Colour','第 1 张胶色':'Disc 1 vinyl colour','内袋抽出':'Sleeve out','唱片抽出':'Record out',
+  '胶色':'Vinyl','黑胶':'Black','彩胶':'Colour','第 1 张胶色':'Disc 1 vinyl colour','内袋抽出':'Sleeve out','唱片抽出':'Record out','每面音轨':'Tracks per side',
   '第 2 张':'Disc 2','C / D 面 · 放在第 1 张后面':'Sides C / D · behind disc 1','上传 C 面标签':'Upload side C label','上传 D 面标签':'Upload side D label',
   'C 面标签':'Side C label','D 面标签':'Side D label','第 2 张胶色':'Disc 2 vinyl colour',
   '纹路':'Pattern','第 1 张纹路':'Disc 1 pattern','第 2 张纹路':'Disc 2 pattern','纹路色':'Pattern colour','第 1 张纹路色':'Disc 1 pattern colour','第 2 张纹路色':'Disc 2 pattern colour',
@@ -435,7 +437,7 @@ const state = {
   vinyl:'black', vinylColor:'#c8392b', vinyl2:'black', vinyl2Color:'#d9a441', wrapOn:true, wrinkle:1, gloss:1,
   pattern:'none', patternColor:'#1b1b1b', patternAlt:'#2a6f4e', patternContrast:1, patternRot:0, patternFromCover:false,
   pattern2:'none', pattern2Color:'#1b1b1b', pattern2Alt:'#2a6f4e', pattern2Contrast:1, pattern2Rot:0, pattern2FromCover:false, vinylSame:true,
-  vinylClear:0, vinyl2Clear:0,
+  vinylClear:0, vinyl2Clear:0, tracks:6, tracks2:6,
   stickerOn:true, stickerShape:'circle', stickerSize:7.6, stickerX:8.8, stickerY:9.2, stickerRot:0,
   numOn:true, numCur:123, numTotal:1000, numPrefix:'No.', numFormat:'slash', numFont:'auto', numPlace:'back', numFinish:'stamp', numColor:'#25336f',
   numX:10.5, numY:-13.6, numSize:.5, numRot:-3,
@@ -549,17 +551,20 @@ function fitImage(src,w,h,{rotateIfWide=false}={}){
 
 // ---------- Procedural material maps ----------
 // Vinyl: roughness (G) and anisotropy (RG = radial direction, B = strength) from one radial profile.
-function grooveMaps(){
+// Tracks are cut at a constant pitch, so equal radial widths mean equal playing time. One map per track count.
+const grooveCache=new Map();
+function grooveMaps(tracks){if(!grooveCache.has(tracks))grooveCache.set(tracks,makeGrooveMaps(tracks));return grooveCache.get(tracks)}
+function makeGrooveMaps(tracks){
   const N=2048,R=LP.r,bins=4096,rough=new Float32Array(bins),aniso=new Float32Array(bins),r=rng(11);
-  // Track boundaries between run-out (≈61 mm) and lead-in (≈147 mm radius).
-  const gaps=[6.95,8.3,9.9,11.2,12.9].map(x=>[x,x+.07]);
+  // Track boundaries, evenly spaced between run-out (≈61 mm) and lead-in (≈147 mm radius).
+  const runOut=6.1,leadIn=14.72,gaps=Array.from({length:tracks-1},(_,k)=>runOut+(k+1)*(leadIn-runOut)/tracks).map(x=>[x-.035,x+.035]);
   let noise=0;
   for(let i=0;i<bins;i++){const rr=i/bins*R;noise=noise*.55+(r()*2-1)*.45;
     let gap=0;
     if(rr<LP.label+.02)gap=1;
-    else if(rr<6.1)gap=.92;                 // run-out / dead wax
+    else if(rr<runOut)gap=.92;                // run-out / dead wax
     else if(rr>14.95)gap=1;                  // outer rim
-    else if(rr>14.72)gap=.55;                // lead-in
+    else if(rr>leadIn)gap=.55;                // lead-in
     for(const[a,b]of gaps)if(rr>a&&rr<b)gap=Math.max(gap,.9);
     rough[i]=THREE.MathUtils.lerp(.34+.07*noise,.09,gap);
     aniso[i]=THREE.MathUtils.lerp(.92,.12,gap);
@@ -649,7 +654,7 @@ ground.rotation.x=-Math.PI/2;ground.position.y=GROUND_Y;ground.receiveShadow=tru
 const tex={front:colorTex(sampleFront()),back:colorTex(sampleBack()),spine:colorTex(sampleSpine()),labelA:colorTex(sampleLabel('A')),labelB:colorTex(sampleLabel('B')),labelC:colorTex(sampleLabel('C')),labelD:colorTex(sampleLabel('D')),sticker:colorTex(sampleSticker('circle')),sleeve:null,
   innerLeft:colorTex(sampleInnerLeft()),innerRight:colorTex(sampleInnerRight()),insertFront:colorTex(sampleInsert('front')),insertBack:colorTex(sampleInsert('back')),obi:null};
 const userSticker={img:null},userObi={img:null};
-const grooves=grooveMaps(),wrapNormal=wrapNormalMap(),bump=paperBump();
+const wrapNormal=wrapNormalMap(),bump=paperBump();
 
 // ---------- Materials ----------
 function paper(map){return new THREE.MeshPhysicalMaterial({map,roughness:.6,metalness:0,clearcoat:.03,clearcoatRoughness:.4,bumpMap:bump,bumpScale:.35})}
@@ -661,7 +666,7 @@ const stockInner=new THREE.MeshStandardMaterial({color:0xb9b3a4,roughness:.95});
 function applyFinish(){const f=state.finish;for(const m of[frontMat,backMat,spineMat,innerLeftMat,innerRightMat,insertFrontMat,insertBackMat]){m.roughness=f==='gloss'?.26:f==='matte'?.92:.6;m.clearcoat=f==='gloss'?.55:.03;m.clearcoatRoughness=f==='gloss'?.1:.4;m.bumpScale=f==='gloss'?.12:.35}}
 
 // Each disc gets its own face/edge materials, so a 2LP can mix black and coloured vinyl.
-function vinylMats(){return{face:new THREE.MeshPhysicalMaterial({color:0x0b0b0c,metalness:0,roughness:1,roughnessMap:grooves.rough,anisotropy:.9,anisotropyMap:grooves.aniso,envMap:studioEnv,envMapIntensity:.32,side:THREE.FrontSide}),
+function vinylMats(){return{face:new THREE.MeshPhysicalMaterial({color:0x0b0b0c,metalness:0,roughness:1,anisotropy:.9,envMap:studioEnv,envMapIntensity:.32,side:THREE.FrontSide}),
   edge:new THREE.MeshPhysicalMaterial({color:0x0b0b0c,metalness:0,roughness:.3,envMap:studioEnv,envMapIntensity:.3})}}
 const vinyl1=vinylMats(),vinyl2=vinylMats();
 const labelMatA=new THREE.MeshStandardMaterial({map:tex.labelA,roughness:.62});
@@ -794,6 +799,8 @@ function applyVinylTo(i,mats){
   const{black,base,clear,mask}=discLook(i),see=clear>0;
   for(const m of[mats.face,mats.edge]){m.color.set(base);m.transparent=see;m.opacity=1-clear;m.depthWrite=!see;m.needsUpdate=true}
   mats.face.envMapIntensity=black?.32:.22;
+  const g=grooveMaps(state[i===2?'tracks2':'tracks']);
+  if(mats.face.roughnessMap!==g.rough){mats.face.roughnessMap=g.rough;mats.face.anisotropyMap=g.aniso;mats.face.needsUpdate=true}
   return applyPatternTo(i,mats);
 }
 // Resolves once both discs carry their pattern textures; spec rendering waits on it.
@@ -1078,7 +1085,7 @@ function alertNote(msg){$('modal-title').textContent=msg;$('modal-img').hidden=t
 // Every control is registered against its state key, so syncUI() can redraw the whole panel from state
 // after a spec is applied through window.grooveMock.
 const CONTROLS=[];
-const UNITS={pct:{toState:v=>v/100,toUI:v=>Math.round(v*100),fmt:v=>v+'%'},mm:{toState:v=>v/10,toUI:v=>Math.round(v*10),fmt:v=>v+' mm'},deg:{toState:v=>v,toUI:v=>Math.round(v),fmt:v=>v+'°'}};
+const UNITS={pct:{toState:v=>v/100,toUI:v=>Math.round(v*100),fmt:v=>v+'%'},mm:{toState:v=>v/10,toUI:v=>Math.round(v*10),fmt:v=>v+' mm'},deg:{toState:v=>v,toUI:v=>Math.round(v),fmt:v=>v+'°'},count:{toState:v=>v,toUI:v=>Math.round(v),fmt:v=>String(v)}};
 function seg(id,key,after){CONTROLS.push({kind:'seg',id,key});const root=$(id);root.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;state[key]=isNaN(+b.dataset.v)?b.dataset.v:+b.dataset.v;for(const x of root.children)x.setAttribute('aria-pressed',x===b);after?.()})}
 function slider(id,key,unit,after=pose){CONTROLS.push({kind:'slider',id,key,unit});const el=$(id),out=$(id+'-v'),u=UNITS[unit];const f=()=>{state[key]=u.toState(+el.value);out.textContent=u.fmt(+el.value);after()};el.addEventListener('input',f);f()}
 function toggle(id,key,sub,after=pose){CONTROLS.push({kind:'toggle',id,key,sub});$(id).addEventListener('change',e=>{state[key]=e.target.checked;if(sub)$(sub).hidden=!state[key];after()})}
@@ -1171,6 +1178,8 @@ slider('record-rot','recordRot','deg');
 slider('insert-x','insertX','pct');
 slider('sleeve2-x','sleeve2X','pct');
 slider('record2-x','record2X','pct');
+slider('tracks','tracks','count',queueVinyl);
+slider('tracks2','tracks2','count',queueVinyl);
 slider('gate-open','gateOpen','deg',()=>{pose();if(!userMoved)setView(state.view)});
 let obiTimer;
 slider('obi-width','obiWidth','mm',()=>{clearTimeout(obiTimer);obiTimer=setTimeout(()=>{if(obi.children.length)buildObi()},60)});
@@ -1247,6 +1256,7 @@ const SPEC_FIELDS=[
     colorF(`records.disc${i}.color`,`vinyl${s}Color`,`第 ${i} 张彩胶颜色；有纹路时是底色（分色类的第一块）${note}`),
     numF(`records.disc${i}.sleeveOut`,`sleeve${s}X`,0,100,.01,`第 ${i} 张内袋连同唱片从封套开口抽出的比例（%）${note}`),
     numF(`records.disc${i}.recordOut`,`record${s}X`,0,100,.01,`第 ${i} 张唱片再从内袋里抽出的比例（%）${note}`),
+    numF(`records.disc${i}.tracks`,`tracks${s}`,1,20,1,`第 ${i} 张每面的音轨数，盘面按等宽分成这么多圈，相邻音轨之间有一道亮环；两面相同${note}`,true),
     enumF(`records.disc${i}.pattern.id`,`pattern${s}`,['none',...MASKS.map(m=>m.id)],`第 ${i} 张彩胶纹路，none 或不写为纯色，只在 vinyl=color 时生效。按配色方式分三类——分色（底色是第一块，pattern.color 第二块，split-tri 再用 pattern.color2 第三块；split-quad 对角同色）：${patternIds('regions')}；主次（底色 + pattern.color，其余色层自动推算）：${patternIds('accent')}；同色系（只用底色，纹路是它的深浅变化，pattern.contrast 调反差）：${patternIds('tonal')}。底色是 color；只给 id 时，color、pattern.color、pattern.color2 回到这款纹路的默认配色${note}`),
     colorF(`records.disc${i}.pattern.color`,`pattern${s}Color`,`第 ${i} 张纹路色：主次类为纹路颜色，分色类为第二块颜色；同色系不使用${note}`),
     colorF(`records.disc${i}.pattern.color2`,`pattern${s}Alt`,`第 ${i} 张分色第三块颜色，仅 split-tri 使用${note}`),
