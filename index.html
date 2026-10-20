@@ -1457,6 +1457,14 @@ async function libConfirm(r){const turn=++libTurn;libStatus(tr('正在读取图�
       if(turn!==libTurn)return;
       formats=alt.flatMap((o,n)=>{const from=[...new Set((o.media||[]).map(m=>m.format).filter(Boolean))].join(' + ')||tr('其他格式','Other format');
         return https(idx[n].images).map(i=>({...toImg(i,o.id),from,note:[o.date?.slice(0,4),o.country].filter(Boolean).join(' · ')}))})}
+    // The cover comes first from a digital release: that is the label's own artwork file, not a scan or a
+    // photo of a sleeve. CAA's /front without a size is the original upload, so it goes first.
+    const isDigital=o=>(o.media||[]).some(m=>m.format==='Digital Media');
+    const dig=isDigital(rel)?null:libGroupReleases.filter(o=>o.id!==r.id&&isDigital(o)&&o['cover-art-archive']?.front)
+      .sort((a,b)=>(b['cover-art-archive'].count||0)-(a['cover-art-archive'].count||0))[0];
+    if(dig)formats=formats.filter(i=>!(i.ref.startsWith(dig.id+'/')&&i.types.includes('Front')));
+    const digital=dig?[{thumb:`${CAA}release/${dig.id}/front-250`,full:[`${CAA}release/${dig.id}/front`,`${CAA}release/${dig.id}/front-1200`],types:['Front'],digital:true,
+      from:tr('数字版','Digital'),note:[dig.date?.slice(0,4),dig.country].filter(Boolean).join(' · '),ref:`${dig.id}/front`}]:[];
     const assign={},kept=[];
     for(const[slot,f]of[['front',i=>i.front],['front',i=>i.types.includes('Front')],['back',i=>i.back],['back',i=>i.types.includes('Back')],
         ['spine',i=>i.types.includes('Spine')],['sleeve',i=>i.types.includes('Liner')]]){
@@ -1471,18 +1479,21 @@ async function libConfirm(r){const turn=++libTurn;libStatus(tr('正在读取图�
     for(const n of[...discs]){const m=/\bside\s*([A-D])\b/i.exec(own[n].note)||/^\s*([A-D])\s*$/.exec(own[n].note),sl=m&&'label'+m[1].toUpperCase();
       if(sl&&free.includes(sl)){assign[sl]=n;free.splice(free.indexOf(sl),1);discs.splice(discs.indexOf(n),1)}}
     for(const n of discs){const sl=free.shift();if(!sl)break;assign[sl]=n}
-    // No front of its own: borrow the album's cover from another pressing, else from another format.
-    if(!('front' in assign)&&!kept.includes('front')){const k=[...others,...formats].findIndex(i=>i.types.includes('Front'));
+    // Front: the digital cover when there is one; else this release's own; else another pressing's or format's.
+    if(digital.length){if(slotOrigin.front==='user'){if(!kept.includes('front'))kept.push('front')}else assign.front=own.length+others.length+formats.length}
+    else if(!('front' in assign)&&!kept.includes('front')){const k=[...others,...formats].findIndex(i=>i.types.includes('Front'));
       if(k>=0){if(slotOrigin.front==='user')kept.push('front');else assign.front=own.length+k}}
     const pack=rel.packaging,jacket=!vinyl?null:pack==='Gatefold Cover'?'gatefold':pack?'single':null;
-    libPlan={release:rel,vinyl,images:[...own,...others,...formats],ownCount:own.length,assign,kept,lps:nLp,extraLps:Math.max(0,lps.length-2),sides,jacket,bmp:{},crops:{},editing:null};
+    libPlan={release:rel,vinyl,images:[...own,...others,...formats,...digital],ownCount:own.length,assign,kept,lps:nLp,extraLps:Math.max(0,lps.length-2),sides,jacket,bmp:{},crops:{},editing:null};
     libStatus('');libConfirmView()}
   catch(err){if(turn===libTurn)libFail()}}
 
 const typeLabel=im=>im.types.map(t=>tr(...(CAA_TYPE[t]||[t,t]))).join(' / ')||tr('未分类','Untyped');
 const imgLabel=im=>im.other?tr('其他版本封面','Other pressing'):im.from?`${im.from} · ${typeLabel(im)}`:typeLabel(im);
 function libConfirmView(){const p=libPlan,r=p.release,targets=libTargets(p.lps),names=Object.fromEntries(targets);libView=libConfirmView;
-  const cards=p.images.map((im,k)=>`<div class="lib-card">
+  // The digital cover leads the gallery; every card keeps its index k for the menus and crops.
+  const order=p.images.map((_,k)=>k).sort((a,b)=>(+!!p.images[b].digital)-(+!!p.images[a].digital)||a-b);
+  const cards=order.map(k=>[p.images[k],k]).map(([im,k])=>`<div class="lib-card">
     <a class="lib-cover" href="${im.full.at(-1)}" target="_blank" rel="noopener" style="background-image:url('${im.thumb}')" title="${esc(imgLabel(im)+(im.note?' · '+im.note:''))}"></a>
     <div class="lib-meta">${esc(imgLabel(im))}${im.note?`<br>${esc(im.note)}`:''}</div>
     <div><div class="lib-uses" data-uses="${k}"></div>
