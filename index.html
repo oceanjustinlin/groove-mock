@@ -113,8 +113,10 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
 .lib-item.param{grid-template-columns:auto minmax(0,1fr)}
 .lib-item input{accent-color:var(--accent);width:16px;height:16px}
 .lib-item .lib-cover{width:36px}
-.lib-media{display:flex;flex-wrap:wrap;gap:6px}
-.lib-media a{display:block;width:44px}
+.lib-gallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 8px;max-height:420px;overflow:auto;padding:2px}
+.lib-card{display:grid;gap:4px;align-content:start;min-width:0}
+.lib-card .lib-cover{width:100%}
+.lib-card .field.select{width:100%;font-size:12px}
 .tile .tag.lib{background:var(--accent);color:var(--accent-ink)}
 .sub[hidden]{display:none!important}
 .sub{display:grid;gap:10px}
@@ -1220,47 +1222,76 @@ function libReleaseRows(){const g=libGroup,art=r=>r['cover-art-archive']||{};lib
 function sideCounts(medium){const by={};for(const t of medium.tracks||[]){const m=/^([A-Z])/i.exec(t.number||'');if(m){const k=m[1].toUpperCase();by[k]=(by[k]||0)+1}}
   const v=Object.values(by);if(v.length)return v;const n=(medium.tracks||[]).length;return n?[Math.ceil(n/2),Math.floor(n/2)]:[]}
 
-const libSlots=()=>[['front',tr('正面','Front')],['back',tr('背面','Back')],['spine',tr('书脊','Spine')],['sleeve',tr('内袋','Inner sleeve')]];
+// Every slot a library image can go to; C / D labels only exist on 2LP.
+const libTargets=lps=>[['front',tr('正面','Front')],['back',tr('背面','Back')],['spine',tr('书脊','Spine')],
+  ['innerLeft',tr('内页左','Inner left')],['innerRight',tr('内页右','Inner right')],['sleeve',tr('内袋','Inner sleeve')],
+  ['insertFront',tr('插页正面','Insert front')],['insertBack',tr('插页背面','Insert back')],['obi',tr('Obi 侧标','Obi strip')],['sticker',tr('贴纸','Sticker')],
+  ['labelA',tr('A 面标签','Side A label')],['labelB',tr('B 面标签','Side B label')],
+  ...(lps===2?[['labelC',tr('C 面标签','Side C label')],['labelD',tr('D 面标签','Side D label')]]:[])];
+const CAA_TYPE={Front:['正面','Front'],Back:['背面','Back'],Spine:['书脊','Spine'],Liner:['内袋','Liner'],Medium:['盘面','Disc'],Booklet:['小册子','Booklet'],
+  Obi:['Obi','Obi'],Tray:['托盘','Tray'],Sticker:['贴纸','Sticker'],Poster:['海报','Poster'],Panel:['折页','Panel'],Track:['单曲','Track'],Other:['其他','Other']};
+// libPlan.assign maps slot → index into libPlan.images; each image goes to at most one slot.
 let libPlan=null;
 async function libConfirm(r){const turn=++libTurn;libStatus(tr('正在读取图片和曲目…','Loading images and tracks…'));
   try{const[rel,caa]=await Promise.all([mbGet(`release/${r.id}?inc=recordings+labels`),
       r['cover-art-archive']?.artwork?fetch(`${CAA}release/${r.id}/`).then(x=>x.ok?x.json():{images:[]}).catch(()=>({images:[]})):{images:[]}]);
     if(turn!==libTurn)return;
     // CAA lists http:// links; an https page can't fetch those.
-    const imgs=JSON.parse(JSON.stringify(caa.images||[]).replace(/http:\/\//g,'https://')),has=t=>i=>(i.types||[]).includes(t);
-    const pick={front:imgs.find(i=>i.front)||imgs.find(has('Front')),back:imgs.find(i=>i.back)||imgs.find(has('Back')),spine:imgs.find(has('Spine')),sleeve:imgs.find(has('Liner'))};
+    const imgs=JSON.parse(JSON.stringify(caa.images||[]).replace(/http:\/\//g,'https://'));
+    const own=imgs.map(i=>({thumb:i.thumbnails?.['250']||i.thumbnails?.small||i.image,full:[i.thumbnails?.['1200'],i.thumbnails?.['500']||i.thumbnails?.large,i.image].filter(Boolean),
+      types:i.types||[],front:i.front,back:i.back,note:i.comment||'',ref:`${rel.id}/${i.id}`}));
+    // Other pressings of the same album often carry a different cover; offer their fronts as well.
+    const others=libReleaseList.filter(o=>o.id!==r.id&&o['cover-art-archive']?.front).slice(0,12).map(o=>({thumb:`${CAA}release/${o.id}/front-250`,
+      full:[`${CAA}release/${o.id}/front-1200`,`${CAA}release/${o.id}/front-500`],types:['Front'],other:true,
+      note:[o.date?.slice(0,4),o.country,(o['label-info']||[]).map(l=>l['catalog-number']).filter(Boolean)[0]].filter(Boolean).join(' · '),ref:`${o.id}/front`}));
+    const assign={},kept=[];
+    for(const[slot,f]of[['front',i=>i.front],['front',i=>i.types.includes('Front')],['back',i=>i.back],['back',i=>i.types.includes('Back')],
+        ['spine',i=>i.types.includes('Spine')],['sleeve',i=>i.types.includes('Liner')]]){
+      if(slot in assign||kept.includes(slot))continue;const k=own.findIndex((im,n)=>f(im)&&!Object.values(assign).includes(n));if(k<0)continue;
+      // The viewer's own upload stays unless they pick this image for it.
+      if(slotOrigin[slot]==='user')kept.push(slot);else assign[slot]=k}
     const lps=(rel.media||[]).filter(isLp),sides=lps.slice(0,2).map(sideCounts);
     const pack=rel.packaging,jacket=pack==='Gatefold Cover'?'gatefold':pack?'single':null;
-    libPlan={release:rel,pick,lps:Math.min(2,lps.length)||1,extraLps:Math.max(0,lps.length-2),sides,jacket,media:imgs.filter(has('Medium'))};
+    libPlan={release:rel,images:[...own,...others],assign,kept,lps:Math.min(2,lps.length)||1,extraLps:Math.max(0,lps.length-2),sides,jacket};
     libStatus('');libConfirmView()}
   catch(err){if(turn===libTurn)libFail()}}
 
-function libConfirmView(){const p=libPlan,r=p.release,rows=[];libView=libConfirmView;
-  const thumbOf=i=>i.thumbnails?.['250']||i.thumbnails?.small||i.image;
-  for(const[slot,name]of libSlots()){const i=p.pick[slot];if(!i)continue;const mine=slotOrigin[slot]==='user';
-    rows.push(`<label class="lib-item"><input type="checkbox" data-slot-pick="${slot}"${mine?'':' checked'}><span class="lib-cover" style="background-image:url('${thumbOf(i)}')"></span>
-      <span>${name}${mine?`<div class="lib-meta">${tr('已有你上传的图，默认保留','You uploaded one; kept by default')}</div>`:''}</span></label>`)}
-  const missing=libSlots().filter(([s])=>s!=='sleeve'&&!p.pick[s]).map(([,n])=>n);
+const imgLabel=im=>im.other?tr('其他版本封面','Other pressing'):im.types.map(t=>tr(...(CAA_TYPE[t]||[t,t]))).join(' / ')||tr('未分类','Untyped');
+function libConfirmView(){const p=libPlan,r=p.release,targets=libTargets(p.lps),names=Object.fromEntries(targets);libView=libConfirmView;
+  const slotOf=k=>Object.keys(p.assign).find(s=>p.assign[s]===k)||'';
+  const cards=p.images.map((im,k)=>`<div class="lib-card">
+    <a class="lib-cover" href="${im.full.at(-1)}" target="_blank" rel="noopener" style="background-image:url('${im.thumb}')" title="${esc(imgLabel(im)+(im.note?' · '+im.note:''))}"></a>
+    <div class="lib-meta">${esc(imgLabel(im))}${im.note?`<br>${esc(im.note)}`:''}</div>
+    <select class="field select" data-img="${k}" aria-label="${esc(tr(`第 ${k+1} 张图用作`,`Use image ${k+1} as`))}"><option value="">${tr('不用','Not used')}</option>${targets.map(([s,n])=>`<option value="${s}"${slotOf(k)===s?' selected':''}>${n}</option>`).join('')}</select></div>`).join('');
   const params=[`<label class="lib-item param"><input type="checkbox" data-param="count" checked><span>${tr('唱片数量','Records')}${tr('：',': ')}${p.lps===2?'2LP':tr('单 LP','1LP')}${p.extraLps?`<div class="lib-meta">${tr(`这一版共 ${p.lps+p.extraLps} 张，只做前 2 张`,`This release has ${p.lps+p.extraLps} discs; only the first 2 are modelled`)}</div>`:''}</span></label>`];
   if(p.jacket)params.push(`<label class="lib-item param"><input type="checkbox" data-param="jacket" checked><span>${tr('封套','Jacket')}${tr('：',': ')}${p.jacket==='gatefold'?tr('双开','Gatefold'):tr('单开','Single')}</span></label>`);
   p.sides.forEach((s,i)=>{if(!s.length)return;const n=Math.min(20,Math.max(...s));
     params.push(`<label class="lib-item param"><input type="checkbox" data-param="tracks${i+1}" checked><span>${tr(`第 ${i+1} 张每面音轨`,`Disc ${i+1} tracks per side`)}${tr('：',': ')}${n}${new Set(s).size>1?`<div class="lib-meta">${tr(`各面曲目数 ${s.join(' / ')}，按最多的一面`,`Sides have ${s.join(' / ')} tracks; using the largest`)}</div>`:''}</span></label>`)});
-  const media=p.media.length?`<div class="lib-meta">${tr('盘面照片（需要自己裁成标签后上传）','Disc photos (crop to a label and upload yourself)')}</div><div class="lib-media">${p.media.slice(0,8).map(i=>`<a href="${i.image}" target="_blank" rel="noopener" title="${esc(i.comment||tr('盘面','Disc'))}"><span class="lib-cover" style="background-image:url('${thumbOf(i)}')"></span></a>`).join('')}</div>`:'';
+  const notes=[];
+  if(p.kept.length)notes.push(tr(`${p.kept.map(s=>names[s]).join('、')}已有你上传的图，默认保留；要替换就在图下面选。`,`You uploaded your own ${p.kept.map(s=>names[s].toLowerCase()).join(' and ')}; it stays unless you pick an image for it below.`));
+  if(!p.images.length)notes.push(tr('这一版在曲库里没有图片，只能应用下面的唱片参数。','This release has no images in the library; only the record settings below apply.'));
   libShow(`<div class="lib-head"><button class="chip" type="button" data-back="${libReleaseList.length>1?'releases':'groups'}">← ${tr('返回','Back')}</button><span>${esc(r.title)} · ${releaseMeta(r)}</span></div>
-    <div class="lib-pick">${rows.join('')}${params.join('')}</div>${media}
-    ${missing.length?`<p class="note">${tr(`这一版没有${missing.join('、')}图，保留现在的图，可以自己上传。`,`No ${missing.join(' or ').toLowerCase()} image for this release; the current one stays, and you can upload your own.`)}</p>`:''}
+    ${p.images.length?`<p class="note">${tr('每张图下面选它用在哪个位置，点图看大图。','Choose where each image goes; click an image to see it full size.')}</p><div class="lib-gallery">${cards}</div>`:''}
+    ${notes.map(n=>`<p class="note">${n}</p>`).join('')}
+    <div class="lib-pick">${params.join('')}</div>
     <div class="row" style="justify-content:flex-start"><button class="primary" type="button" data-apply>${tr('应用','Apply')}</button>
     <a class="note" href="https://musicbrainz.org/release/${r.id}" target="_blank" rel="noopener">${tr('在 MusicBrainz 查看','View on MusicBrainz')}</a></div>`)}
 
-async function libApply(){const p=libPlan,v=$('lib-view'),btn=v.querySelector('[data-apply]'),turn=++libTurn;
-  const slots=[...v.querySelectorAll('[data-slot-pick]:checked')].map(x=>x.dataset.slotPick),on=k=>!!v.querySelector(`[data-param="${k}"]:checked`);
+// One image per slot: picking a slot for this image takes it away from whichever image had it.
+$('lib-view').addEventListener('change',e=>{const sel=e.target.closest('[data-img]');if(!sel||!libPlan)return;
+  const k=+sel.dataset.img,a=libPlan.assign;
+  for(const s of Object.keys(a))if(a[s]===k)delete a[s];
+  if(sel.value){const prev=a[sel.value];if(prev!==undefined){const o=$('lib-view').querySelector(`[data-img="${prev}"]`);if(o)o.value=''}
+    a[sel.value]=k;libPlan.kept=libPlan.kept.filter(s=>s!==sel.value)}});
+
+async function libApply(){const p=libPlan,v=$('lib-view'),btn=v.querySelector('[data-apply]'),turn=++libTurn,on=k=>!!v.querySelector(`[data-param="${k}"]:checked`);
   btn.disabled=true;libStatus(tr('正在下载图片…','Downloading images…'));
-  const failed=[];
-  await Promise.all(slots.map(async slot=>{const i=p.pick[slot];
-    for(const url of[i.thumbnails?.['1200'],i.thumbnails?.['500']||i.thumbnails?.large,i.image].filter(Boolean)){
+  const done=[],failed=[];
+  await Promise.all(Object.entries(p.assign).map(async([slot,k])=>{const im=p.images[k];
+    for(const url of im.full){
       try{const res=await fetch(url);if(!res.ok)continue;const blob=await res.blob();if(turn!==libTurn)return;
-        await setSlotImage(slot,await createImageBitmap(blob),i.thumbnails?.['250']||url,'fetched');
-        assetLog[slot]={source:'fetched',tool:'MusicBrainz + Cover Art Archive',note:`release ${p.release.id} · ${(i.types||[]).join('/')||'image'} ${i.id} · ${url}`};return}
+        await setSlotImage(slot,await createImageBitmap(blob),im.thumb,'fetched');
+        assetLog[slot]={source:'fetched',tool:'MusicBrainz + Cover Art Archive',note:`CAA ${im.ref} · ${im.types.join('/')||'image'} · ${url}`};done.push(slot);return}
       catch(e){}}
     failed.push(slot)}));
   if(turn!==libTurn)return;
@@ -1268,10 +1299,16 @@ async function libApply(){const p=libPlan,v=$('lib-view'),btn=v.querySelector('[
   if(on('count'))spec.records.count=p.lps;
   if(on('jacket'))spec.jacket={type:p.jacket};
   p.sides.forEach((s,i)=>{if(s.length&&on('tracks'+(i+1)))spec.records['disc'+(i+1)]={tracks:Math.min(20,Math.max(...s))}});
-  if(slots.includes('sleeve')&&!failed.includes('sleeve'))spec.records.sleeve={on:true};
+  // A part given new art is switched on, so the image is actually seen.
+  if(done.includes('sleeve'))spec.records.sleeve={on:true};
+  if(done.some(s=>s.startsWith('insert')))spec.insert={on:true};
+  if(done.includes('obi'))spec.obi={on:true};
+  if(done.includes('sticker'))spec.sticker={on:true};
   await applySpec(spec);
-  const names=Object.fromEntries(libSlots());
-  libStatus(failed.length?tr(`已应用。${failed.map(s=>names[s]).join('、')}图下载失败，保留原来的图。`,`Applied. Couldn’t download the ${failed.map(s=>names[s].toLowerCase()).join(', ')} image; the previous one stays.`):tr('已应用。','Applied.'));
+  const names=Object.fromEntries(libTargets(2)),msg=[failed.length?tr(`已应用。${failed.map(s=>names[s]).join('、')}下载失败，保留原来的图。`,`Applied. Couldn’t download the ${failed.map(s=>names[s].toLowerCase()).join(', ')} image; the previous one stays.`):tr('已应用。','Applied.')];
+  if(!isGate()&&done.some(s=>s.startsWith('inner')))msg.push(tr('内页只在双开封套里看得到。','Inner pages only show on a gatefold jacket.'));
+  if(state.lpCount!==2&&done.some(s=>s==='labelC'||s==='labelD'))msg.push(tr('C / D 面标签只在 2LP 时可见。','Side C / D labels only show on 2LP.'));
+  libStatus(msg.join(' '));
   btn.disabled=false}
 
 // ---------- Controls wiring ----------
