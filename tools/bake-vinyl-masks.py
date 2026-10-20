@@ -50,6 +50,35 @@ CURATED = {
     'pinwheel-02': {'role': 'layout', 'palette': 'accent', 'crop': 0.92},
     'ripple-01': {'role': 'layout', 'palette': 'tonal', 'status': 'review'},
     'swirl-02': {'role': 'layout', 'palette': 'accent', 'status': 'review'},
+    # Smoke: photo variants of unlicensed references, colour-extracted (docs/vinyl-mask-image-to-image-workflow.md
+    # sections 3, 4.1, 4.2). Each master folder also keeps ref.jpg, gen.png, prompt.txt and extract.json.
+    'smoke-01': {'role': 'effect', 'palette': 'tonal', 'layers': ['layer1.png'], 'base': '#bdbdc3', 'colors': ['#323031'],
+                 'source': {'kind': 'unlicensed-reference', 'operation': 'photo variant + colour extraction', 'date': '2026-10-20',
+                            'master': 'output/texture-gen/library/smoke-01', 'reference': 'https://www.pinterest.com/pin/475129829451470170/',
+                            'referenceSha256': '3670d98e6e26ea331f9829bca7bafc2e106a17e431fb0629eb1d76ab5926aecf',
+                            'generatedSha256': '4f058509e5c80e0a5b153db27eae44fd44a0ae2e6f31967e25d9631a497e7c4c'}},
+    'smoke-02': {'role': 'effect', 'palette': 'tonal', 'layers': ['layer1.png'], 'base': '#cec5b1', 'colors': ['#7d7467'],
+                 'source': {'kind': 'unlicensed-reference', 'operation': 'photo variant + colour extraction', 'date': '2026-10-20',
+                            'master': 'output/texture-gen/library/smoke-02', 'reference': 'https://www.pinterest.com/pin/337488565839430032/',
+                            'referenceSha256': '5862536036eff71a94eaca41bf6d90b3eb84e061be597f029bc8d5249db22257',
+                            'generatedSha256': 'babe8ce350ec3a03efc8758aadcc69959dc1ab7c45e2b83e6d52c5863918a9c5'}},
+    'smoke-03': {'role': 'effect', 'palette': 'tonal', 'layers': ['layer1.png'], 'base': '#750d16', 'colors': ['#2a090d'],
+                 'source': {'kind': 'unlicensed-reference', 'operation': 'photo variant + colour extraction', 'date': '2026-10-20',
+                            'master': 'output/texture-gen/library/smoke-03', 'reference': 'https://www.pinterest.com/pin/989666086837708902/',
+                            'referenceSha256': '6d132852b227a2b483eba37abacac519d73665d08adfa17f2cad6908ca5d664a',
+                            'generatedSha256': '2de879ab99df51aec9d078e4913e72b63ac978cd8e6d6105c1d395e506e38473'}},
+    'smoke-04': {'role': 'effect', 'palette': 'tonal', 'layers': ['layer1.png'], 'base': '#024f4d', 'colors': ['#03171c'],
+                 'source': {'kind': 'unlicensed-reference', 'operation': 'photo variant + colour extraction', 'date': '2026-10-20',
+                            'master': 'output/texture-gen/library/smoke-04', 'reference': 'https://www.pinterest.com/pin/449445237833759225/',
+                            'referenceSha256': 'da7abd33e6e973d5e18a6dbc083fa7f522f7b5a5afb803ca4faf32f6bbcc6b41',
+                            'generatedSha256': 'f9ae6fdaec893aad0b5036ee6b57ffd876de18e3c6ffc77d472b52ba508670bf'}},
+    # Marble: same route as smoke; two pattern colours unmixed from one photo (vinyl-photo-extract.py --accents 2).
+    'marble-01': {'role': 'layout', 'palette': 'tonal', 'layers': ['layer1.png', 'layer2.png'], 'base': '#78acd7',
+                  'colors': ['#002885', '#e8f6ff'],
+                  'source': {'kind': 'unlicensed-reference', 'operation': 'photo variant + colour extraction', 'date': '2026-10-20',
+                             'master': 'output/texture-gen/library/marble-01', 'reference': 'https://www.pinterest.com/pin/648377677607525707/',
+                             'referenceSha256': '9fb279c49e0226f1dbd862e856af6c8e015c0da8e06f472dd235eb2381dc31fa',
+                             'generatedSha256': '2972051cf3d632871ba41e36dd4583dce3f48f9855e2e8dbe087fd8da4f8a9d1'}},
 }
 
 # meta.disc_frac is the disc diameter as a fraction of the master's width. The masters extend the
@@ -195,6 +224,9 @@ def load_gray(src_dir: Path, mask_id: str, cfg: dict, size: int):
         g = np.asarray(img if deep else img.convert('L')).astype(np.float32) * (255 / 65535 if deep else 1)
         arr[..., c] = crop_resize(Image.fromarray(g, mode='F'), crop, size)
     source = {'kind': 'generated', 'master': f'masters/{mask_id}', 'file': files, **cfg.get('source', {})}
+    if (src_dir / 'prompt.txt').exists():
+        # The full prompt lives beside the master rather than in this table.
+        source['prompt'] = (src_dir / 'prompt.txt').read_text().strip()
     return arr, cfg['base'], list(cfg['colors']), crop, {'labelRadius': None, 'source': source}
 
 
