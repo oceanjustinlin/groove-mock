@@ -37,6 +37,8 @@ button,input,select{font:inherit;color:inherit}
 .views{display:flex;gap:4px}
 .chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;cursor:pointer;font-size:13px}
 .chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.gh{display:inline-grid;place-items:center;width:30px;height:30px;padding:0;color:var(--ink)}
+.gh svg{width:16px;height:16px;fill:currentColor}
 .primary{background:var(--accent);color:var(--accent-ink);border:0;border-radius:8px;padding:8px 16px;font-weight:700;cursor:pointer}
 .primary:disabled{opacity:.6;cursor:progress}
 
@@ -117,6 +119,7 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
       <button class="chip" data-view="front" aria-pressed="false">正面</button>
       <button class="chip" data-view="side" aria-pressed="false">侧面</button>
     </div>
+    <a class="chip gh" href="https://github.com/oceanjustinlin/record-mockup" target="_blank" rel="noopener" title="源码、命令行和 Agent 用法" aria-label="源码、命令行和 Agent 用法（GitHub）"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
     <button class="chip" id="lang-btn" lang="en" aria-label="Switch language">EN</button>
     <button class="primary" id="export-btn">导出 PNG</button>
   </header>
@@ -412,14 +415,15 @@ const EN={
   '输出':'Output','背景':'Background','透明':'Transparent','纯色':'Solid','背景颜色':'Background colour','分辨率':'Resolution',
   '图片只在你的浏览器里处理，不会上传。':'Images are processed in your browser and never uploaded.',
   'PNG 已生成':'PNG ready','导出的模型图':'Exported mockup','如果点"下载"没有反应，请右键（手机长按）图片另存。':'If Download does nothing, right-click (long-press on phones) the image and save it.',
-  '下载':'Download','关闭':'Close'};
+  '下载':'Download','关闭':'Close',
+  '源码、命令行和 Agent 用法':'Source, CLI and agent usage','源码、命令行和 Agent 用法（GitHub）':'Source, CLI and agent usage (GitHub)'};
 const LANGS=['zh','en'];
 let lang=(()=>{const q=new URLSearchParams(location.search).get('lang');if(LANGS.includes(q))return q;
   try{const v=localStorage.getItem('gm-lang');if(LANGS.includes(v))return v}catch(e){}
   return(navigator.languages?.[0]||navigator.language||'').toLowerCase().startsWith('zh')?'zh':'en'})();
 const tr=(zh,en)=>lang==='en'?en:zh;
 // Remember each node's Chinese source once, so switching back and forth is lossless.
-const I18N_ATTRS=['aria-label','alt'],zhText=new Map(),zhAttr=new Map();
+const I18N_ATTRS=['aria-label','alt','title'],zhText=new Map(),zhAttr=new Map();
 for(const root of document.querySelectorAll('.app,.modal')){
   const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
   for(let n;(n=w.nextNode());){const k=n.nodeValue.trim();if(EN[k])zhText.set(n,n.nodeValue)}
