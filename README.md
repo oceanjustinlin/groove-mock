@@ -1,14 +1,14 @@
-# Groove Mock — 3D Vinyl Record Mockup Generator
+# Record Mockup — 3D Vinyl & LP Mockup Generator
 
 **English** · [简体中文](README.zh-CN.md)
 
-Groove Mock renders photorealistic **3D vinyl record mockups**: LP jackets, gatefolds, 2LP sets, shrink wrap, hype stickers, obi strips and limited-edition numbers. Use it in the browser to build a release visual by hand, or drive the same renderer from a JSON scene spec through a CLI that AI coding agents can operate.
+Record Mockup renders photorealistic **3D vinyl record mockups**: LP jackets, gatefolds, 2LP sets, shrink wrap, hype stickers, obi strips and limited-edition numbers. Use it in the browser to build a release visual by hand, or drive the same renderer from a JSON scene spec through a CLI that AI coding agents can operate.
 
-**[Try it in your browser →](https://oceanjustinlin.github.io/groove-mock/)** No install or sign-up needed; your artwork never leaves your machine.
+**[Try it in your browser →](https://oceanjustinlin.github.io/record-mockup/)** No install or sign-up needed; your artwork never leaves your machine.
 
 ![3D vinyl mockup of a 2LP release in shrink wrap with a hype sticker, obi strip, foil edition number, black and red vinyl pulled from inner sleeves](docs/images/hero.jpg)
 
-<sub>All images in this README are rendered by Groove Mock from its built-in sample artwork. Specs live in [`docs/specs/`](docs/specs/).</sub>
+<sub>All images in this README are rendered by Record Mockup from its built-in sample artwork. Specs live in [`docs/specs/`](docs/specs/).</sub>
 
 ## What it renders
 
@@ -33,11 +33,11 @@ Typical uses: pre-order announcements, store and Bandcamp listings, label catalo
 
 **Browser editor.** `index.html` is a single-page editor: upload artwork, switch formats, pull records out, orbit the camera and export a PNG. Images are processed locally in the browser and are not uploaded anywhere.
 
-**CLI and agents.** `cli/groove-mock.mjs` opens the same page in headless Chrome and drives it through `window.grooveMock`, so the CLI output matches the editor exactly. Every option is a field in a JSON scene spec with a published JSON Schema, which makes the tool easy for AI agents such as Codex or Claude Code to operate: write a spec, render, look at the PNG, adjust, render again.
+**CLI and agents.** `cli/record-mockup.mjs` opens the same page in headless Chrome and drives it through `window.recordMockup`, so the CLI output matches the editor exactly. Every option is a field in a JSON scene spec with a published JSON Schema, which makes the tool easy for AI agents such as Codex or Claude Code to operate: write a spec, render, look at the PNG, adjust, render again.
 
 ```mermaid
 flowchart LR
-  A[Artwork + JSON spec] --> B[groove-mock render]
+  A[Artwork + JSON spec] --> B[record-mockup render]
   B --> C[Headless Chrome<br>same renderer as the editor]
   C --> D[PNG mockup]
   D -->|agent reviews the image| A
@@ -69,9 +69,9 @@ Then add `--browser chromium` to CLI commands.
 
 ```bash
 mkdir -p output
-node cli/groove-mock.mjs schema -o output/schema.json
-node cli/groove-mock.mjs slots examples/2lp-gatefold.json
-node cli/groove-mock.mjs render examples/2lp-gatefold.json -o output/example.png --json --strict
+node cli/record-mockup.mjs schema -o output/schema.json
+node cli/record-mockup.mjs slots examples/2lp-gatefold.json
+node cli/record-mockup.mjs render examples/2lp-gatefold.json -o output/example.png --json --strict
 ```
 
 The example uses the renderer's built-in sample artwork, so no album art is needed.
@@ -79,7 +79,7 @@ The example uses the renderer's built-in sample artwork, so no album art is need
 To start your own scene:
 
 ```bash
-node cli/groove-mock.mjs init -o output/spec.json
+node cli/record-mockup.mjs init -o output/spec.json
 ```
 
 Keep the images next to the spec and reference them by relative path. Register the source of every custom image under `meta.assets.<slot>.source`: `user`, `generated`, `typeset`, `composite` or `sample`. For generated images, also record the prompt.
@@ -111,7 +111,7 @@ Vinyl is set per disc under `records.disc1` and `records.disc2`. `vinyl` is `bla
 
 ## Commands
 
-Run `node cli/groove-mock.mjs --help` for every option. See also [`cli/README.md`](cli/README.md).
+Run `node cli/record-mockup.mjs --help` for every option. See also [`cli/README.md`](cli/README.md).
 
 | Command | What it does |
 |---|---|
@@ -129,11 +129,11 @@ Exit codes: `0` done, `1` error, `2` warnings under `--strict`.
 
 When only a front cover is available, [`AGENTS.md`](AGENTS.md) describes how an agent completes the rest. It inventories slots with `slots`, extracts a style card from the cover, generates text-free backgrounds with an image model using [`prompts/image-prompts.md`](prompts/image-prompts.md), typesets text such as tracklists in code, renders, reviews and records every asset's source in `meta.assets`.
 
-Groove Mock never generates a real release's front cover, and generated companion artwork is labelled as illustrative.
+Record Mockup never generates a real release's front cover, and generated companion artwork is labelled as illustrative.
 
 ## Browser editor and network use
 
-The editor is published at <https://oceanjustinlin.github.io/groove-mock/> on every push to `main` that touches the page (`.github/workflows/pages.yml` runs `node site/build.mjs`, which adds the document head, search and sharing metadata, favicon, robots.txt and sitemap).
+The editor is published at <https://oceanjustinlin.github.io/record-mockup/> on every push to `main` that touches the page (`.github/workflows/pages.yml` runs `node site/build.mjs`, which adds the document head, search and sharing metadata, favicon, robots.txt and sitemap).
 
 To run it locally, serve the page, for example from the project root:
 
@@ -156,7 +156,7 @@ This renders every spec in `docs/specs/`, writes JPEGs to `docs/images/`, and bu
 ## Verification
 
 ```bash
-node --check cli/groove-mock.mjs
+node --check cli/record-mockup.mjs
 npm test --prefix cli
 npm audit --prefix cli --omit=dev
 ```

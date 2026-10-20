@@ -1,6 +1,6 @@
-# Groove Mock：给 agent 的操作说明
+# Record Mockup：给 agent 的操作说明
 
-本目录是一个黑胶唱片 3D 模型工具。`index.html` 既是网页，也是渲染器。agent 通过命令行工具 `cli/groove-mock.mjs` 操作它：写一份 JSON 场景描述（spec），渲染出 PNG，看图后调整参数，再渲染。
+本目录是一个黑胶唱片 3D 模型工具。`index.html` 既是网页，也是渲染器。agent 通过命令行工具 `cli/record-mockup.mjs` 操作它：写一份 JSON 场景描述（spec），渲染出 PNG，看图后调整参数，再渲染。
 
 不要为了出图去改 `index.html`。所有可调的东西都在 spec 里。
 
@@ -14,9 +14,9 @@ cd cli && npm install
 
 ## 工作流程
 
-1. 查看可用字段：`node cli/groove-mock.mjs schema`。输出的是 JSON Schema，每个字段都有单位、范围、默认值和中文说明。
-2. 写 spec：把 spec 和图片放在同一个目录，图片路径写相对路径。可以从 `examples/2lp-gatefold.json` 改，也可以用 `node cli/groove-mock.mjs init -o spec.json` 生成默认模板。
-3. 渲染：`node cli/groove-mock.mjs render spec.json -o out.png --json`。
+1. 查看可用字段：`node cli/record-mockup.mjs schema`。输出的是 JSON Schema，每个字段都有单位、范围、默认值和中文说明。
+2. 写 spec：把 spec 和图片放在同一个目录，图片路径写相对路径。可以从 `examples/2lp-gatefold.json` 改，也可以用 `node cli/record-mockup.mjs init -o spec.json` 生成默认模板。
+3. 渲染：`node cli/record-mockup.mjs render spec.json -o out.png --json`。
 4. 检查：打开输出的 PNG 看效果，同时看结果里的 `warnings`。
 5. 调整：改 spec 后重新渲染。只试一两个参数时，用 `--set path=value`，不用改文件。
 
@@ -26,7 +26,7 @@ cd cli && npm install
 
 用户只给了部分素材（比如只有封面）时，按这个顺序补齐。提示词模板在 `prompts/image-prompts.md`。
 
-1. **盘点**：运行 `node cli/groove-mock.mjs slots spec.json`，看当前场景用到哪些贴图位（标 ●）、各自的尺寸、可见区域、遮挡，以及建议做法（用户提供 / 生图 / 排版 / 生图底 + 排版）。
+1. **盘点**：运行 `node cli/record-mockup.mjs slots spec.json`，看当前场景用到哪些贴图位（标 ●）、各自的尺寸、可见区域、遮挡，以及建议做法（用户提供 / 生图 / 排版 / 生图底 + 排版）。
 2. **风格卡**：先看封面，按模板第 0 节输出主色和风格描述。后面每条生图提示词都要带上它。
 3. **生成底图**：只给建议为"生图"或"生图底 + 排版"的贴图位生成，**底图不能有任何文字**，尺寸按 `slots` 的输出来。
 4. **排版文字**：曲目、标题、面号、歌词、Obi、贴纸文案用代码排版（Python 或 HTML 截图都可以），叠到底图上。文字内容来自用户给的信息；用户没给的，用明显的占位文字，不要编造曲目。
@@ -64,4 +64,4 @@ cd cli && npm install
 - 背面编号的 `number.x` 以从背后看为准，向右为正。
 - 换 `pattern.id` 不会改底色：写了 `records.discN.color` 而没写 `pattern.color` 时，纹路色按底色推算；`color` 也没写时，用这款纹路的默认配色。要固定纹路色，就写上 `pattern.color`。
 - Obi 图是一张展开图，从左到右依次为背面、书脊、正面。
-- 批量出编号图：`node cli/groove-mock.mjs numbers spec.json --from 1 --to 50 --dir out/`。
+- 批量出编号图：`node cli/record-mockup.mjs numbers spec.json --from 1 --to 50 --dir out/`。

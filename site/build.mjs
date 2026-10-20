@@ -9,10 +9,10 @@ import {fileURLToPath} from 'node:url';
 
 const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const OUT = path.join(ROOT, '_site');
-const SITE_URL = (process.env.SITE_URL || 'https://oceanjustinlin.github.io/groove-mock/').replace(/\/?$/, '/');
-const REPO_URL = 'https://github.com/oceanjustinlin/groove-mock';
+const SITE_URL = (process.env.SITE_URL || 'https://oceanjustinlin.github.io/record-mockup/').replace(/\/?$/, '/');
+const REPO_URL = 'https://github.com/oceanjustinlin/record-mockup';
 
-const TITLE = 'Groove Mock — 3D Vinyl Record Mockup Generator';
+const TITLE = 'Record Mockup — 3D Vinyl & LP Mockup Generator';
 const DESCRIPTION = 'Make photorealistic 3D vinyl record mockups in your browser: LP jackets, gatefolds, 2LP sets, ' +
   'shrink wrap, hype stickers, obi strips, coloured vinyl and edition numbers. Export transparent PNGs.';
 const esc = s => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
@@ -30,7 +30,7 @@ const headPart = source.slice(0, styleEnd)
 const bodyPart = source.slice(styleEnd);
 
 const jsonLd = {
-  '@context': 'https://schema.org', '@type': 'WebApplication', name: 'Groove Mock', url: SITE_URL,
+  '@context': 'https://schema.org', '@type': 'WebApplication', name: 'Record Mockup', url: SITE_URL,
   description: DESCRIPTION, image: SITE_URL + 'social-preview.png', applicationCategory: 'DesignApplication',
   operatingSystem: 'Any (modern web browser with WebGL 2)', browserRequirements: 'Requires WebGL 2',
   inLanguage: 'zh-CN', sameAs: [REPO_URL],
@@ -48,14 +48,14 @@ const html = `<!doctype html>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <meta name="theme-color" content="#eceee9">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="Groove Mock">
+<meta property="og:site_name" content="Record Mockup">
 <meta property="og:title" content="${esc(TITLE)}">
 <meta property="og:description" content="${esc(DESCRIPTION)}">
 <meta property="og:url" content="${SITE_URL}">
 <meta property="og:image" content="${SITE_URL}social-preview.png">
 <meta property="og:image:width" content="1280">
 <meta property="og:image:height" content="640">
-<meta property="og:image:alt" content="Groove Mock: a 3D vinyl mockup of a 2LP in shrink wrap with an obi strip and a hype sticker">
+<meta property="og:image:alt" content="Record Mockup: a 3D vinyl mockup of a 2LP in shrink wrap with an obi strip and a hype sticker">
 <meta property="og:locale" content="zh_CN">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${esc(TITLE)}">

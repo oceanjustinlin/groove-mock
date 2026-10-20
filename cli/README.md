@@ -1,6 +1,6 @@
-# groove-mock CLI
+# record-mockup CLI
 
-用一份 JSON 场景描述（spec）渲染黑胶 3D 模型图。它在后台用 Chrome 打开上一级目录的 `index.html`，调用页面上的 `window.grooveMock` 接口，所以出图效果和网页完全一致。
+用一份 JSON 场景描述（spec）渲染黑胶 3D 模型图。它在后台用 Chrome 打开上一级目录的 `index.html`，调用页面上的 `window.recordMockup` 接口，所以出图效果和网页完全一致。
 
 ## 安装
 
@@ -14,12 +14,12 @@ npm install
 ## 命令
 
 ```bash
-node groove-mock.mjs schema -o schema.json              # 字段说明（JSON Schema）
-node groove-mock.mjs init -o spec.json                  # 生成默认 spec
-node groove-mock.mjs slots spec.json                    # 贴图位、尺寸和遮挡
-node groove-mock.mjs render spec.json -o out.png        # 渲染一张
-node groove-mock.mjs render spec.json --set number.current=88 --set camera.view=front
-node groove-mock.mjs numbers spec.json --from 1 --to 50 # 批量渲染编号图
+node record-mockup.mjs schema -o schema.json              # 字段说明（JSON Schema）
+node record-mockup.mjs init -o spec.json                  # 生成默认 spec
+node record-mockup.mjs slots spec.json                    # 贴图位、尺寸和遮挡
+node record-mockup.mjs render spec.json -o out.png        # 渲染一张
+node record-mockup.mjs render spec.json --set number.current=88 --set camera.view=front
+node record-mockup.mjs numbers spec.json --from 1 --to 50 # 批量渲染编号图
 ```
 
 通用选项：`--json` 输出一行 JSON；`--strict` 遇到场景或素材来源警告时不渲染并返回退出码 2；`--width` / `--height` 覆盖输出尺寸；`--software` 强制软件渲染；`--verbose` 显示页面错误。

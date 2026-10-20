@@ -6,7 +6,7 @@ import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 
-const cli = fileURLToPath(new URL('../groove-mock.mjs', import.meta.url));
+const cli = fileURLToPath(new URL('../record-mockup.mjs', import.meta.url));
 const pixel = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAEklEQVR4nGMMq5jFwMDAxAAGABDGAWwoLzFNAAAAAElFTkSuQmCC';
 
 async function run(t, command, {strict = true, registered = false} = {}) {

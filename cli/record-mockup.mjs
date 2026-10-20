@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// groove-mock: render vinyl mockups from a JSON scene spec.
-// It serves ../index.html locally, opens it in headless Chrome and drives window.grooveMock,
+// record-mockup: render vinyl mockups from a JSON scene spec.
+// It serves ../index.html locally, opens it in headless Chrome and drives window.recordMockup,
 // so the CLI and the web page share one renderer.
 import {chromium} from 'playwright-core';
 import http from 'node:http';
@@ -21,14 +21,14 @@ const MIME = {
   '.json': 'application/json', '.css': 'text/css',
 };
 
-const HELP = `groove-mock — 用 JSON 场景描述渲染黑胶 3D 模型图
+const HELP = `record-mockup — 用 JSON 场景描述渲染黑胶 3D 模型图
 
 用法
-  groove-mock schema [-o schema.json]           输出 spec 的 JSON Schema（字段、单位、范围、默认值）
-  groove-mock init   [-o spec.json]             写一份带默认值的 spec 模板
-  groove-mock slots  [spec.json]                各贴图位的尺寸、可见区域、遮挡和制作建议（按 spec 的场景计算）
-  groove-mock render <spec.json> [-o out.png]   按 spec 渲染一张 PNG
-  groove-mock numbers <spec.json> --from 1 --to 50 [--dir out/]
+  record-mockup schema [-o schema.json]           输出 spec 的 JSON Schema（字段、单位、范围、默认值）
+  record-mockup init   [-o spec.json]             写一份带默认值的 spec 模板
+  record-mockup slots  [spec.json]                各贴图位的尺寸、可见区域、遮挡和制作建议（按 spec 的场景计算）
+  record-mockup render <spec.json> [-o out.png]   按 spec 渲染一张 PNG
+  record-mockup numbers <spec.json> --from 1 --to 50 [--dir out/]
                                                 按号段批量渲染限量编号图
 
 选项
@@ -170,8 +170,8 @@ async function openPageWith(opts, args) {
   const {port} = server.address();
   await page.goto(`http://127.0.0.1:${port}/${path.basename(pageFile)}`, {waitUntil: 'load'});
   try {
-    await page.waitForFunction(() => window.grooveMock, null, {timeout: 30000});
-    await page.evaluate(() => window.grooveMock.ready);
+    await page.waitForFunction(() => window.recordMockup, null, {timeout: 30000});
+    await page.evaluate(() => window.recordMockup.ready);
   } catch {
     const webgl = await page.evaluate(() => !document.getElementById('gl-error')?.hidden).catch(() => false);
     const detail = pageErrors.length ? `\n页面错误：${pageErrors.join(' | ')}` : '';
@@ -186,9 +186,9 @@ async function openPageWith(opts, args) {
   };
 }
 
-const applySpec = (session, spec) => session.page.evaluate(s => window.grooveMock.apply(s), spec);
+const applySpec = (session, spec) => session.page.evaluate(s => window.recordMockup.apply(s), spec);
 async function renderTo(session, outFile) {
-  const result = await session.page.evaluate(() => window.grooveMock.render());
+  const result = await session.page.evaluate(() => window.recordMockup.render());
   await fs.mkdir(path.dirname(outFile), {recursive: true});
   await fs.writeFile(outFile, Buffer.from(result.dataUrl.split(',')[1], 'base64'));
   return {out: outFile, width: result.width, height: result.height, bytes: result.bytes};
@@ -198,7 +198,7 @@ async function renderTo(session, outFile) {
 async function cmdSchema(opts) {
   const s = await openPage(opts);
   try {
-    const schema = await s.page.evaluate(() => window.grooveMock.schema());
+    const schema = await s.page.evaluate(() => window.recordMockup.schema());
     const text = JSON.stringify(schema, null, 2) + '\n';
     if (opts.out) { await fs.writeFile(path.resolve(opts.out), text); log(opts, {ok: true, out: path.resolve(opts.out)}, `已写入 ${opts.out}`); }
     else process.stdout.write(text);
@@ -211,7 +211,7 @@ async function cmdSlots(args, opts) {
   const s = await openPage(opts);
   try {
     if (spec) await applySpec(s, spec);
-    const slots = await s.page.evaluate(() => window.grooveMock.slots());
+    const slots = await s.page.evaluate(() => window.recordMockup.slots());
     if (opts.json) { process.stdout.write(JSON.stringify({ok: true, slots}) + '\n'); return; }
     const lines = [];
     for (const x of slots) {
@@ -241,15 +241,15 @@ async function cmdInit(opts) {
   if (existsSync(out)) throw new CliError(`${out} 已存在，换一个 -o 路径或先删除它`);
   const s = await openPage(opts);
   try {
-    const spec = await s.page.evaluate(() => window.grooveMock.getSpec());
+    const spec = await s.page.evaluate(() => window.recordMockup.getSpec());
     spec.images = {};
     await fs.writeFile(out, JSON.stringify(spec, null, 2) + '\n');
-    log(opts, {ok: true, out}, `已写入 ${out}\n在 images 里填图片路径（如 "front": "cover.png"），可用字段见 groove-mock schema。`);
+    log(opts, {ok: true, out}, `已写入 ${out}\n在 images 里填图片路径（如 "front": "cover.png"），可用字段见 record-mockup schema。`);
   } finally { await s.close(); }
 }
 
 async function cmdRender(args, opts) {
-  if (!args[0]) throw new CliError('render 需要一个 spec 文件：groove-mock render spec.json');
+  if (!args[0]) throw new CliError('render 需要一个 spec 文件：record-mockup render spec.json');
   const t0 = Date.now();
   const {spec, file} = await loadSpec(args[0], opts);
   const out = path.resolve(opts.out || file.replace(/\.json$/i, '') + '.png');
@@ -266,7 +266,7 @@ async function cmdRender(args, opts) {
 }
 
 async function cmdNumbers(args, opts) {
-  if (!args[0]) throw new CliError('numbers 需要一个 spec 文件：groove-mock numbers spec.json --from 1 --to 50');
+  if (!args[0]) throw new CliError('numbers 需要一个 spec 文件：record-mockup numbers spec.json --from 1 --to 50');
   const from = Number(opts.from), to = Number(opts.to);
   if (!Number.isInteger(from) || !Number.isInteger(to) || from < 1 || to < from) throw new CliError('--from 和 --to 需要正整数，且 from ≤ to');
   if (to - from >= 1000) throw new CliError('一次最多渲染 1000 张，请分段运行');
@@ -279,7 +279,7 @@ async function cmdNumbers(args, opts) {
     const {assets, warnings: sourceWarnings} = provenance(spec);
     warnings.push(...sourceWarnings);
     if (opts.strict && warnings.length) return strictFail(opts, warnings);
-    const total = await s.page.evaluate(() => window.grooveMock.getSpec().number.total);
+    const total = await s.page.evaluate(() => window.recordMockup.getSpec().number.total);
     if (to > total) throw new CliError(`--to ${to} 超过了 number.total（${total}）`);
     const width = String(total).length, files = [];
     for (let n = from; n <= to; n++) {

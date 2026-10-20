@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Bake VinylLab mask masters into runtime vinyl pattern masks for Groove Mock.
+"""Bake VinylLab mask masters into runtime vinyl pattern masks for Record Mockup.
 
 Masters stay outside the repo (16-bit field.png + RGB layers.png + meta.json per set). Each baked
 mask is an 8-bit RGB PNG whose R/G/B channels are the accent1..3 soft masks, cropped so the disc

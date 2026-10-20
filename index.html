@@ -1,6 +1,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Groove Mock</title>
+<title>Record Mockup</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -111,7 +111,7 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
 
 <div class="app">
   <header class="bar">
-    <div class="brand"><h1>Groove Mock</h1><span class="spec">12″ LP · 封套 314 × 314 mm · 唱片 Ø302 mm</span></div>
+    <div class="brand"><h1>Record Mockup</h1><span class="spec">12″ LP · 封套 314 × 314 mm · 唱片 Ø302 mm</span></div>
     <div class="views" role="group" aria-label="视角">
       <button class="chip" data-view="quarter" aria-pressed="true">斜侧</button>
       <button class="chip" data-view="front" aria-pressed="false">正面</button>
@@ -352,7 +352,7 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
     <div class="row"><strong id="modal-title">PNG 已生成</strong><span class="spec" id="modal-size"></span></div>
     <img id="modal-img" alt="导出的模型图">
     <p class="note">如果点"下载"没有反应，请右键（手机长按）图片另存。</p>
-    <div class="row"><a class="primary" id="modal-dl" download="groove-mock.png" href="#" style="text-decoration:none">下载</a><button class="chip" id="modal-close">关闭</button></div>
+    <div class="row"><a class="primary" id="modal-dl" download="record-mockup.png" href="#" style="text-decoration:none">下载</a><button class="chip" id="modal-close">关闭</button></div>
   </div>
 </div>
 
@@ -1103,7 +1103,7 @@ function alertNote(msg){$('modal-title').textContent=msg;$('modal-img').hidden=t
 
 // ---------- Controls wiring ----------
 // Every control is registered against its state key, so syncUI() can redraw the whole panel from state
-// after a spec is applied through window.grooveMock.
+// after a spec is applied through window.recordMockup.
 const CONTROLS=[];
 const UNITS={pct:{toState:v=>v/100,toUI:v=>Math.round(v*100),fmt:v=>v+'%'},mm:{toState:v=>v/10,toUI:v=>Math.round(v*10),fmt:v=>v+' mm'},deg:{toState:v=>v,toUI:v=>Math.round(v),fmt:v=>v+'°'},count:{toState:v=>v,toUI:v=>Math.round(v),fmt:v=>String(v)}};
 function seg(id,key,after){CONTROLS.push({kind:'seg',id,key});const root=$(id);root.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;state[key]=isNaN(+b.dataset.v)?b.dataset.v:+b.dataset.v;for(const x of root.children)x.setAttribute('aria-pressed',x===b);after?.()})}
@@ -1258,8 +1258,8 @@ addEventListener('keydown',e=>{if(e.key==='Escape')$('modal').hidden=true});
 
 // ---------- Scene spec + agent API ----------
 // One JSON document describes everything the panel controls, in the panel's own units (mm, %, degrees).
-// window.grooveMock applies it, renders PNGs at any size and describes itself as a JSON Schema, so a
-// headless browser (the groove-mock CLI) can drive this page without clicking anything.
+// window.recordMockup applies it, renders PNGs at any size and describes itself as a JSON Schema, so a
+// headless browser (the record-mockup CLI) can drive this page without clicking anything.
 const DEFAULT_STATE=structuredClone(state);
 const enumF=(path,key,values,desc)=>({path,key,type:'enum',values,desc});
 const numF=(path,key,min,max,k,desc,integer=false)=>({path,key,type:'number',min,max,k,desc,integer});
@@ -1362,7 +1362,7 @@ function specFromState(){
   s.output={background:state.bg==='transparent'?'transparent':state.bgColor,width:state.outW,height:state.outH};
   return s}
 function buildSchema(){
-  const root={$schema:'https://json-schema.org/draft/2020-12/schema',title:'Groove Mock scene spec',
+  const root={$schema:'https://json-schema.org/draft/2020-12/schema',title:'Record Mockup scene spec',
     description:'黑胶实物 3D 模型的场景描述。所有字段都可省略，省略即保持默认值。长度单位 mm，比例单位 %，角度单位度。',
     type:'object',additionalProperties:false,properties:{version:{const:1}}};
   const parent=p=>{let o=root;for(const k of p.split('.').slice(0,-1)){o.properties[k]??={type:'object',additionalProperties:false,properties:{}};o=o.properties[k]}return o};
@@ -1497,7 +1497,7 @@ $('lang-btn').addEventListener('click',()=>{lang=lang==='en'?'zh':'en';try{local
 const nextFrame=()=>new Promise(r=>requestAnimationFrame(()=>r()));
 const ready=fontsSettled.then(nextFrame).then(nextFrame);
 const toDataUrl=blob=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>rej(r.error);r.readAsDataURL(blob)});
-window.grooveMock={
+window.recordMockup={
   version:1,ready,
   schema:buildSchema,
   slots:slotGuide,
