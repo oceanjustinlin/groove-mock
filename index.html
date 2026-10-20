@@ -1324,7 +1324,8 @@ async function libArtistAlbums(x,all=false){libArtistPick=x;const turn=++libTurn
   catch(err){if(turn===libTurn)libFail()}}
 
 // libView redraws the current step, so switching language relabels it.
-let libGroupList=[],libReleaseList=[],libGroup=null,libView=null,libGroupOpts=null;
+// libGroupReleases keeps every format of the album (CD, digital…) for when a vinyl pressing has no scans.
+let libGroupList=[],libReleaseList=[],libGroupReleases=[],libGroup=null,libView=null,libGroupOpts=null;
 // opts (alias path only): back = return to the artist list; all = offer the artist's full album list; note = why this list.
 function libGroups(groups,opts=null){libGroupList=groups;libGroupOpts=opts;libView=()=>libGroups(libGroupList,libGroupOpts);
   const head=opts?`<div class="lib-head">${opts.back?`<button class="chip" type="button" data-back="artists">← ${tr('返回','Back')}</button>`:''}<span>${esc(libArtistPick?.name||'')}</span>${opts.all?`<button class="chip" type="button" data-all-albums>${tr('全部专辑','All albums')}</button>`:''}</div>${opts.note?`<p class="note">${esc(opts.note)}</p>`:''}`:'';
@@ -1351,7 +1352,7 @@ async function libReleases(group){libGroup=group;const turn=++libTurn;libStatus(
     // Big albums have a few hundred releases; three pages cover almost all of them.
     while(offset<total&&offset<300){const j=await mbGet(`release?release-group=${group.id}&inc=labels+media&limit=100&offset=${offset}`);if(turn!==libTurn)return;
       all=all.concat(j.releases||[]);total=j['release-count']||0;offset+=100}
-    const lps=all.filter(r=>(r.media||[]).some(isLp));
+    const lps=all.filter(r=>(r.media||[]).some(isLp));libGroupReleases=all;
     const art=r=>r['cover-art-archive']||{};
     lps.sort((a,b)=>(art(b).count||0)-(art(a).count||0)||(+!!art(b).back)-(+!!art(a).back)||String(a.date||'9').localeCompare(String(b.date||'9')));
     libReleaseList=lps;
@@ -1420,7 +1421,8 @@ const libTargets=lps=>[['front',tr('正面','Front')],['back',tr('背面','Back'
   ['labelA',tr('A 面标签','Side A label')],['labelB',tr('B 面标签','Side B label')],
   ...(lps===2?[['labelC',tr('C 面标签','Side C label')],['labelD',tr('D 面标签','Side D label')]]:[])];
 const CAA_TYPE={Front:['正面','Front'],Back:['背面','Back'],Spine:['书脊','Spine'],Liner:['内袋','Liner'],Medium:['盘面','Disc'],Booklet:['小册子','Booklet'],
-  Obi:['Obi','Obi'],Tray:['托盘','Tray'],Sticker:['贴纸','Sticker'],Poster:['海报','Poster'],Panel:['折页','Panel'],Track:['单曲','Track'],Other:['其他','Other']};
+  Obi:['Obi','Obi'],Tray:['托盘','Tray'],Sticker:['贴纸','Sticker'],Poster:['海报','Poster'],Panel:['折页','Panel'],Track:['单曲','Track'],Other:['其他','Other'],
+  'Raw/Unedited':['原始扫描','Raw scan'],'Matrix/Runout':['刻字区','Matrix/runout'],Top:['顶面','Top'],Bottom:['底面','Bottom'],Watermark:['水印','Watermark']};
 // libPlan.assign maps slot → index into libPlan.images; each image goes to at most one slot.
 let libPlan=null;
 async function libConfirm(r){const turn=++libTurn;libStatus(tr('正在读取图片和曲目…','Loading images and tracks…'));
@@ -1428,13 +1430,24 @@ async function libConfirm(r){const turn=++libTurn;libStatus(tr('正在读取图�
       r['cover-art-archive']?.artwork?fetch(`${CAA}release/${r.id}/`).then(x=>x.ok?x.json():{images:[]}).catch(()=>({images:[]})):{images:[]}]);
     if(turn!==libTurn)return;
     // CAA lists http:// links; an https page can't fetch those.
-    const imgs=JSON.parse(JSON.stringify(caa.images||[]).replace(/http:\/\//g,'https://'));
-    const own=imgs.map(i=>({thumb:i.thumbnails?.['250']||i.thumbnails?.small||i.image,full:[i.thumbnails?.['1200'],i.thumbnails?.['500']||i.thumbnails?.large,i.image].filter(Boolean),
-      types:i.types||[],front:i.front,back:i.back,note:i.comment||'',ref:`${rel.id}/${i.id}`}));
+    const https=list=>JSON.parse(JSON.stringify(list||[]).replace(/http:\/\//g,'https://'));
+    const toImg=(i,rid)=>({thumb:i.thumbnails?.['250']||i.thumbnails?.small||i.image,full:[i.thumbnails?.['1200'],i.thumbnails?.['500']||i.thumbnails?.large,i.image].filter(Boolean),
+      types:i.types||[],front:i.front,back:i.back,note:i.comment||'',ref:`${rid}/${i.id}`});
+    const own=https(caa.images).map(i=>toImg(i,rel.id));
     // Other pressings of the same album often carry a different cover; offer their fronts as well.
     const others=libReleaseList.filter(o=>o.id!==r.id&&o['cover-art-archive']?.front).slice(0,12).map(o=>({thumb:`${CAA}release/${o.id}/front-250`,
       full:[`${CAA}release/${o.id}/front-1200`,`${CAA}release/${o.id}/front-500`],types:['Front'],other:true,
       note:[o.date?.slice(0,4),o.country,(o['label-info']||[]).map(l=>l['catalog-number']).filter(Boolean)[0]].filter(Boolean).join(' · '),ref:`${o.id}/front`}));
+    // A new pressing often has no scans yet, while the CD or digital release of the same album does.
+    // When this one lacks a front or a back, add every image from the two best-covered other formats.
+    let formats=[];
+    if(!own.some(i=>i.front||i.types.includes('Front'))||!own.some(i=>i.back||i.types.includes('Back'))){
+      const alt=libGroupReleases.filter(o=>o.id!==r.id&&!(o.media||[]).some(isLp)&&o['cover-art-archive']?.artwork)
+        .sort((a,b)=>(b['cover-art-archive'].count||0)-(a['cover-art-archive'].count||0)).slice(0,2);
+      const idx=await Promise.all(alt.map(o=>fetch(`${CAA}release/${o.id}/`).then(x=>x.ok?x.json():{images:[]}).catch(()=>({images:[]}))));
+      if(turn!==libTurn)return;
+      formats=alt.flatMap((o,n)=>{const from=[...new Set((o.media||[]).map(m=>m.format).filter(Boolean))].join(' + ')||tr('其他格式','Other format');
+        return https(idx[n].images).map(i=>({...toImg(i,o.id),from,note:[o.date?.slice(0,4),o.country].filter(Boolean).join(' · ')}))})}
     const assign={},kept=[];
     for(const[slot,f]of[['front',i=>i.front],['front',i=>i.types.includes('Front')],['back',i=>i.back],['back',i=>i.types.includes('Back')],
         ['spine',i=>i.types.includes('Spine')],['sleeve',i=>i.types.includes('Liner')]]){
@@ -1448,12 +1461,16 @@ async function libConfirm(r){const turn=++libTurn;libStatus(tr('正在读取图�
     for(const n of[...discs]){const m=/\bside\s*([A-D])\b/i.exec(own[n].note)||/^\s*([A-D])\s*$/.exec(own[n].note),sl=m&&'label'+m[1].toUpperCase();
       if(sl&&free.includes(sl)){assign[sl]=n;free.splice(free.indexOf(sl),1);discs.splice(discs.indexOf(n),1)}}
     for(const n of discs){const sl=free.shift();if(!sl)break;assign[sl]=n}
+    // No front of its own: borrow the album's cover from another pressing, else from another format.
+    if(!('front' in assign)&&!kept.includes('front')){const k=[...others,...formats].findIndex(i=>i.types.includes('Front'));
+      if(k>=0){if(slotOrigin.front==='user')kept.push('front');else assign.front=own.length+k}}
     const pack=rel.packaging,jacket=pack==='Gatefold Cover'?'gatefold':pack?'single':null;
-    libPlan={release:rel,images:[...own,...others],assign,kept,lps:nLp,extraLps:Math.max(0,lps.length-2),sides,jacket,bmp:{},crops:{},editing:null};
+    libPlan={release:rel,images:[...own,...others,...formats],ownCount:own.length,assign,kept,lps:nLp,extraLps:Math.max(0,lps.length-2),sides,jacket,bmp:{},crops:{},editing:null};
     libStatus('');libConfirmView()}
   catch(err){if(turn===libTurn)libFail()}}
 
-const imgLabel=im=>im.other?tr('其他版本封面','Other pressing'):im.types.map(t=>tr(...(CAA_TYPE[t]||[t,t]))).join(' / ')||tr('未分类','Untyped');
+const typeLabel=im=>im.types.map(t=>tr(...(CAA_TYPE[t]||[t,t]))).join(' / ')||tr('未分类','Untyped');
+const imgLabel=im=>im.other?tr('其他版本封面','Other pressing'):im.from?`${im.from} · ${typeLabel(im)}`:typeLabel(im);
 function libConfirmView(){const p=libPlan,r=p.release,targets=libTargets(p.lps),names=Object.fromEntries(targets);libView=libConfirmView;
   const cards=p.images.map((im,k)=>`<div class="lib-card">
     <a class="lib-cover" href="${im.full.at(-1)}" target="_blank" rel="noopener" style="background-image:url('${im.thumb}')" title="${esc(imgLabel(im)+(im.note?' · '+im.note:''))}"></a>
@@ -1468,6 +1485,7 @@ function libConfirmView(){const p=libPlan,r=p.release,targets=libTargets(p.lps),
   const notes=[];
   if(p.kept.length)notes.push(tr(`${p.kept.map(s=>names[s]).join('、')}已有你上传的图，默认保留；要替换就在图下面选。`,`You uploaded your own ${p.kept.map(s=>names[s].toLowerCase()).join(' and ')}; it stays unless you pick an image for it below.`));
   if(!p.images.length)notes.push(tr('这一版在曲库里没有图片，只能应用下面的唱片参数。','This release has no images in the library; only the record settings below apply.'));
+  else if(!p.ownCount)notes.push(tr('这一版还没有图，下面是同一张专辑其他版本和格式的图。CD 的背面比例和黑胶不同，用作背面前先看看。','This pressing has no images yet; these come from other pressings and formats of the album. A CD back has different proportions from an LP back, so check it before using it.'));
   libShow(`<div class="lib-head"><button class="chip" type="button" data-back="${libReleaseList.length>1?'releases':'groups'}">← ${tr('返回','Back')}</button><span>${esc(r.title)} · ${releaseMeta(r)}</span></div>
     ${p.images.length?`<p class="note">${tr('每张图下面选它用在哪个位置，点图看大图。','Choose where each image goes; click an image to see it full size.')}</p><div id="lib-crop"></div><div class="lib-gallery">${cards}</div>`:''}
     ${notes.map(n=>`<p class="note">${n}</p>`).join('')}
