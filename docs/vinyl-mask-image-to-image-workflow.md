@@ -20,6 +20,8 @@
 | 3D | `node cli/record-mockup.mjs render <scene> --page output/texture-gen/index.html` |
 | 正式入库 | `tools/bake-vinyl-masks.py`（第 6 节），人工验收之后 |
 
+`tools/vinyl-gen.py` 把前四步串起来：`new` 建候选目录（`ref.jpg`、`prompt.txt`、`job.json`），`gen` 调 Codex 生成照片（已有 `gen.png` 的跳过），`post` 依次提取、烘焙进隔离库、渲染 3D、拼审阅图（`output/texture-gen/boards/<id>-review.jpg`）。
+
 本文描述制作与交付要求。照片检查和最终验收需要人工判断；提取、烘焙、缩略图和 manifest 登记由脚本完成。现有能力以这些脚本、`vinyl-masks/manifest.json` 和 `index.html` 为准。
 
 ## 2. 当前运行时契约
