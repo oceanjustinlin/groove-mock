@@ -274,6 +274,9 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
             <div class="row"><span class="lbl">数量</span>
               <div class="seg" id="lp-count"><button data-v="1" aria-pressed="true">单 LP</button><button data-v="2" aria-pressed="false">2LP</button></div>
             </div>
+            <div class="row" id="lp-layout-row" hidden><span class="lbl">分装</span>
+              <div class="seg" id="lp-layout"><button data-v="split" aria-pressed="true">左右各一张</button><button data-v="stacked" aria-pressed="false">同一口袋</button></div>
+            </div>
             <div class="slider"><label for="record-rot">标签角度</label><input type="range" id="record-rot" min="-180" max="180" value="0"><output id="record-rot-v">0°</output></div>
             <div class="row">
               <label class="switch"><input type="checkbox" id="sleeve-on">显示内袋</label>
@@ -545,7 +548,7 @@ const EN={
   '位置':'Position','贴纸':'Sticker','工艺':'Finish','印刷':'Print','印章':'Stamp','烫金':'Foil','手写':'Hand','编号颜色':'Number colour',
   '水平':'Horizontal','垂直':'Vertical','字高':'Height','角度':'Angle',
   '切换位置时，坐标会回到该位置的默认值。烫金在转动视角时会反光。只含英文的字体遇到中文时，会用黑体补齐。上传的字体只在本地使用。':'Switching position resets the coordinates to that position’s defaults. Foil catches the light as you turn the view. Latin-only fonts fall back to a Chinese sans for CJK characters. Uploaded fonts stay on your device.',
-  '唱片与内袋':'Records & sleeves','33⅓ RPM · 标签 Ø100':'33⅓ RPM · Label Ø100','数量':'Count','单 LP':'1LP','标签角度':'Label angle',
+  '唱片与内袋':'Records & sleeves','33⅓ RPM · 标签 Ø100':'33⅓ RPM · Label Ø100','数量':'Count','分装':'Layout','左右各一张':'One per panel','同一口袋':'Both in one pocket','单 LP':'1LP','标签角度':'Label angle',
   '显示内袋':'Show inner sleeve','上传内袋印刷图':'Upload inner sleeve art','印刷图':'Artwork','内袋颜色':'Sleeve colour',
   '第 1 张':'Disc 1','A / B 面':'Sides A / B','上传 A 面标签':'Upload side A label','上传 B 面标签':'Upload side B label','A 面标签':'Side A label','B 面标签':'Side B label',
   '胶色':'Vinyl','黑胶':'Black','彩胶':'Colour','第 1 张胶色':'Disc 1 vinyl colour','内袋抽出':'Sleeve out','唱片抽出':'Record out','每面音轨':'Tracks per side',
@@ -594,15 +597,16 @@ const state = {
   stickerOn:true, stickerShape:'circle', stickerSize:7.6, stickerX:8.8, stickerY:9.2, stickerRot:0,
   numOn:true, numCur:123, numTotal:1000, numPrefix:'No.', numFormat:'slash', numFont:'auto', numPlace:'back', numFinish:'stamp', numColor:'#25336f',
   numX:10.5, numY:-13.6, numSize:.5, numRot:0,
-  jacketType:'single', gateOpen:0, lpCount:1, sleeve2X:.6, record2X:.3, obiOn:true, obiWidth:3.2, insertOn:true, insertX:0,
+  jacketType:'single', gateOpen:0, lpCount:1, lpLayout:'split', sleeve2X:.6, record2X:.3, obiOn:true, obiWidth:3.2, insertOn:true, insertX:0,
   bg:'transparent', bgColor:'#e6e3dc', scale:2, view:'quarter',
   camZoom:1, camAz:0, camEl:0, camPanX:0, camPanY:0, outW:2400, outH:1600,   // used by the agent API / CLI
   animPreset:'turntable', animDuration:6, animFps:0, animDir:'left', animAngle:25, animAspect:'16:9', animSize:0,   // 0 = per-format default
   videoFormat:'mp4'   // panel only; the CLI takes the format from the output file name
 };
 const isGate=()=>state.jacketType==='gatefold';
-// A gatefold 2LP keeps one disc in each panel: the front cover is a second 1LP pocket, open at its free edge.
-const isSplit=()=>isGate()&&state.lpCount===2;
+// A gatefold 2LP keeps one disc in each panel unless records.layout stacks them: the front cover is then a
+// second 1LP pocket, open at its free edge.
+const isSplit=()=>isGate()&&state.lpCount===2&&state.lpLayout==='split';
 const pocketDepth=()=>POCKET_D[isSplit()?1:state.lpCount];
 const coverDepth=()=>isSplit()?POCKET_D[1]:J.board;
 const frontZ=()=>isGate()?J.d/2+coverDepth():J.d/2;      // outer face of the front cover
@@ -1213,7 +1217,9 @@ function pose(){
     rec.position.set(ox+rx,THREE.MathUtils.lerp(floor+LP.r,GROUND_Y+LP.r,settle(rx-LP.r-mouth)),z);
     rec.rotation.set(0,flip,THREE.MathUtils.degToRad(state.recordRot))};
   placeSet(sleeve,record,state.sleeveX,state.recordX,zc,true);
-  if(split)placeSet(sleeve2,record2,state.sleeve2X,state.record2X,coverDepth()/2,true,coverPivot,J.w/2,Math.PI);
+  // Disc 2 shows side C to the camera: facing out while the cover is shut, turned over once it opens past
+  // 90°. A gatefold clip fixes the face for its whole loop (disc2Flip) so the label never swaps mid-swing.
+  if(split)placeSet(sleeve2,record2,state.sleeve2X,state.record2X,coverDepth()/2,true,coverPivot,J.w/2,(state.disc2Flip??state.gateOpen>90)?Math.PI:0);
   else placeSet(sleeve2,record2,state.sleeve2X,state.record2X,-zc,two);
   const ix=state.insertX*25;
   insert.visible=state.insertOn;insert.position.set(ix,THREE.MathUtils.lerp(jacketFloor+INS.s/2,GROUND_Y+INS.s/2,settle(ix-INS.s/2-J.w/2)),two&&!split?-.23:INS.z);
@@ -1230,10 +1236,11 @@ function pose(){
 function applyLpCount(){
   $('lp2-sub').hidden=state.lpCount!==2;applyJacketType();
 }
+const syncLayoutRow=()=>{$('lp-layout-row').hidden=!(isGate()&&state.lpCount===2)};
 const lp2Where=()=>{$('lp2-where').textContent=isSplit()?tr('C / D 面 · 装在左扇','Sides C / D · in the left panel'):tr('C / D 面 · 放在第 1 张后面','Sides C / D · behind disc 1')};
 function applyJacketType(){
   J.d=pocketDepth();buildJacket();
-  lp2Where();
+  lp2Where();syncLayoutRow();
   const gate=isGate();$('gate-sub').hidden=!gate;$('jacket-spec').textContent=specText();
   buildWrap(state.wrinkle);buildObi();pose();if(!userMoved)setView(state.view);
 }
@@ -1718,7 +1725,7 @@ seg('finish','finish',applyFinish);
 seg('jacket-type','jacketType',()=>{applyJacketType();
   if(!isGate()&&state.animPreset==='gatefold'){state.animPreset='turntable';for(const b of $('anim-preset').children)b.setAttribute('aria-pressed',b.dataset.v==='turntable');if(previewActive())fitPreview()}
   syncAnimPanel()});
-seg('lp-count','lpCount',applyLpCount);
+seg('lp-count','lpCount',applyLpCount);seg('lp-layout','lpLayout',applyJacketType);
 seg('vinyl-style','vinyl',()=>{applyVinyl();syncPatterns()});
 seg('vinyl2-style','vinyl2',()=>{applyVinyl();syncPatterns()});
 seg('sticker-shape','stickerShape',()=>{buildSticker();stickerTexture();pose()});
@@ -1865,7 +1872,8 @@ const SPEC_FIELDS=[
   enumF('jacket.type','jacketType',['single','gatefold'],'封套类型：single 单开，gatefold 双开'),
   enumF('jacket.finish','finish',['matte','satin','gloss'],'纸张工艺：matte 哑光，satin 缎面，gloss 亮面'),
   numF('jacket.gateOpen','gateOpen',0,180,1,'双开封面打开角度（度）。大于 0 时塑封、贴纸、Obi 视为已拆除，不显示'),
-  numF('records.count','lpCount',1,2,1,'唱片数量：1 为单 LP，2 为 2LP。单开时两张叠在同一个口袋里（封套自动加厚）；双开时两扇各装一张，第 2 张在左扇（封面）里，打开后向左抽出',true),
+  enumF('records.layout','lpLayout',['split','stacked'],'2LP 双开时两张怎么装：split 左右两扇各一张（默认），第 2 张在左扇（封面）里，打开后向左抽出；stacked 两张叠在右扇同一个口袋。单开或单 LP 时不使用'),
+  numF('records.count','lpCount',1,2,1,'唱片数量：1 为单 LP，2 为 2LP。单开时两张叠在同一个口袋里（封套自动加厚）；双开时按 records.layout 分装，默认两扇各一张',true),
   numF('records.labelRotation','recordRot',-180,180,1,'唱片标签旋转角度（度），两张共用'),
   boolF('records.sleeve.on','sleeveOn','是否显示内袋'),
   colorF('records.sleeve.color','sleeveColor','内袋纸色，未提供 images.sleeve 时生效'),
@@ -1873,7 +1881,7 @@ const SPEC_FIELDS=[
     enumF(`records.disc${i}.vinyl`,`vinyl${s}`,['black','color'],`第 ${i} 张胶色：black 纯黑胶（不叠纹路、不透明）；color 彩胶，用 color 和 transparency，可再加 pattern。旧值 clear 仍可用，等于 color + transparency 38${note}`),
     numF(`records.disc${i}.transparency`,`vinyl${s}Clear`,0,80,.01,`第 ${i} 张彩胶的透明度（%），0 为不透明。有纹路时只有底色变透明，纹路本身不透明；black 不使用${note}`),
     colorF(`records.disc${i}.color`,`vinyl${s}Color`,`第 ${i} 张彩胶颜色；有纹路时是底色（分色类的第一块）${note}`),
-    numF(`records.disc${i}.sleeveOut`,`sleeve${s}X`,0,100,.01,`第 ${i} 张内袋连同唱片从封套开口抽出的比例（%）${note}${i===2?'。双开时从左扇的开口抽出：合上时朝右，打开后朝左':''}`),
+    numF(`records.disc${i}.sleeveOut`,`sleeve${s}X`,0,100,.01,`第 ${i} 张内袋连同唱片从封套开口抽出的比例（%）${note}${i===2?'。双开且 records.layout=split 时从左扇的开口抽出：合上时朝右，打开后朝左':''}`),
     numF(`records.disc${i}.recordOut`,`record${s}X`,0,100,.01,`第 ${i} 张唱片再从内袋里抽出的比例（%）${note}`),
     numF(`records.disc${i}.tracks`,`tracks${s}`,1,20,1,`第 ${i} 张每面的音轨数，盘面按等宽分成这么多圈，相邻音轨之间有一道亮环；两面相同${note}`,true),
     enumF(`records.disc${i}.pattern.id`,`pattern${s}`,['none',...MASKS.map(m=>m.id)],`第 ${i} 张彩胶纹路，none 或不写为纯色，只在 vinyl=color 时生效。按配色方式分三类——分色（底色是第一块，pattern.color 第二块，split-tri 再用 pattern.color2 第三块；split-quad 对角同色）：${patternIds('regions')}；主次（底色 + pattern.color，其余色层自动推算）：${patternIds('accent')}；同色系（只用底色，纹路是它的深浅变化，pattern.contrast 调反差）：${patternIds('tonal')}。底色是 color；写了 color 而没写 pattern.color / pattern.color2 时，纹路色按底色推算；color 也没写时，用这款纹路的默认配色${note}`),
@@ -2121,7 +2129,7 @@ function animFrame(u){
   if(p==='spin')return{set:{recordRot:state.recordRot-360*Math.max(1,Math.round(state.animDuration*SPIN_RPM/60))*u}};
   const k=outAndBack(u);
   // An opening gatefold has lost its film, sticker and obi, at every frame rather than popping off at 0.5°.
-  if(p==='gatefold')return{set:{gateOpen:(state.gateOpen>.5?state.gateOpen:GATE_OPEN_DEFAULT)*k,wrapOn:false,obiOn:false,stickerOn:false}};
+  if(p==='gatefold'){const end=state.gateOpen>.5?state.gateOpen:GATE_OPEN_DEFAULT;return{set:{gateOpen:end*k,disc2Flip:end>90,wrapOn:false,obiOn:false,stickerOn:false}}}
   return{set:Object.fromEntries(Object.entries(pullTargets()).map(([key,v])=>[key,v*k]))}}
 // Whether disc i's label shows from the front (as pose() places it): clear of the jacket, and of the sleeve
 // unless the record still sits centred in it, where the sleeve's hole shows the label.
