@@ -8,6 +8,8 @@
 |---|---|---|---|
 | three | 0.169.0 | MIT | `third-party/three-LICENSE.txt` |
 | playwright-core | 1.63.0 | Apache-2.0 | `third-party/playwright-core-LICENSE.txt` |
+| mediabunny | 1.61.3 | MPL-2.0 | `third-party/mediabunny-LICENSE.txt` |
+| gifenc | 1.0.3 | MIT | `third-party/gifenc-LICENSE.txt` |
 
 安装后的依赖还可能带有自己的 NOTICE、第三方声明和许可证；请保留并遵循这些文件。此处附带的许可文本来自当前锁定版本的 npm 包。
 

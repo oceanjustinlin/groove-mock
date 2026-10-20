@@ -6,7 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "test": "node --test test/provenance.test.mjs"
+    "test": "node --test --test-concurrency=1 test/provenance.test.mjs test/video.test.mjs"
   },
   "bin": {
     "record-mockup": "./record-mockup.mjs"
@@ -15,6 +15,8 @@
     "node": ">=20"
   },
   "dependencies": {
+    "gifenc": "1.0.3",
+    "mediabunny": "1.61.3",
     "playwright-core": "1.63.0",
     "three": "0.169.0"
   }
