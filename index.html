@@ -35,7 +35,8 @@ button,input,select{font:inherit;color:inherit}
 .brand h1{margin:0;white-space:nowrap;font-family:var(--font-display);font-stretch:78%;font-weight:800;font-size:24px;letter-spacing:.01em;line-height:1}
 .spec{font-family:var(--font-mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
 .views{display:flex;gap:4px}
-.play{display:inline-grid;place-items:center;width:30px;padding:5px 0}
+/* Icon-only: no side padding, including the phone rule that pads .stage .views .chip. */
+.chip.play,.stage .views .chip.play{display:inline-grid;place-items:center;width:30px;padding:0}
 .play svg{width:14px;height:14px;fill:currentColor}
 .play .i-pause,.play[aria-pressed="true"] .i-play{display:none}
 .play[aria-pressed="true"] .i-pause{display:block}
@@ -201,7 +202,7 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
       <button class="chip" data-view="quarter" aria-pressed="true">斜侧</button>
       <button class="chip" data-view="front" aria-pressed="false">正面</button>
       <button class="chip" data-view="side" aria-pressed="false">侧面</button>
-      <button class="chip play" id="play-btn" aria-pressed="false"><svg class="i-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9.5-5.5z"/></svg><svg class="i-pause" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 2.5h3v11h-3zM9.5 2.5h3v11h-3z"/></svg></button>
+      <button class="chip play" id="play-btn" aria-pressed="false"><svg class="i-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 2.5v11l9-5.5z"/></svg><svg class="i-pause" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 2.5h3v11h-3zM9.5 2.5h3v11h-3z"/></svg></button>
       <button class="chip" id="play-reset" hidden>复位</button>
     </div>
     <a class="chip gh" href="https://github.com/oceanjustinlin/record-mockup" target="_blank" rel="noopener" title="源码、命令行和 Agent 用法" aria-label="源码、命令行和 Agent 用法（GitHub）"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
@@ -467,7 +468,7 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
             <div class="row" id="anim-dir-row"><span class="lbl">方向</span>
               <div class="seg" id="anim-dir"><button data-v="left" aria-pressed="true">向左</button><button data-v="right" aria-pressed="false">向右</button></div>
             </div>
-            <div class="slider"><label for="anim-duration">一圈时长</label><input type="range" id="anim-duration" min="1" max="30" value="6"><output id="anim-duration-v">6 s</output></div>
+            <div class="slider"><label for="anim-duration">时长</label><input type="range" id="anim-duration" min="1" max="30" value="6"><output id="anim-duration-v">6 s</output></div>
             <div class="slider" id="anim-angle-row" hidden><label for="anim-angle">摆幅</label><input type="range" id="anim-angle" min="5" max="90" value="25"><output id="anim-angle-v">25°</output></div>
             <div class="row"><span class="lbl">画幅</span>
               <div class="seg" id="anim-aspect"><button data-v="16:9" aria-pressed="true">16:9</button><button data-v="1:1" aria-pressed="false">1:1</button><button data-v="9:16" aria-pressed="false">9:16</button></div>
@@ -560,7 +561,7 @@ const EN={
   'PNG 已生成':'PNG ready','导出的模型图':'Exported mockup','如果点"下载"没有反应，请右键（手机长按）图片另存。':'If Download does nothing, right-click (long-press on phones) the image and save it.',
   '下载':'Download','关闭':'Close',
   '复位':'Reset','动画':'Animation','画幅':'Aspect','格式':'Format','尺寸':'Size','自动':'Auto','导出视频':'Export video',
-  '如果点"下载"没有反应，请右键（手机长按）视频另存。':'If Download does nothing, right-click (long-press on a phone) the video and save it.','动作':'Motion','转台':'Turntable','摆动':'Swing','自转':'Spin','展开':'Open','抽出':'Pull out','方向':'Direction','向左':'Left','向右':'Right','一圈时长':'Loop length','摆幅':'Swing angle',
+  '如果点"下载"没有反应，请右键（手机长按）视频另存。':'If Download does nothing, right-click (long-press on a phone) the video and save it.','动作':'Motion','转台':'Turntable','摆动':'Swing','自转':'Spin','展开':'Open','抽出':'Pull out','方向':'Direction','向左':'Left','向右':'Right','时长':'Duration','摆幅':'Swing angle',
   '尺寸指短边像素，自动时 MP4 为 1080，GIF 为 600。点视角旁的 ▶ 在工作台预览，导出视频用同一段动画。转台会转到背面，没有背面图时用摆动；展开和抽出会停在当前设置的角度和位置，都为 0 时用常见值。':'Size is the short side in pixels; Auto is 1080 for MP4 and 600 for GIF. Press ▶ next to the views to preview on the stage; video export uses the same animation. Turntable shows the back, so use Swing without back artwork. Open and Pull out stop at the angle and positions set in the panel, or typical ones when those are 0.',
   '源码、命令行和 Agent 用法':'Source, CLI and agent usage','源码、命令行和 Agent 用法（GitHub）':'Source, CLI and agent usage (GitHub)'};
 const LANGS=['zh','en'];
@@ -1679,7 +1680,7 @@ function syncUI(){
   syncPatterns()}
 
 seg('finish','finish',applyFinish);
-seg('jacket-type','jacketType',applyJacketType);
+seg('jacket-type','jacketType',()=>{applyJacketType();syncAnimPanel()});
 seg('lp-count','lpCount',applyLpCount);
 seg('vinyl-style','vinyl',()=>{applyVinyl();syncPatterns()});
 seg('vinyl2-style','vinyl2',()=>{applyVinyl();syncPatterns()});
@@ -2177,7 +2178,11 @@ function resetPreview(){preview.playing=false;preview.phase=0;shadowReach(0);set
 $('play-btn').addEventListener('click',()=>setPlaying(!preview.playing));
 $('play-reset').addEventListener('click',resetPreview);
 setPlaying(false);
-function syncAnimPanel(){const p=state.animPreset,issues=animIssues();
+function syncAnimPanel(){
+  // Opening needs a gatefold: a single jacket hides the choice, and a clip set to it falls back to turntable.
+  const gate=$('anim-preset').querySelector('[data-v=gatefold]');gate.hidden=!isGate();
+  if(!isGate()&&state.animPreset==='gatefold'){state.animPreset='turntable';for(const b of $('anim-preset').children)b.setAttribute('aria-pressed',b.dataset.v==='turntable');if(previewActive())fitPreview()}
+  const p=state.animPreset,issues=animIssues();
   $('anim-dir-row').hidden=p!=='turntable'&&p!=='swing';$('anim-angle-row').hidden=p!=='swing';
   const notes=issues.map(k=>tr(ANIM_ISSUES[k][1],ANIM_ISSUES[k][2]));
   if(state.bg==='transparent')notes.push(tr('视频不支持透明背景，会用上面的背景颜色。','Video has no transparency; it uses the background colour above.'));
@@ -2200,6 +2205,7 @@ $('video-btn').addEventListener('click',async()=>{
   }catch(e){if(e.name!=='AbortError')alertNote(tr(`视频导出失败：${e.message}`,`Video export failed: ${e.message}`))}
   finally{videoAbort=null;$('export-overlay').hidden=true;btn.textContent=tr('导出视频','Export video')}});
 slider('anim-duration','animDuration','sec',()=>{});slider('anim-angle','animAngle','deg',refitPreview);
+syncAnimPanel();
 
 async function renderAnimation(format,{onProgress=()=>{},encoder='auto',signal}={}){
   if(!(encoder in ENCODERS))throw new Error(`不支持的编码方式 ${encoder}，可选：${Object.keys(ENCODERS).join(' / ')}`);
