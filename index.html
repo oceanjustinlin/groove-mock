@@ -500,6 +500,7 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
     <img id="modal-img" alt="导出的模型图">
     <video id="modal-video" controls loop muted playsinline hidden></video>
     <p class="note" id="note-img">如果点"下载"没有反应，请右键（手机长按）图片另存。</p>
+    <p class="note" id="note-poster" hidden>手机上只预览第一帧，以免播放大 GIF 时页面崩溃。点"下载"保存完整 GIF。</p>
     <p class="note" id="note-video" hidden>如果点"下载"没有反应，请右键（手机长按）视频另存。</p>
     <div class="row"><a class="primary" id="modal-dl" download="record-mockup.png" href="#" style="text-decoration:none">下载</a><button class="chip" id="modal-close">关闭</button></div>
   </div>
@@ -566,7 +567,7 @@ const EN={
   'PNG 已生成':'PNG ready','导出的模型图':'Exported mockup','如果点"下载"没有反应，请右键（手机长按）图片另存。':'If Download does nothing, right-click (long-press on phones) the image and save it.',
   '下载':'Download','关闭':'Close',
   '复位':'Reset','动画':'Animation','画幅':'Aspect','格式':'Format','尺寸':'Size','自动':'Auto','导出视频':'Export video',
-  '如果点"下载"没有反应，请右键（手机长按）视频另存。':'If Download does nothing, right-click (long-press on a phone) the video and save it.','动作':'Motion','转台':'Turntable','摆动':'Swing','自转':'Spin','展开':'Open','抽出':'Pull out','方向':'Direction','向左':'Left','向右':'Right','时长':'Duration','摆幅':'Swing angle',
+  '如果点"下载"没有反应，请右键（手机长按）视频另存。':'If Download does nothing, right-click (long-press on a phone) the video and save it.','手机上只预览第一帧，以免播放大 GIF 时页面崩溃。点"下载"保存完整 GIF。':'Phones preview only the first frame, since playing a large GIF can crash the page. Press Download to save the full GIF.','动作':'Motion','转台':'Turntable','摆动':'Swing','自转':'Spin','展开':'Open','抽出':'Pull out','方向':'Direction','向左':'Left','向右':'Right','时长':'Duration','摆幅':'Swing angle',
   '尺寸指短边像素，自动时 MP4 为 1080，GIF 为 600。点视角旁的 ▶ 在工作台预览，导出视频用同一段动画。转台会转到背面，没有背面图时用摆动；展开和抽出会停在当前设置的角度和位置，都为 0 时用常见值。':'Size is the short side in pixels; Auto is 1080 for MP4 and 600 for GIF. Press ▶ next to the views to preview on the stage; video export uses the same animation. Turntable shows the back, so use Swing without back artwork. Open and Pull out stop at the angle and positions set in the panel, or typical ones when those are 0.',
   '源码、命令行和 Agent 用法':'Source, CLI and agent usage','源码、命令行和 Agent 用法（GitHub）':'Source, CLI and agent usage (GitHub)'};
 const LANGS=['zh','en'];
@@ -1305,12 +1306,13 @@ for(const slot of Object.keys(SLOTS)){
     catch(err){alertNote(tr(`没能读取这张图片（${file.name}）。请换成 PNG、JPG 或 WebP 再试。`,`Couldn’t read this image (${file.name}). Try a PNG, JPG or WebP.`))}
     e.target.value='';});
 }
-function alertNote(msg){$('modal-title').textContent=msg;for(const id of['modal-img','modal-video','modal-dl','note-img','note-video'])$(id).hidden=true;$('modal-size').textContent='';$('modal').hidden=false}
+function alertNote(msg){$('modal-title').textContent=msg;for(const id of['modal-img','modal-video','modal-dl','note-img','note-poster','note-video'])$(id).hidden=true;$('modal-size').textContent='';$('modal').hidden=false}
 // The export sheet: an image (PNG, GIF) or a looping video, with its download link.
-function showResult({title,url,file,size,video=false}){
+// poster: a still shown in place of the image, for a GIF too heavy to play on the device.
+function showResult({title,url,file,size,video=false,poster}){
   $('modal-title').textContent=title;$('modal-size').textContent=size;
-  $('modal-img').hidden=video;$('note-img').hidden=video;$('modal-video').hidden=!video;$('note-video').hidden=!video;$('modal-dl').hidden=false;
-  if(video){$('modal-video').src=url;$('modal-video').play().catch(()=>{})}else $('modal-img').src=url;
+  $('modal-img').hidden=video;$('note-img').hidden=video||!!poster;$('note-poster').hidden=!poster;$('modal-video').hidden=!video;$('note-video').hidden=!video;$('modal-dl').hidden=false;
+  if(video){$('modal-video').src=url;$('modal-video').play().catch(()=>{})}else $('modal-img').src=poster||url;
   $('modal-dl').href=url;$('modal-dl').download=file;$('modal').hidden=false}
 function closeModal(){$('modal').hidden=true;$('modal-video').pause()}
 
@@ -2183,10 +2185,13 @@ onmessage=({data:m})=>{try{
   enc.writeFrame(applyPalette(m.rgba,m.palette),m.w,m.h,{first:m.first,palette:m.first?m.palette:null,delay:m.delay,repeat:0});
   const bytes=enc.bytes();postMessage({id:m.id,result:bytes},[bytes.buffer])}
   catch(e){postMessage({id:m.id,error:String(e&&e.message||e)})}}`;
-async function gifPool(){
+// Phones and tablets (iOS above all) kill a tab that holds too much memory, and an animated GIF decodes every
+// frame to play: there the export uses fewer workers and frames in flight, and the result shows a still.
+const LOW_MEMORY=matchMedia('(pointer:coarse)').matches;
+async function gifPool(max=4){
   const lib=URL.createObjectURL(new Blob([await (await fetch(GIFENC_URL)).text()],{type:'text/javascript'}));
   const code=URL.createObjectURL(new Blob([GIF_WORKER(lib)],{type:'text/javascript'}));
-  const size=Math.max(1,Math.min(4,(navigator.hardwareConcurrency||2)-1)),idle=[],queue=[],waiting=new Map();let next=0,failure=null;
+  const size=Math.max(1,Math.min(max,(navigator.hardwareConcurrency||2)-1)),idle=[],queue=[],waiting=new Map();let next=0,failure=null;
   const fail=e=>{failure=e;for(const{reject}of waiting.values())reject(e);waiting.clear()};
   const pump=()=>{while(idle.length&&queue.length){const wk=idle.pop(),{msg,transfer,resolve,reject}=queue.shift(),id=next++;
     waiting.set(id,{resolve,reject,wk});wk.postMessage({...msg,id},transfer)}};
@@ -2237,23 +2242,25 @@ const refitPreview=()=>{syncAnimPanel();if(previewActive())fitPreview()};
 seg('anim-preset','animPreset',refitPreview);seg('anim-dir','animDir',refitPreview);
 seg('anim-aspect','animAspect');seg('video-format','videoFormat');seg('anim-size','animSize');
 // Export video from the panel. Pressing the button again while it runs cancels.
-let videoUrl,videoAbort;
+let videoUrl,posterUrl,videoAbort;
 $('video-btn').addEventListener('click',async()=>{
   if(videoAbort){videoAbort.abort();return}
   const btn=$('video-btn'),format=state.videoFormat,status=$('export-status'),bar=$('export-progress');
+  // Let the last result go first, so its file is not held in memory through this export.
+  $('modal-img').removeAttribute('src');for(const u of[videoUrl,posterUrl])if(u)URL.revokeObjectURL(u);videoUrl=posterUrl=null;
   videoAbort=new AbortController();btn.textContent=tr('取消导出','Cancel');status.textContent=tr('正在准备…','Preparing…');bar.value=0;$('export-overlay').hidden=false;
   try{
-    const r=await renderAnimation(format,{encoder:'software',signal:videoAbort.signal,onProgress:(d,n)=>{status.textContent=tr(`正在生成 ${d} / ${n} 帧`,`Rendering frame ${d} / ${n}`);bar.value=d/n}});
-    const blob=new Blob([r.bytes],{type:format==='gif'?'image/gif':'video/mp4'});
-    if(videoUrl)URL.revokeObjectURL(videoUrl);videoUrl=URL.createObjectURL(blob);
-    showResult({title:format==='gif'?tr('GIF 已生成','GIF ready'):tr('视频已生成','Video ready'),url:videoUrl,file:`record-mockup.${format}`,video:format==='mp4',
+    const r=await renderAnimation(format,{encoder:'software',signal:videoAbort.signal,poster:LOW_MEMORY&&720,onProgress:(d,n)=>{status.textContent=tr(`正在生成 ${d} / ${n} 帧`,`Rendering frame ${d} / ${n}`);bar.value=d/n}});
+    const blob=r.blob;videoUrl=URL.createObjectURL(blob);if(r.poster)posterUrl=URL.createObjectURL(r.poster);
+    showResult({title:format==='gif'?tr('GIF 已生成','GIF ready'):tr('视频已生成','Video ready'),url:videoUrl,poster:posterUrl,file:`record-mockup.${format}`,video:format==='mp4',
       size:`${r.width} × ${r.height} px · ${r.duration} s · ${(blob.size/1048576).toFixed(1)} MB`});
   }catch(e){if(e.name!=='AbortError')alertNote(tr(`视频导出失败：${e.message}`,`Video export failed: ${e.message}`))}
   finally{videoAbort=null;$('export-overlay').hidden=true;btn.textContent=tr('导出视频','Export video')}});
 slider('anim-duration','animDuration','sec',()=>{});slider('anim-angle','animAngle','deg',refitPreview);
 syncAnimPanel();
 
-async function renderAnimation(format,{onProgress=()=>{},encoder='auto',signal}={}){
+// Returns the clip as a Blob. poster (GIF only): also a JPEG of the first frame, at most that many px on its long side.
+async function renderAnimation(format,{onProgress=()=>{},encoder='auto',signal,poster}={}){
   if(!(encoder in ENCODERS))throw new Error(`不支持的编码方式 ${encoder}，可选：${Object.keys(ENCODERS).join(' / ')}`);
   if(!VIDEO_FORMATS.includes(format))throw new Error(`不支持的格式 ${format}，可选：${VIDEO_FORMATS.join(' / ')}`);
   const warnings=[],{fps,width:w,height:h,frames}=animSettings(format),clip=Array.from({length:frames},(_,i)=>animFrame(i/frames));
@@ -2267,7 +2274,7 @@ async function renderAnimation(format,{onProgress=()=>{},encoder='auto',signal}=
     scene.background=new THREE.Color(state.bgColor);
     const {pivot,reach}=fitClipCamera();shadowReach(reach);
     const draw=i=>renderAnimFrame(clip[i],pivot);
-    let bytes;
+    let blob,still;
     if(format==='mp4'){
       const mb=await import(MEDIABUNNY_URL);
       const config={codec:'avc',quality:mb.QUALITY_VERY_HIGH,keyFrameInterval:2,hardwareAcceleration:ENCODERS[encoder]};
@@ -2282,10 +2289,10 @@ async function renderAnimation(format,{onProgress=()=>{},encoder='auto',signal}=
         const sample=new mb.VideoSample(new VideoFrame(renderer.domElement,{timestamp:Math.round(i*1e6/fps),duration:Math.round(1e6/fps)}));
         await src.add(sample);sample.close();onProgress(i+1,frames)}}
       catch(e){await output.cancel();throw e}
-      await output.finalize();bytes=new Uint8Array(output.target.buffer);
+      await output.finalize();blob=new Blob([output.target.buffer],{type:'video/mp4'});
     }else{
       const cv=canvas(w,h),g=cv.getContext('2d',{willReadFrequently:true}),grab=()=>{g.drawImage(renderer.domElement,0,0);return g.getImageData(0,0,w,h).data};
-      const pool=await gifPool();
+      const pool=await gifPool(LOW_MEMORY?2:4),cap=(LOW_MEMORY?1:2)*pool.size;
       try{
         // One palette for the whole clip, sampled from frames spread across the loop, so colours don't flicker.
         const picks=8,stride=4,sample=new Uint8Array(Math.ceil(w*h/stride)*4*picks);let n=0;
@@ -2295,16 +2302,18 @@ async function renderAnimation(format,{onProgress=()=>{},encoder='auto',signal}=
         // on its own. A few frames stay in flight, so memory stays flat however long the clip is.
         const chunks=new Array(frames),inFlight=new Set();let done=0;
         for(let i=0;i<frames;i++){signal?.throwIfAborted();draw(i);const rgba=grab();
+          if(i===0&&poster){const k=Math.min(1,poster/Math.max(w,h));still=canvas(Math.round(w*k),Math.round(h*k));still.getContext('2d').drawImage(cv,0,0,still.width,still.height)}
           const job=pool.run({type:'frame',rgba,palette,w,h,delay,first:i===0},[rgba.buffer]).then(b=>{chunks[i]=b;onProgress(++done,frames)});
           inFlight.add(job);job.then(()=>inFlight.delete(job),()=>{});   // failures surface through race / all
-          if(inFlight.size>=2*pool.size)await Promise.race(inFlight);else await yieldTask()}
+          if(inFlight.size>=cap)await Promise.race(inFlight);else await yieldTask()}
         await Promise.all(inFlight);
-        const header=new TextEncoder().encode('GIF89a'),total=chunks.reduce((t,c)=>t+c.length,header.length+1);
-        bytes=new Uint8Array(total);bytes.set(header);let at=header.length;for(const c of chunks){bytes.set(c,at);at+=c.length}bytes[at]=0x3b;   // trailer
+        // The Blob joins the chunks itself, so the GIF is never copied into one more buffer.
+        blob=new Blob([new TextEncoder().encode('GIF89a'),...chunks,new Uint8Array([0x3b])],{type:'image/gif'});   // header, frames, trailer
+        if(still)still=await new Promise(res=>still.toBlob(res,'image/jpeg',.85));
       }finally{pool.close()}
     }
     const real=format==='gif'?100/Math.round(100/fps):fps;   // GIF delays count in 1/100 s
-    return{format,width:w,height:h,fps:Math.round(real*100)/100,frames,duration:Math.round(frames/real*100)/100,bytes,warnings}
+    return{format,width:w,height:h,fps:Math.round(real*100)/100,frames,duration:Math.round(frames/real*100)/100,blob,...(still&&{poster:still}),warnings}
   }finally{
     if(previewActive())fitPreview();else shadowReach(0);
     camera.position.copy(cam.pos);controls.target.copy(cam.target);applyBg();
@@ -2345,8 +2354,8 @@ window.recordMockup={
   // Renders spec.animation as an MP4 or GIF. onProgress(done, total) is called after each frame;
   // encoder (MP4 only) is auto | software | hardware.
   async renderVideo(opts={}){await ready;
-    const r=await renderAnimation(opts.format||'mp4',{onProgress:opts.onProgress,encoder:opts.encoder}),type=r.format==='gif'?'image/gif':'video/mp4';
-    const{bytes,...rest}=r;return{...rest,bytes:bytes.length,dataUrl:await toDataUrl(new Blob([bytes],{type}))}}
+    const{blob,...rest}=await renderAnimation(opts.format||'mp4',{onProgress:opts.onProgress,encoder:opts.encoder});
+    return{...rest,bytes:blob.size,dataUrl:await toDataUrl(blob)}}
 };
 window.__gm={state,scene,camera,renderer,pose,controls,setView};
 </script>
