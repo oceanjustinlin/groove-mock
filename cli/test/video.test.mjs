@@ -47,3 +47,9 @@ test('video refuses an unknown output extension', async t => {
   assert.equal(r.status, 1);
   assert.match(r.json.error, /\.mp4 或 \.gif/);
 });
+
+test('video warns when a gatefold animation has no gatefold to open', async t => {
+  const r = await video(t, 'open.mp4', {preset: 'gatefold', duration: 1});
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.match(r.json.warnings.join('\n'), /gatefold/);
+});

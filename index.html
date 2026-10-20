@@ -98,9 +98,10 @@ body.resizing .stage canvas{pointer-events:none}
 .tile .tag{position:absolute;right:4px;top:4px;font-size:10px;background:var(--surface);color:var(--muted);border-radius:4px;padding:0 4px}
 .tile:focus-within .thumb{outline:2px solid var(--accent);outline-offset:2px}
 .row{display:flex;align-items:center;gap:10px;justify-content:space-between}
-.row label,.lbl{font-size:13px}
+.row label,.lbl{font-size:13px;white-space:nowrap}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
-.seg button{border:0;background:transparent;padding:4px 10px;cursor:pointer;font-size:13px}
+.seg button{border:0;background:transparent;padding:4px 10px;cursor:pointer;font-size:13px;white-space:nowrap}
+#anim-preset button{padding:4px 8px}
 .seg button+button{border-left:1px solid var(--line)}
 .seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
 .slider{display:grid;grid-template-columns:72px minmax(0,1fr) 58px;align-items:center;gap:8px;font-size:13px}
@@ -455,16 +456,17 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
             <p class="note">图片只在你的浏览器里处理，不会上传。</p>
           </section>
           <section class="group">
-            <h2>旋转动画</h2>
-            <div class="row"><span class="lbl">轨迹</span>
-              <div class="seg" id="anim-preset"><button data-v="turntable" aria-pressed="true">转台</button><button data-v="swing" aria-pressed="false">摆动</button></div>
+            <h2>动画</h2>
+            <div class="row"><span class="lbl">动作</span>
+              <div class="seg" id="anim-preset"><button data-v="turntable" aria-pressed="true">转台</button><button data-v="swing" aria-pressed="false">摆动</button><button data-v="spin" aria-pressed="false">自转</button><button data-v="gatefold" aria-pressed="false">展开</button><button data-v="pull" aria-pressed="false">抽出</button></div>
             </div>
-            <div class="row"><span class="lbl">方向</span>
+            <div class="row" id="anim-dir-row"><span class="lbl">方向</span>
               <div class="seg" id="anim-dir"><button data-v="left" aria-pressed="true">向左</button><button data-v="right" aria-pressed="false">向右</button></div>
             </div>
             <div class="slider"><label for="anim-duration">一圈时长</label><input type="range" id="anim-duration" min="1" max="30" value="6"><output id="anim-duration-v">6 s</output></div>
             <div class="slider" id="anim-angle-row" hidden><label for="anim-angle">摆幅</label><input type="range" id="anim-angle" min="5" max="90" value="25"><output id="anim-angle-v">25°</output></div>
-            <p class="note">点视角旁的 ▶ 在工作台预览。转台会转到背面，没有背面图时用摆动。</p>
+            <p class="note" id="anim-issue" hidden></p>
+            <p class="note">点视角旁的 ▶ 在工作台预览，导出视频用同一段动画。转台会转到背面，没有背面图时用摆动；展开和抽出会停在当前设置的角度和位置，都为 0 时用常见值。</p>
           </section>
         </div>
       </div>
@@ -541,8 +543,8 @@ const EN={
   '图片只在你的浏览器里处理，不会上传。':'Images are processed in your browser and never uploaded.',
   'PNG 已生成':'PNG ready','导出的模型图':'Exported mockup','如果点"下载"没有反应，请右键（手机长按）图片另存。':'If Download does nothing, right-click (long-press on phones) the image and save it.',
   '下载':'Download','关闭':'Close',
-  '复位':'Reset','旋转动画':'Turn animation','轨迹':'Motion','转台':'Turntable','摆动':'Swing','方向':'Direction','向左':'Left','向右':'Right','一圈时长':'Loop length','摆幅':'Swing angle',
-  '点视角旁的 ▶ 在工作台预览。转台会转到背面，没有背面图时用摆动。':'Press ▶ next to the views to preview on the stage. Turntable shows the back; use Swing if there is no back artwork.',
+  '复位':'Reset','动画':'Animation','动作':'Motion','转台':'Turntable','摆动':'Swing','自转':'Spin','展开':'Open','抽出':'Pull out','方向':'Direction','向左':'Left','向右':'Right','一圈时长':'Loop length','摆幅':'Swing angle',
+  '点视角旁的 ▶ 在工作台预览，导出视频用同一段动画。转台会转到背面，没有背面图时用摆动；展开和抽出会停在当前设置的角度和位置，都为 0 时用常见值。':'Press ▶ next to the views to preview on the stage; video export uses the same animation. Turntable shows the back, so use Swing without back artwork. Open and Pull out stop at the angle and positions set in the panel, or typical ones when those are 0.',
   '源码、命令行和 Agent 用法':'Source, CLI and agent usage','源码、命令行和 Agent 用法（GitHub）':'Source, CLI and agent usage (GitHub)'};
 const LANGS=['zh','en'];
 let lang=(()=>{const q=new URLSearchParams(location.search).get('lang');if(LANGS.includes(q))return q;
@@ -1196,7 +1198,7 @@ function setView(name){userMoved=false;const v=VIEWS[name],half=Math.tan(THREE.M
   const dist=Math.max(v.fit[1]/(2*half),(v.fit[0]+reach)/(2*half*camera.aspect)),dir=new THREE.Vector3(...v.dir).normalize().multiplyScalar(dist);
   controls.target.set(...t);camera.position.set(t[0]+dir.x,t[1]+dir.y,t[2]+dir.z);controls.update();state.view=name;
   for(const b of document.querySelectorAll('[data-view]'))b.setAttribute('aria-pressed',b.dataset.view===name);
-  if(previewTurned())fitPreview()}
+  if(previewActive())fitPreview()}
 
 // ---------- Resize / loop ----------
 // Re-frame on resize until the viewer moves the camera themselves.
@@ -1206,11 +1208,11 @@ function applyBg(){stage.classList.toggle('transparent',state.bg==='transparent'
 let first=true;
 // Stage preview of spec.animation: phase is the loop position in [0, 1); paused keeps the turned pose.
 const preview={playing:false,phase:0,last:0};
-const previewTurned=()=>preview.playing||preview.phase>0;
+const previewActive=()=>preview.playing||preview.phase>0;
 const SHADOW_BOX=(({left,right,top,bottom})=>({left,right,top,bottom}))(key.shadow.camera);
 const loop=now=>{controls.update();
   if(preview.playing){preview.phase=(preview.phase+Math.min(.1,(now-preview.last)/1000)/state.animDuration)%1;preview.last=now}
-  if(previewTurned())renderTurned(animAngle(preview.phase),productBox(productParts()).getCenter(new THREE.Vector3()));else renderer.render(scene,camera);
+  renderStage();
   if(first){first=false;$('loading').hidden=true}};
 renderer.setAnimationLoop(loop);
 
@@ -1252,7 +1254,7 @@ function showPage(id){if(!RAIL.some(b=>b.dataset.page===id))id='jacket';
   for(const b of RAIL){const on=b.dataset.page===id;b.setAttribute('aria-selected',on);b.tabIndex=on?0:-1}
   for(const pg of document.querySelectorAll('.page'))pg.hidden=pg.dataset.page!==id;
   document.querySelector('.pages').scrollTop=0;try{localStorage.setItem('gm-page',id)}catch(e){}}
-document.querySelector('.rail').addEventListener('click',e=>{const b=e.target.closest('[role="tab"]');if(b)showPage(b.dataset.page)});
+document.querySelector('.rail').addEventListener('click',e=>{const b=e.target.closest('[role="tab"]');if(!b)return;showPage(b.dataset.page);if(b.dataset.page==='output')syncAnimPanel()});
 document.querySelector('.rail').addEventListener('keydown',e=>{const step={ArrowDown:1,ArrowRight:1,ArrowUp:-1,ArrowLeft:-1}[e.key];if(!step&&e.key!=='Home'&&e.key!=='End')return;e.preventDefault();
   const i=RAIL.findIndex(b=>b.getAttribute('aria-selected')==='true'),n=e.key==='Home'?0:e.key==='End'?RAIL.length-1:(i+step+RAIL.length)%RAIL.length;
   showPage(RAIL[n].dataset.page);RAIL[n].focus()});
@@ -1647,7 +1649,7 @@ function syncUI(){
     else if(c.kind==='slider'){const u=UNITS[c.unit],x=u.toUI(v);el.value=x;$(c.id+'-v').textContent=u.fmt(x)}
     else if(c.kind==='toggle'){el.checked=!!v;if(c.sub)$(c.sub).hidden=!v}
     else el.value=v}
-  $('lp2-sub').hidden=state.lpCount!==2;$('vinyl-same').checked=state.vinylSame;$('vinyl2-own').hidden=state.vinylSame;$('gate-sub').hidden=!isGate();$('jacket-spec').textContent=specText();$('anim-angle-row').hidden=state.animPreset!=='swing';
+  $('lp2-sub').hidden=state.lpCount!==2;$('vinyl-same').checked=state.vinylSame;$('vinyl2-own').hidden=state.vinylSame;$('gate-sub').hidden=!isGate();$('jacket-spec').textContent=specText();syncAnimPanel();
   for(const b of document.querySelectorAll('[data-view]'))b.setAttribute('aria-pressed',b.dataset.view===state.view);
   syncPatterns()}
 
@@ -1926,10 +1928,10 @@ function buildSchema(){
     width:{type:'integer',minimum:256,maximum:4096,default:DEFAULT_STATE.outW,description:'输出宽度（px）'},
     height:{type:'integer',minimum:256,maximum:4096,default:DEFAULT_STATE.outH,description:'输出高度（px）'}}};
   root.properties.animation={type:'object',additionalProperties:false,description:'旋转视频 / 动图（record-mockup video 读取，render 不读）。相机按 camera.view 等设置取景，并自动拉远到整段动画都不出画',properties:{
-    preset:{enum:ANIM_PRESETS,default:'turntable',description:'turntable 转台：匀速转一整圈，首尾相接；swing 摆动：在当前角度左右来回摆 angle 度，不会露出背面'},
+    preset:{enum:ANIM_PRESETS,default:'turntable',description:'turntable 转台：匀速转一整圈；swing 摆动：左右来回摆 angle 度，不露背面；spin 唱片自转（33⅓ 转/分，需唱片已抽出）；gatefold 双开封面打开再合上，开到 jacket.gateOpen（为 0 时 160°），全程不显示塑封、贴纸和 Obi；pull 内袋和唱片抽出再推回，抽到 records.discN 的 sleeveOut / recordOut（都为 0 时用常见值）。都是首尾相接的循环'},
     duration:{type:'number',minimum:1,maximum:30,default:6,description:'一个循环的时长（秒）'},
     fps:{type:'integer',minimum:10,maximum:60,description:'帧率。不写时 MP4 为 30，GIF 为 20'},
-    direction:{enum:['left','right'],default:'left',description:'正面朝哪边转（从镜头看）'},
+    direction:{enum:['left','right'],default:'left',description:'正面朝哪边转（从镜头看），只用于 turntable 和 swing'},
     angle:{type:'number',minimum:5,maximum:90,default:25,description:'swing 的摆幅（度，单侧）'},
     aspect:{enum:Object.keys(ANIM_ASPECTS),default:'16:9',description:'画幅：16:9 横屏，1:1 方形，9:16 竖屏'},
     size:{type:'integer',minimum:240,maximum:2160,description:'短边像素。不写时 MP4 为 1080（16:9 即 1920 × 1080），GIF 为 600'}}};
@@ -2033,33 +2035,73 @@ async function renderToBlob(w,h){
 // turntable), so highlights sweep across the cover and the film instead of riding along with it.
 const MEDIABUNNY_URL='https://cdn.jsdelivr.net/npm/mediabunny@1.61.3/dist/bundles/mediabunny.min.mjs';
 const GIFENC_URL='https://cdn.jsdelivr.net/npm/gifenc@1.0.3/dist/gifenc.esm.js';
-const ANIM_PRESETS=['turntable','swing'],ANIM_ASPECTS={'16:9':[16,9],'1:1':[1,1],'9:16':[9,16]},VIDEO_FORMATS=['mp4','gif'];
-const ANIM_DEFAULTS={mp4:{fps:30,size:1080},gif:{fps:20,size:600}};
+const ANIM_PRESETS=['turntable','swing','spin','gatefold','pull'],ANIM_ASPECTS={'16:9':[16,9],'1:1':[1,1],'9:16':[9,16]},VIDEO_FORMATS=['mp4','gif'];
+const ANIM_DEFAULTS={mp4:{fps:30,size:1080},gif:{fps:20,size:600}},SPIN_RPM=100/3,GATE_OPEN_DEFAULT=160;
 function animSettings(format){
   const d=ANIM_DEFAULTS[format],fps=state.animFps||d.fps,size=state.animSize||d.size,[aw,ah]=ANIM_ASPECTS[state.animAspect];
   const even=v=>2*Math.round(v/2),k=size/Math.min(aw,ah);
   return{fps,width:even(aw*k),height:even(ah*k),frames:Math.max(2,Math.round(state.animDuration*fps))}}
-// Turn of the product (radians about the vertical axis) at loop phase u in [0, 1).
-function animAngle(u){const s=state.animDir==='left'?-1:1;
-  return state.animPreset==='swing'?s*THREE.MathUtils.degToRad(state.animAngle)*Math.sin(2*Math.PI*u):s*2*Math.PI*u}
+// Out-and-back moves (open, pull): hold shut, ease out, hold open, ease back; 0 → 1 → 0 over one loop.
+function outAndBack(u){const ease=(a,b)=>THREE.MathUtils.smoothstep(u,a,b);return u<.5?ease(.08,.42):1-ease(.58,.92)}
+// Where a pull ends: the scene's own sleeve / record / insert positions, or a typical pull when all are in.
+function pullTargets(){
+  const two=state.lpCount===2,t={sleeveX:state.sleeveX,recordX:state.recordX,...(state.insertOn&&{insertX:state.insertX}),...(two&&{sleeve2X:state.sleeve2X,record2X:state.record2X})};
+  if(Object.values(t).every(v=>v<.05))Object.assign(t,state.sleeveOn?{sleeveX:.5,recordX:.45,...(two&&{sleeve2X:.75,record2X:.3})}:{recordX:.6,...(two&&{record2X:.9})});
+  return t}
+// One frame of the clip at loop phase u in [0, 1): turn is the product's turn (radians about the vertical
+// axis); set holds state keys posed for this frame only. Stage preview and video export both draw from it.
+function animFrame(u){
+  const p=state.animPreset,dir=state.animDir==='left'?-1:1;
+  if(p==='turntable')return{turn:dir*2*Math.PI*u};
+  if(p==='swing')return{turn:dir*THREE.MathUtils.degToRad(state.animAngle)*Math.sin(2*Math.PI*u)};
+  // Records turn clockwise seen from the label side, a whole number of turns per loop at 33⅓ rpm.
+  if(p==='spin')return{set:{recordRot:state.recordRot-360*Math.max(1,Math.round(state.animDuration*SPIN_RPM/60))*u}};
+  const k=outAndBack(u);
+  // An opening gatefold has lost its film, sticker and obi, at every frame rather than popping off at 0.5°.
+  if(p==='gatefold')return{set:{gateOpen:(state.gateOpen>.5?state.gateOpen:GATE_OPEN_DEFAULT)*k,wrapOn:false,obiOn:false,stickerOn:false}};
+  return{set:Object.fromEntries(Object.entries(pullTargets()).map(([key,v])=>[key,v*k]))}}
+// Whether disc i's label shows from the front (as pose() places it): clear of the jacket, and of the sleeve
+// unless the record still sits centred in it, where the sleeve's hole shows the label.
+function labelShows(i){const s=i===1?'':'2',x=state[`sleeve${s}X`]*24,rx=x+state[`record${s}X`]*27,clear=edge=>rx-LP.label>edge;
+  if(!state.sleeveOn)return clear(J.w/2);
+  return clear(Math.max(J.w/2,x+SLV.s/2))||(state[`record${s}X`]<.01&&x-SLV.hole>J.w/2)}
+// Things in the scene that leave a preset with nothing to show. Codes, so the API and the panel can word them.
+function animIssues(){const p=state.animPreset,out=[];
+  if(p==='gatefold'&&!isGate())out.push('gate-single');
+  if(p==='spin'&&!labelShows(1)&&!(state.lpCount===2&&labelShows(2)))out.push('spin-hidden');
+  return out}
+// Each issue: [API / CLI warning, panel text in Chinese, panel text in English].
+const ANIM_ISSUES={'gate-single':['jacket.type 不是 gatefold，没有可打开的封面','单开封套没有可打开的封面，先在「封套」里选双开。','A single jacket has no cover to open; choose Gatefold under Jacket first.'],
+  'spin-hidden':['唱片标签被封套或内袋挡住，看不出自转；把 records.disc1.recordOut 调大，露出标签','唱片标签还被挡着，看不出自转；在「唱片」里把唱片抽出更多。','The label is still covered, so the spin won’t show; pull the record further out under Records.']};
+// Poses the scene with set applied, runs fn, then puts every key back.
+function withPose(set,fn){
+  if(!set)return fn();
+  const saved={};for(const k in set){saved[k]=state[k];state[k]=set[k]}pose();
+  try{return fn()}finally{Object.assign(state,saved);pose()}}
 function productParts(){return scene.children.filter(o=>o.visible&&!o.isLight&&o!==ground)}
 function productBox(parts){
   scene.updateMatrixWorld();const box=new THREE.Box3(),b=new THREE.Box3();
   for(const p of parts)p.traverseVisible(m=>{if(!m.geometry)return;m.geometry.boundingBox||m.geometry.computeBoundingBox();box.union(b.copy(m.geometry.boundingBox).applyMatrix4(m.matrixWorld))});
   return box}
-// One camera for the whole clip, far enough that every frame's turned bounding box fits the frame.
-function fitTurningCamera(box,angles){
-  const c=box.getCenter(new THREE.Vector3()),v=VIEWS[state.view],half=Math.tan(THREE.MathUtils.degToRad(camera.fov/2)),margin=1.08;
+const restPivot=()=>productBox(productParts()).getCenter(new THREE.Vector3());
+// One camera for the whole clip, far enough that every sampled frame — posed, then turned about the rest
+// pose's centre — fits the frame. Returns that centre and the shadow reach the clip needs.
+function fitClipCamera(){
+  const n=ANIM_PRESETS.indexOf(state.animPreset)<2?72:24,frames=Array.from({length:n},(_,i)=>animFrame(i/n));
+  const rest=productBox(productParts()),pivot=rest.getCenter(new THREE.Vector3()),boxes=frames.map(f=>f.set?withPose(f.set,()=>productBox(productParts())):rest),all=new THREE.Box3();
+  for(const b of boxes)all.union(b);
+  const c=all.getCenter(new THREE.Vector3()),v=VIEWS[state.view],half=Math.tan(THREE.MathUtils.degToRad(camera.fov/2)),margin=1.08;
   const sph=new THREE.Spherical().setFromVector3(new THREE.Vector3(...v.dir));
   sph.theta+=THREE.MathUtils.degToRad(state.camAz);sph.phi=THREE.MathUtils.clamp(sph.phi-THREE.MathUtils.degToRad(state.camEl),.05,Math.PI-.05);sph.radius=1;
   const d=new THREE.Vector3().setFromSpherical(sph),r=new THREE.Vector3().crossVectors(d.clone().negate(),camera.up).normalize(),u=new THREE.Vector3().crossVectors(r,d.clone().negate());
-  const corners=[];for(const x of[box.min.x,box.max.x])for(const y of[box.min.y,box.max.y])for(const z of[box.min.z,box.max.z])corners.push(new THREE.Vector3(x,y,z).sub(c));
-  const axis=new THREE.Vector3(0,1,0),q=new THREE.Vector3();let dist=0;
-  for(const a of angles)for(const p of corners){q.copy(p).applyAxisAngle(axis,a);const z=q.dot(d);
-    dist=Math.max(dist,z+margin*Math.abs(q.dot(r))/(half*camera.aspect),z+margin*Math.abs(q.dot(u))/half)}
+  const axis=new THREE.Vector3(0,1,0),q=new THREE.Vector3();let dist=0,reach=0;
+  frames.forEach((f,i)=>{const b=boxes[i];
+    for(const x of[b.min.x,b.max.x])for(const y of[b.min.y,b.max.y])for(const z of[b.min.z,b.max.z]){
+      q.set(x,y,z).sub(pivot).applyAxisAngle(axis,f.turn||0).add(pivot);reach=Math.max(reach,q.length());q.sub(c);const zc=q.dot(d);
+      dist=Math.max(dist,zc+margin*Math.abs(q.dot(r))/(half*camera.aspect),zc+margin*Math.abs(q.dot(u))/half)}});
   const target=c.clone().add(new THREE.Vector3(state.camPanX/10,state.camPanY/10,0));
   controls.target.copy(target);camera.position.copy(target).addScaledVector(d,dist/state.camZoom);camera.lookAt(target);
-  return c}
+  return{pivot,reach:reach+5}}
 // encoder: 'software' starts at once; 'hardware' is faster per frame but its first use in a browser can stall
 // for many seconds (macOS headless: ~18 s); 'auto' leaves the choice to the browser.
 const ENCODERS={auto:'no-preference',software:'prefer-software',hardware:'prefer-hardware'};
@@ -2070,37 +2112,41 @@ function renderTurned(angle,c){
   const parts=productParts(),saved=parts.map(o=>[o.position.clone(),o.quaternion.clone()]),turn=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),angle);
   for(const o of parts){o.position.sub(c).applyQuaternion(turn).add(c);o.quaternion.premultiply(turn)}
   try{renderer.render(scene,camera)}finally{parts.forEach((o,i)=>{o.position.copy(saved[i][0]);o.quaternion.copy(saved[i][1])})}}
-function renderStage(){if(previewTurned())renderTurned(animAngle(preview.phase),productBox(productParts()).getCenter(new THREE.Vector3()));else renderer.render(scene,camera)}
-// The key light's shadow box must cover the product at every turn, not only facing front; 0 restores it.
+// Draws one clip frame: poses it, turns it about the rest pose's centre, then restores both.
+function renderAnimFrame(f,pivot){withPose(f.set,()=>renderTurned(f.turn||0,pivot))}
+function renderStage(){if(previewActive())renderAnimFrame(animFrame(preview.phase),restPivot());else renderer.render(scene,camera)}
+// The key light's shadow box must cover the product in every frame, not only at rest; 0 restores it.
 function shadowReach(r){const sh=key.shadow.camera;Object.assign(sh,r?{left:-r,right:r,top:r,bottom:-r}:SHADOW_BOX);sh.updateProjectionMatrix()}
-function turnReach(box,c){return box.getBoundingSphere(new THREE.Sphere()).radius+c.length()+5}
-function fitPreview(){const box=productBox(productParts()),c=fitTurningCamera(box,Array.from({length:72},(_,i)=>animAngle(i/72)));shadowReach(turnReach(box,c))}
+function fitPreview(){shadowReach(fitClipCamera().reach)}
 function setPlaying(on){
-  preview.playing=on;if(on){preview.last=performance.now();fitPreview()}
-  const b=$('play-btn'),label=on?tr('暂停','Pause'):tr('播放旋转','Play turn');b.setAttribute('aria-pressed',on);b.setAttribute('aria-label',label);b.title=label;
+  preview.playing=on;if(on){preview.last=performance.now();fitPreview()}syncAnimPanel();
+  const b=$('play-btn'),label=on?tr('暂停','Pause'):tr('播放动画','Play animation');b.setAttribute('aria-pressed',on);b.setAttribute('aria-label',label);b.title=label;
   $('play-reset').hidden=on||preview.phase===0}
 function resetPreview(){preview.playing=false;preview.phase=0;shadowReach(0);setPlaying(false);setView(state.view)}
 $('play-btn').addEventListener('click',()=>setPlaying(!preview.playing));
 $('play-reset').addEventListener('click',resetPreview);
 setPlaying(false);
-const refitPreview=()=>{$('anim-angle-row').hidden=state.animPreset!=='swing';if(previewTurned())fitPreview()};
+function syncAnimPanel(){const p=state.animPreset,issues=animIssues();
+  $('anim-dir-row').hidden=p!=='turntable'&&p!=='swing';$('anim-angle-row').hidden=p!=='swing';
+  $('anim-issue').hidden=!issues.length;$('anim-issue').textContent=issues.map(k=>tr(ANIM_ISSUES[k][1],ANIM_ISSUES[k][2])).join(' ')}
+const refitPreview=()=>{syncAnimPanel();if(previewActive())fitPreview()};
 seg('anim-preset','animPreset',refitPreview);seg('anim-dir','animDir',refitPreview);
 slider('anim-duration','animDuration','sec',()=>{});slider('anim-angle','animAngle','deg',refitPreview);
 
 async function renderAnimation(format,{onProgress=()=>{},encoder='auto'}={}){
   if(!(encoder in ENCODERS))throw new Error(`不支持的编码方式 ${encoder}，可选：${Object.keys(ENCODERS).join(' / ')}`);
   if(!VIDEO_FORMATS.includes(format))throw new Error(`不支持的格式 ${format}，可选：${VIDEO_FORMATS.join(' / ')}`);
-  const warnings=[],{fps,width:w,height:h,frames}=animSettings(format),phases=Array.from({length:frames},(_,i)=>i/frames),angles=phases.map(animAngle);
+  const warnings=[],{fps,width:w,height:h,frames}=animSettings(format),clip=Array.from({length:frames},(_,i)=>animFrame(i/frames));
+  warnings.push(...animIssues().map(k=>ANIM_ISSUES[k][0]));
   if(state.bg==='transparent')warnings.push(`视频不支持透明背景，已改用纯色 ${state.bgColor}（output.background 可指定颜色）`);
   if(format==='gif'&&fps>50)warnings.push('GIF 帧率超过 50 时，多数播放器会放慢播放');
-  const parts=productParts(),cam={pos:camera.position.clone(),target:controls.target.clone()};
+  const cam={pos:camera.position.clone(),target:controls.target.clone()};
   renderer.setAnimationLoop(null);
   try{
     renderer.setPixelRatio(1);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();
     scene.background=new THREE.Color(state.bgColor);
-    const box=productBox(parts),c=fitTurningCamera(box,angles);
-    shadowReach(turnReach(box,c));
-    const turnTo=a=>renderTurned(a,c);
+    const {pivot,reach}=fitClipCamera();shadowReach(reach);
+    const draw=i=>renderAnimFrame(clip[i],pivot);
     let bytes;
     if(format==='mp4'){
       const mb=await import(MEDIABUNNY_URL);
@@ -2112,7 +2158,7 @@ async function renderAnimation(format,{onProgress=()=>{},encoder='auto'}={}){
       // Wrap the canvas in a VideoFrame ourselves: it stays on the GPU, where CanvasSource's capture is ~10x slower.
       const src=new mb.VideoSampleSource(config);
       output.addVideoTrack(src,{frameRate:fps});await output.start();
-      for(let i=0;i<frames;i++){turnTo(angles[i]);
+      for(let i=0;i<frames;i++){draw(i);
         const sample=new mb.VideoSample(new VideoFrame(renderer.domElement,{timestamp:Math.round(i*1e6/fps),duration:Math.round(1e6/fps)}));
         await src.add(sample);sample.close();onProgress(i+1,frames)}
       await output.finalize();bytes=new Uint8Array(output.target.buffer);
@@ -2121,16 +2167,16 @@ async function renderAnimation(format,{onProgress=()=>{},encoder='auto'}={}){
       const cv=canvas(w,h),g=cv.getContext('2d',{willReadFrequently:true}),grab=()=>{g.drawImage(renderer.domElement,0,0);return g.getImageData(0,0,w,h).data};
       // One palette for the whole clip, sampled from frames spread across the loop, so colours don't flicker.
       const picks=8,stride=4,sample=new Uint8Array(Math.ceil(w*h/stride)*4*picks);let n=0;
-      for(let k=0;k<picks;k++){turnTo(angles[Math.floor(k*frames/picks)]);const px=grab();for(let j=0;j<px.length;j+=4*stride){sample.set(px.subarray(j,j+4),n);n+=4}}
+      for(let k=0;k<picks;k++){draw(Math.floor(k*frames/picks));const px=grab();for(let j=0;j<px.length;j+=4*stride){sample.set(px.subarray(j,j+4),n);n+=4}}
       const palette=quantize(sample.subarray(0,n),256),gif=GIFEncoder(),delay=Math.round(100/fps)*10;
-      for(let i=0;i<frames;i++){turnTo(angles[i]);gif.writeFrame(applyPalette(grab(),palette),w,h,i===0?{palette,delay,repeat:0}:{delay});
+      for(let i=0;i<frames;i++){draw(i);gif.writeFrame(applyPalette(grab(),palette),w,h,i===0?{palette,delay,repeat:0}:{delay});
         onProgress(i+1,frames);if(i%8===7)await nextFrame()}
       gif.finish();bytes=gif.bytes();
     }
     const real=format==='gif'?100/Math.round(100/fps):fps;   // GIF delays count in 1/100 s
     return{format,width:w,height:h,fps:Math.round(real*100)/100,frames,duration:Math.round(frames/real*100)/100,bytes,warnings}
   }finally{
-    if(previewTurned())fitPreview();else shadowReach(0);
+    if(previewActive())fitPreview();else shadowReach(0);
     camera.position.copy(cam.pos);controls.target.copy(cam.target);applyBg();
     renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));resize();renderer.setAnimationLoop(loop)}}
 

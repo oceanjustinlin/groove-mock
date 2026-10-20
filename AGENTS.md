@@ -53,7 +53,7 @@ cd cli && npm install
 | 限量编号 | `number.current` / `total` / `format` / `place` / `finish` / `font`，自定义字体用 `number.fontFile` |
 | 构图 | `camera.view`：quarter / front / side，再用 `zoom`、`azimuth`、`elevation` 微调，用 `panX` / `panY`（mm）平移画面中心；拍背面用 `view: front` + `azimuth: 180` + `panX: -90` |
 | 输出 | `output.width` / `height`（px，最大 4096），`output.background`：`"transparent"` 或 `#rrggbb` |
-| 旋转视频 / 动图 | `animation.preset`：`turntable` 转一整圈 / `swing` 左右摆 `angle` 度（不露背面），`duration`（秒），`aspect`：`16:9` / `1:1` / `9:16`，`size` 短边 px。用 `video spec.json -o x.mp4`（或 `.gif`）出片，构图沿用 `camera.*`，镜头自动拉远到整段不出画 |
+| 视频 / 动图 | `animation.preset`：`turntable` 转一整圈 / `swing` 左右摆 `angle` 度（不露背面）/ `spin` 唱片自转（标签要露出来）/ `gatefold` 双开封面打开再合上（开到 `jacket.gateOpen`，为 0 时 160°）/ `pull` 内袋和唱片抽出再推回（抽到 `sleeveOut` / `recordOut`，都为 0 时用常见值）；`direction` 只用于 turntable 和 swing，`duration`（秒），`aspect`：`16:9` / `1:1` / `9:16`，`size` 短边 px。用 `video spec.json -o x.mp4`（或 `.gif`）出片，构图沿用 `camera.*`，镜头自动拉远到整段不出画。网页工作台的 ▶ 播放同一段动画 |
 | 素材来源 | `meta.assets.<贴图位>.source`，渲染器不读，`render` 会在结果的 `assets` 里汇总 |
 
 ## 容易踩的点
@@ -66,6 +66,7 @@ cd cli && npm install
 - 换 `pattern.id` 不会改底色：写了 `records.discN.color` 而没写 `pattern.color` 时，纹路色按底色推算；`color` 也没写时，用这款纹路的默认配色。要固定纹路色，就写上 `pattern.color`。
 - Obi 图是一张展开图，从左到右依次为背面、书脊、正面。
 - 视频不支持透明背景：`output.background` 为 transparent 时会改用纯色并给出警告，出视频时写明背景色。
+- `video` 的警告里有 `animation` 相关的（单开封套用 gatefold、自转时标签被挡住），说明这段动画看不出效果，先改场景再出片。
 - 转台会转到背面，没给 `images.back` 时出现的是示例图；没有背面素材就用 `animation.preset: "swing"`。
 - 检查视频时不要看第一帧就算数：GIF 和 MP4 都要抽几帧看（比如 0、1/4、1/2、3/4 处），确认转到侧面和背面时没有穿帮。
 - 批量出编号图：`node cli/record-mockup.mjs numbers spec.json --from 1 --to 50 --dir out/`。

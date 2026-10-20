@@ -22,6 +22,7 @@ node record-mockup.mjs render spec.json --set number.current=88 --set camera.vie
 node record-mockup.mjs numbers spec.json --from 1 --to 50 # 批量渲染编号图
 node record-mockup.mjs video spec.json -o turn.mp4          # 旋转视频，按 spec.animation
 node record-mockup.mjs video spec.json -o turn.gif --set animation.aspect=1:1
+node record-mockup.mjs video spec.json -o open.mp4 --set animation.preset=gatefold
 ```
 
 通用选项：`--json` 输出一行 JSON；`--strict` 遇到场景或素材来源警告时不渲染并返回退出码 2；`--width` / `--height` 覆盖输出尺寸；`--software` 强制软件渲染；`--verbose` 显示页面错误。
