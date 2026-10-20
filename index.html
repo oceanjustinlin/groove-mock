@@ -315,7 +315,7 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
             </div>
 
             <div class="disc" id="lp2-sub" hidden>
-              <h3>第 2 张 <small>C / D 面 · 放在第 1 张后面</small></h3>
+              <h3>第 2 张 <small id="lp2-where">C / D 面 · 放在第 1 张后面</small></h3>
               <div class="tiles two">
                 <label class="tile" data-slot="labelC"><span class="thumb"><span class="tag">示例</span></span><input id="up-labelC" type="file" accept="image/*" aria-label="上传 C 面标签">C 面标签</label>
                 <label class="tile" data-slot="labelD"><span class="thumb"><span class="tag">示例</span></span><input id="up-labelD" type="file" accept="image/*" aria-label="上传 D 面标签">D 面标签</label>
@@ -599,7 +599,11 @@ const state = {
   videoFormat:'mp4'   // panel only; the CLI takes the format from the output file name
 };
 const isGate=()=>state.jacketType==='gatefold';
-const frontZ=()=>isGate()?J.d/2+J.board:J.d/2;          // outer face of the front cover
+// A gatefold 2LP keeps one disc in each panel: the front cover is a second 1LP pocket, open at its free edge.
+const isSplit=()=>isGate()&&state.lpCount===2;
+const pocketDepth=()=>POCKET_D[isSplit()?1:state.lpCount];
+const coverDepth=()=>isSplit()?POCKET_D[1]:J.board;
+const frontZ=()=>isGate()?J.d/2+coverDepth():J.d/2;      // outer face of the front cover
 const jacketDepth=()=>frontZ()+J.d/2;
 const gateOpened=()=>isGate()&&state.gateOpen>.5;
 const specText=()=>`${isGate()?tr('双开','Gatefold'):tr('单开','Single')} · ${state.lpCount===2?'2LP':tr('单 LP','1LP')} · ${tr('书脊','Spine')} ${+(jacketDepth()*10).toFixed(1)} mm`;
@@ -1017,14 +1021,30 @@ function buildJacket(){
   const front=pocketFront=mesh(new THREE.BoxGeometry(w,h,t),[stock,stock,stock,stock,frontMat,stockInner]);front.position.z=d/2-t/2;
   const back=mesh(new THREE.BoxGeometry(w,h,t),[stock,stock,stock,stock,stockInner,backMat]);back.position.z=-d/2+t/2;
   const spine=mesh(new THREE.BoxGeometry(t,h,d-2*t),[stockInner,spineMat,stock,stock,stock,stock]);spine.position.x=-w/2+t/2;
+  // A split gatefold's spine art runs on across the cover's hinge edge: this half also covers the front
+  // board's edge (a hair proud of it) so the two halves meet without a seam.
+  if(isSplit()){const c=coverDepth();spine.geometry=spanU(new THREE.BoxGeometry(t,h,d-t),0,(d-t)/(d+c-2*t));spine.position.set(-w/2+t/2-.002,0,t/2)}
   jacket.add(front,back,spine);
   for(const s of[-1,1]){const flap=mesh(new THREE.BoxGeometry(w-t,t,d-2*t),stock);flap.position.set(t/2,s*(h/2-t/2),0);jacket.add(flap)}
-  coverPivot.position.z=d/2;
+  buildCover();
 }
+// Stretch the -x face's u (the spine side, back to front) over [u0, u1] of the texture.
+function spanU(geo,u0,u1){const uv=geo.attributes.uv;for(let i=4;i<8;i++)uv.setX(i,u0+uv.getX(i)*(u1-u0));return geo}
 // Gatefold: a separate front cover board hinged on the spine edge, laid over the pocket. Its inside is
 // the left page of the spread; the pocket's front face becomes the right page.
+// On a split 2LP the cover is a pocket of its own: closed at the hinge, open at the free edge, and disc 2
+// rides in it (pose() parents that sleeve set to the pivot), so it swings with the cover and slides out left.
 const coverPivot=new THREE.Group();coverPivot.position.set(-J.w/2,0,J.d/2);scene.add(coverPivot);
-const coverMesh=mesh(new THREE.BoxGeometry(J.w,J.h,J.board),[stock,stock,stock,stock,frontMat,innerLeftMat]);coverMesh.position.set(J.w/2,0,J.board/2);coverPivot.add(coverMesh);
+let coverFront;
+function buildCover(){
+  for(const c of[...coverPivot.children])if(c.isMesh){c.geometry.dispose();coverPivot.remove(c)}
+  const {w,h,board:t}=J,c=coverDepth();coverPivot.position.z=J.d/2;
+  if(!isSplit()){coverFront=mesh(new THREE.BoxGeometry(w,h,t),[stock,stock,stock,stock,frontMat,innerLeftMat]);coverFront.position.set(w/2,0,t/2);coverPivot.add(coverFront);return}
+  coverFront=mesh(new THREE.BoxGeometry(w,h,t),[stock,stock,stock,stock,frontMat,stockInner]);coverFront.position.set(w/2,0,c-t/2);
+  const inner=mesh(new THREE.BoxGeometry(w,h,t),[stock,stock,stock,stock,stockInner,innerLeftMat]);inner.position.set(w/2,0,t/2);
+  const hinge=mesh(spanU(new THREE.BoxGeometry(t,h,c-t),(J.d-t)/(J.d+c-2*t),1),[stockInner,spineMat,stock,stock,stock,stock]);hinge.position.set(t/2-.002,0,(c-t)/2);
+  coverPivot.add(coverFront,inner,hinge);
+  for(const s of[-1,1]){const flap=mesh(new THREE.BoxGeometry(w-t,t,c-2*t),stock);flap.position.set(w/2+t/2,s*(h/2-t/2),c/2);coverPivot.add(flap)}}
 buildJacket();
 
 // Insert: one double-sided printed sheet.
@@ -1164,7 +1184,7 @@ function numTexture(){
 function placeNumber(){
   const p=state.numPlace,eps=.004;numAnchor.removeFromParent();numAnchor.rotation.set(0,0,0);numAnchor.scale.setScalar(1);
   if(p==='back'){scene.add(numAnchor);numAnchor.position.set(0,0,-J.d/2-eps);numAnchor.rotation.y=Math.PI}
-  else if(p==='front'){if(isGate()){coverMesh.add(numAnchor);numAnchor.position.set(0,0,J.board/2+eps)}else{scene.add(numAnchor);numAnchor.position.set(0,0,J.d/2+eps)}}
+  else if(p==='front'){if(isGate()){coverFront.add(numAnchor);numAnchor.position.set(0,0,J.board/2+eps)}else{scene.add(numAnchor);numAnchor.position.set(0,0,J.d/2+eps)}}
   else if(p==='obi'){const {F,eps:oe}=obiLayout();obi.add(numAnchor);numAnchor.position.set(-J.w/2+F/2,0,frontZ()+oe+eps)}
   else{sticker.add(numAnchor);const k=1/state.stickerSize;numAnchor.scale.set(k,k,1);numAnchor.position.set(0,0,.03)}
   numAnchor.visible=state.numOn;
@@ -1175,23 +1195,28 @@ function pose(){
   const gate=isGate(),opened=gateOpened();
   pocketFront.material[4]=gate?innerRightMat:frontMat;
   coverPivot.visible=gate;coverPivot.rotation.y=-THREE.MathUtils.degToRad(state.gateOpen);
-  // 1LP rides at the pocket centre; 2LP stacks two sleeve sets front/back, insert behind both.
-  const two=state.lpCount===2,zc=two?.1:0;
+  // 1LP rides at the pocket centre; 2LP stacks two sleeve sets front/back, insert behind both, unless the
+  // gatefold splits them: then each pocket holds one set and disc 2 sits in the cover, turned to face the
+  // spread when it is open.
+  const two=state.lpCount===2,split=isSplit(),zc=two&&!split?.1:0;
   // Anything still partly inside its container rests on that container's floor; only once it has fully
   // cleared the mouth does it settle onto the ground. This keeps a disc from poking out under its sleeve.
   const jacketFloor=-(J.h/2-J.board),settle=clear=>THREE.MathUtils.smoothstep(clear,0,1.5);
-  const placeSet=(sl,rec,sX,rX,z,on)=>{
+  // host is the container's frame and ox the pocket centre in it; x runs from the pocket centre to its mouth.
+  const placeSet=(sl,rec,sX,rX,z,on,host=scene,ox=0,flip=0)=>{
+    for(const o of[sl,rec])if(o.parent!==host)host.add(o);
     const S=SLV.s,x=sX*24,sy=THREE.MathUtils.lerp(jacketFloor+S/2,GROUND_Y+S/2,settle(x-S/2-J.w/2));
-    sl.visible=on&&state.sleeveOn;sl.position.set(x,sy,z);rec.visible=on;
+    sl.visible=on&&state.sleeveOn;sl.position.set(ox+x,sy,z);sl.rotation.y=flip;rec.visible=on;
     const rx=x+rX*27,floor=state.sleeveOn?sy-S/2+.04:jacketFloor,mouth=state.sleeveOn?x+S/2:J.w/2;
-    rec.position.set(rx,THREE.MathUtils.lerp(floor+LP.r,GROUND_Y+LP.r,settle(rx-LP.r-mouth)),z);
-    rec.rotation.z=THREE.MathUtils.degToRad(state.recordRot)};
+    rec.position.set(ox+rx,THREE.MathUtils.lerp(floor+LP.r,GROUND_Y+LP.r,settle(rx-LP.r-mouth)),z);
+    rec.rotation.set(0,flip,THREE.MathUtils.degToRad(state.recordRot))};
   placeSet(sleeve,record,state.sleeveX,state.recordX,zc,true);
-  placeSet(sleeve2,record2,state.sleeve2X,state.record2X,-zc,two);
+  if(split)placeSet(sleeve2,record2,state.sleeve2X,state.record2X,coverDepth()/2,true,coverPivot,J.w/2,Math.PI);
+  else placeSet(sleeve2,record2,state.sleeve2X,state.record2X,-zc,two);
   const ix=state.insertX*25;
-  insert.visible=state.insertOn;insert.position.set(ix,THREE.MathUtils.lerp(jacketFloor+INS.s/2,GROUND_Y+INS.s/2,settle(ix-INS.s/2-J.w/2)),two?-.23:INS.z);
+  insert.visible=state.insertOn;insert.position.set(ix,THREE.MathUtils.lerp(jacketFloor+INS.s/2,GROUND_Y+INS.s/2,settle(ix-INS.s/2-J.w/2)),two&&!split?-.23:INS.z);
   const mouthOpen=state.sleeveX>.005||state.recordX>.005||(state.insertOn&&state.insertX>.005)||(two&&(state.sleeve2X>.005||state.record2X>.005));
-  const wrapZ=gate?J.board/2:0,wrapFront=wrapZ+(jacketDepth()+WRAP.extra)/2;
+  const wrapZ=gate?coverDepth()/2:0,wrapFront=wrapZ+(jacketDepth()+WRAP.extra)/2;
   wrap.visible=state.wrapOn&&!opened;wrap.position.z=wrapZ;wrapMouthMat.visible=!mouthOpen;
   wrapStrength.value=state.gloss;wrapMat.normalScale.setScalar(.35*state.wrinkle);wrapMouthMat.normalScale.setScalar(.35*state.wrinkle);
   obi.visible=state.obiOn&&!opened;
@@ -1201,9 +1226,12 @@ function pose(){
   placeNumber();
 }
 function applyLpCount(){
-  J.d=POCKET_D[state.lpCount];$('lp2-sub').hidden=state.lpCount!==2;buildJacket();applyJacketType();
+  $('lp2-sub').hidden=state.lpCount!==2;applyJacketType();
 }
+const lp2Where=()=>{$('lp2-where').textContent=isSplit()?tr('C / D 面 · 装在左扇','Sides C / D · in the left panel'):tr('C / D 面 · 放在第 1 张后面','Sides C / D · behind disc 1')};
 function applyJacketType(){
+  J.d=pocketDepth();buildJacket();
+  lp2Where();
   const gate=isGate();$('gate-sub').hidden=!gate;$('jacket-spec').textContent=specText();
   buildWrap(state.wrinkle);buildObi();pose();if(!userMoved)setView(state.view);
 }
@@ -1211,9 +1239,13 @@ function applyJacketType(){
 // ---------- Views ----------
 // Each view frames a box of the given size (scene units) so it fits any stage aspect ratio.
 const VIEWS={quarter:{t:[9,-.5,0],dir:[-.36,.1,1],fit:[62,35]},front:{t:[9,0,0],dir:[0,0,1],fit:[64,35]},side:{t:[5,-1,0],dir:[-.86,.12,.5],fit:[56,36]}};
+// How far the cover's contents reach from the hinge: the board, or disc 2 and its sleeve pulled past it.
+function coverReach(){if(!isSplit())return J.w;const x=state.sleeve2X*24,rx=x+state.record2X*27;
+  return Math.max(J.w,J.w/2+Math.max(state.sleeveOn?x+SLV.s/2:0,rx+LP.r))}
 function setView(name){userMoved=false;const v=VIEWS[name],half=Math.tan(THREE.MathUtils.degToRad(camera.fov/2));
-  // An opening gatefold cover reaches left of the jacket; widen the frame by that reach.
-  const reach=isGate()?Math.max(0,-J.w*Math.cos(THREE.MathUtils.degToRad(state.gateOpen))):0,t=[v.t[0]-reach/2,v.t[1],v.t[2]];
+  // An opening gatefold cover reaches left of the jacket, and on a split 2LP so does disc 2 pulled from it;
+  // widen the frame by that reach.
+  const reach=isGate()?Math.max(0,-coverReach()*Math.cos(THREE.MathUtils.degToRad(state.gateOpen))):0,t=[v.t[0]-reach/2,v.t[1],v.t[2]];
   const dist=Math.max(v.fit[1]/(2*half),(v.fit[0]+reach)/(2*half*camera.aspect)),dir=new THREE.Vector3(...v.dir).normalize().multiplyScalar(dist);
   controls.target.set(...t);camera.position.set(t[0]+dir.x,t[1]+dir.y,t[2]+dir.z);controls.update();state.view=name;
   for(const b of document.querySelectorAll('[data-view]'))b.setAttribute('aria-pressed',b.dataset.view===name);
@@ -1828,7 +1860,7 @@ const SPEC_FIELDS=[
   enumF('jacket.type','jacketType',['single','gatefold'],'封套类型：single 单开，gatefold 双开'),
   enumF('jacket.finish','finish',['matte','satin','gloss'],'纸张工艺：matte 哑光，satin 缎面，gloss 亮面'),
   numF('jacket.gateOpen','gateOpen',0,180,1,'双开封面打开角度（度）。大于 0 时塑封、贴纸、Obi 视为已拆除，不显示'),
-  numF('records.count','lpCount',1,2,1,'唱片数量：1 为单 LP，2 为 2LP（封套自动加厚）',true),
+  numF('records.count','lpCount',1,2,1,'唱片数量：1 为单 LP，2 为 2LP。单开时两张叠在同一个口袋里（封套自动加厚）；双开时两扇各装一张，第 2 张在左扇（封面）里，打开后向左抽出',true),
   numF('records.labelRotation','recordRot',-180,180,1,'唱片标签旋转角度（度），两张共用'),
   boolF('records.sleeve.on','sleeveOn','是否显示内袋'),
   colorF('records.sleeve.color','sleeveColor','内袋纸色，未提供 images.sleeve 时生效'),
@@ -1836,7 +1868,7 @@ const SPEC_FIELDS=[
     enumF(`records.disc${i}.vinyl`,`vinyl${s}`,['black','color'],`第 ${i} 张胶色：black 纯黑胶（不叠纹路、不透明）；color 彩胶，用 color 和 transparency，可再加 pattern。旧值 clear 仍可用，等于 color + transparency 38${note}`),
     numF(`records.disc${i}.transparency`,`vinyl${s}Clear`,0,80,.01,`第 ${i} 张彩胶的透明度（%），0 为不透明。有纹路时只有底色变透明，纹路本身不透明；black 不使用${note}`),
     colorF(`records.disc${i}.color`,`vinyl${s}Color`,`第 ${i} 张彩胶颜色；有纹路时是底色（分色类的第一块）${note}`),
-    numF(`records.disc${i}.sleeveOut`,`sleeve${s}X`,0,100,.01,`第 ${i} 张内袋连同唱片从封套开口抽出的比例（%）${note}`),
+    numF(`records.disc${i}.sleeveOut`,`sleeve${s}X`,0,100,.01,`第 ${i} 张内袋连同唱片从封套开口抽出的比例（%）${note}${i===2?'。双开时从左扇的开口抽出：合上时朝右，打开后朝左':''}`),
     numF(`records.disc${i}.recordOut`,`record${s}X`,0,100,.01,`第 ${i} 张唱片再从内袋里抽出的比例（%）${note}`),
     numF(`records.disc${i}.tracks`,`tracks${s}`,1,20,1,`第 ${i} 张每面的音轨数，盘面按等宽分成这么多圈，相邻音轨之间有一道亮环；两面相同${note}`,true),
     enumF(`records.disc${i}.pattern.id`,`pattern${s}`,['none',...MASKS.map(m=>m.id)],`第 ${i} 张彩胶纹路，none 或不写为纯色，只在 vinyl=color 时生效。按配色方式分三类——分色（底色是第一块，pattern.color 第二块，split-tri 再用 pattern.color2 第三块；split-quad 对角同色）：${patternIds('regions')}；主次（底色 + pattern.color，其余色层自动推算）：${patternIds('accent')}；同色系（只用底色，纹路是它的深浅变化，pattern.contrast 调反差）：${patternIds('tonal')}。底色是 color；写了 color 而没写 pattern.color / pattern.color2 时，纹路色按底色推算；color 也没写时，用这款纹路的默认配色${note}`),
@@ -2034,7 +2066,6 @@ async function applySpec(spec){
 
 // Rebuild every derived object from state; used after a spec lands.
 function refreshAll(){
-  J.d=POCKET_D[state.lpCount];buildJacket();
   applyFinish();applyVinyl();sleeveMat.color.set(tex.sleeve?'#ffffff':state.sleeveColor);
   buildSticker();stickerTexture();numTexture();
   applyJacketType();applyBg();syncUI();
@@ -2071,7 +2102,9 @@ function outAndBack(u){const ease=(a,b)=>THREE.MathUtils.smoothstep(u,a,b);retur
 // Where a pull ends: the scene's own sleeve / record / insert positions, or a typical pull when all are in.
 function pullTargets(){
   const two=state.lpCount===2,t={sleeveX:state.sleeveX,recordX:state.recordX,...(state.insertOn&&{insertX:state.insertX}),...(two&&{sleeve2X:state.sleeve2X,record2X:state.record2X})};
-  if(Object.values(t).every(v=>v<.05))Object.assign(t,state.sleeveOn?{sleeveX:.5,recordX:.45,...(two&&{sleeve2X:.75,record2X:.3})}:{recordX:.6,...(two&&{record2X:.9})});
+  // Stacked discs stagger so both show; split ones leave by their own pockets and can pull alike.
+  const split=isSplit();
+  if(Object.values(t).every(v=>v<.05))Object.assign(t,state.sleeveOn?{sleeveX:.5,recordX:.45,...(two&&(split?{sleeve2X:.5,record2X:.45}:{sleeve2X:.75,record2X:.3}))}:{recordX:.6,...(two&&{record2X:split?.6:.9})});
   return t}
 // One frame of the clip at loop phase u in [0, 1): turn is the product's turn (radians about the vertical
 // axis); set holds state keys posed for this frame only. Stage preview and video export both draw from it.
@@ -2277,7 +2310,7 @@ function redrawSamples(){
 }
 const fontsSettled=(document.fonts?.ready??Promise.resolve()).then(redrawSamples);
 $('lang-btn').addEventListener('click',()=>{lang=lang==='en'?'zh':'en';try{localStorage.setItem('gm-lang',lang)}catch(e){}
-  translateStatic();$('jacket-spec').textContent=specText();if(!userFontFace)$('num-font-custom').textContent=tr('自定义（未上传）','Custom (none uploaded)');
+  translateStatic();$('jacket-spec').textContent=specText();lp2Where();if(!userFontFace)$('num-font-custom').textContent=tr('自定义（未上传）','Custom (none uploaded)');
   else $('num-font-custom').textContent=$('num-font-custom').textContent.replace(/^(自定义|Custom) · /,tr('自定义 · ','Custom · '));redrawSamples();
   for(const s of['','2'])buildPicker(s);syncPatterns();
   for(const t of document.querySelectorAll('.tag.lib'))t.textContent=tr('曲库','Library');if($('lib-view').innerHTML)libView?.()});

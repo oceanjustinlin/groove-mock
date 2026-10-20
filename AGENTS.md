@@ -43,7 +43,7 @@ cd cli && npm install
 |---|---|
 | 换封面、背面、书脊 | `images.front` / `images.back` / `images.spine` |
 | 双开及内页 | `jacket.type: "gatefold"`，`images.innerLeft` / `innerRight`，`jacket.gateOpen` 为 0–180 |
-| 2LP | `records.count: 2`，`records.disc2.*`，标签用 `images.labelC` / `labelD`。第 2 张默认沿用第 1 张的胶色和纹路（`records.disc2.sameAsDisc1: true`）；写了 `disc2` 的 `vinyl` / `color` / `transparency` / `pattern` 就视为分别设置 |
+| 2LP | `records.count: 2`，`records.disc2.*`，标签用 `images.labelC` / `labelD`。单开时两张叠在同一个口袋；双开时左右两扇各装一张，第 2 张在左扇（封面）里，打开后向左抽出。第 2 张默认沿用第 1 张的胶色和纹路（`records.disc2.sameAsDisc1: true`）；写了 `disc2` 的 `vinyl` / `color` / `transparency` / `pattern` 就视为分别设置 |
 | 胶色 | `records.discN.vinyl`：`black` 纯黑胶（不叠纹路、不透明），`color` 彩胶：`color` 为颜色，`transparency` 为透明度（0–80%）。旧值 `clear` 等于 `color` + `transparency: 38` |
 | 彩胶纹路 | `records.discN.pattern.id`（可选值和分类见 `schema`）。底色是 `records.discN.color`。分色类（`split-*`）：`pattern.color` 为第二块，`split-tri` 用 `pattern.color2` 为第三块；主次类：`pattern.color` 为纹路色，其余色层自动推算；同色系：只用底色，`pattern.contrast` 调反差。只在 `vinyl: color` 时生效。`rotation` 旋转纹路；有 `transparency` 时只有底色透明，纹路不透明。`pattern.fromCover: true` 从 `images.front` 自动取底色和纹路色，写明的颜色优先 |
 | 音轨数 | `records.discN.tracks`：每面音轨数（1–20，默认 6），盘面按等宽分圈，两面相同 |
@@ -59,6 +59,7 @@ cd cli && npm install
 ## 容易踩的点
 
 - `jacket.gateOpen` 大于 0 时，塑封、贴纸和 Obi 视为已拆除，不会出现在图里。
+- 双开 2LP 合上时，第 2 张在前面那扇里，会挡住第 1 张：要两张都露出来，让第 1 张抽得比第 2 张多。打开到 90° 左右时，从左扇抽出的唱片会朝镜头转过来，可能出画。
 - 插页在内袋后面。`insert.out` 要比内袋的抽出比例大，才看得到插页。
 - 抽得很多时，唱片可能跑出画面。可以减小 `recordOut`，或者把 `camera.zoom` 调到 1 以下。
 - 只改 `number.place` 时，编号的位置、字高、角度会回到该位置的默认值；只改 `number.finish` 时，颜色会回到该工艺的默认色。要固定这些值，就同时写上对应字段。
