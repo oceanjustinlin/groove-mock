@@ -139,6 +139,11 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
 .lib-card{display:grid;gap:4px;align-content:start;min-width:0}
 .lib-card .lib-cover{width:100%}
 .lib-card .field.select{width:100%;font-size:12px}
+.lib-card .lib-adjust{font-size:11px;padding:2px 8px;justify-self:start}
+.lib-cover.round{border-color:transparent;background-color:transparent}
+.lib-crop{border:1px solid var(--line);border-radius:10px;padding:10px;display:grid;gap:8px}
+.lib-crop-canvas{width:100%;max-width:260px;aspect-ratio:1;justify-self:center;cursor:grab;touch-action:none;border-radius:8px;background:#0b0b0c}
+.lib-crop-canvas:active{cursor:grabbing}
 .tile .tag.lib{background:var(--accent);color:var(--accent-ink)}
 .sub[hidden]{display:none!important}
 .sub{display:grid;gap:10px}
@@ -1281,7 +1286,9 @@ $('lib-form').addEventListener('submit',async e=>{e.preventDefault();
   const turn=++libTurn;libStatus(tr('正在搜索…','Searching…'));libShow('');
   const q=[album&&`releasegroup:(${album})`,artist&&`artist:(${artist})`].filter(Boolean).join(' AND ');
   try{const j=await mbGet(`release-group?query=${encodeURIComponent(q)}&limit=15`);if(turn!==libTurn)return;
-    libGroups(j['release-groups']||[])}
+    // Equal matches: albums before EPs, singles and the rest, since a mockup is usually for an album.
+    const rank=g=>({Album:0,EP:1,Single:2}[g['primary-type']]??3);
+    libGroups((j['release-groups']||[]).map((g,i)=>({g,i})).sort((a,b)=>(b.g.score??0)-(a.g.score??0)||rank(a.g)-rank(b.g)||a.i-b.i).map(x=>x.g))}
   catch(err){if(turn===libTurn)libFail()}});
 
 // libView redraws the current step, so switching language relabels it.
@@ -1295,6 +1302,8 @@ function libGroups(groups){libGroupList=groups;libView=()=>libGroups(libGroupLis
 
 $('lib-view').addEventListener('click',e=>{
   const g=e.target.closest('[data-group]'),r=e.target.closest('[data-release]'),b=e.target.closest('[data-back]'),a=e.target.closest('[data-apply]');
+  const cr=e.target.closest('[data-crop]');
+  if(cr){openCrop(+cr.dataset.crop);return}
   if(g)libReleases(libGroupList[+g.dataset.group]);
   else if(r)libConfirm(libReleaseList[+r.dataset.release]);
   else if(b){if(b.dataset.back==='groups')libGroups(libGroupList);else libReleaseRows()}
@@ -1329,6 +1338,44 @@ function libReleaseRows(){const g=libGroup,art=r=>r['cover-art-archive']||{};lib
 function sideCounts(medium){const by={};for(const t of medium.tracks||[]){const m=/^([A-Z])/i.exec(t.number||'');if(m){const k=m[1].toUpperCase();by[k]=(by[k]||0)+1}}
   const v=Object.values(by);if(v.length)return v;const n=(medium.tracks||[]).length;return n?[Math.ceil(n/2),Math.floor(n/2)]:[]}
 
+// ---------- Disc photos to labels ----------
+// A CAA "Medium" image is a scan or photo of the record. The label texture maps its square onto the Ø100 mm
+// label, so the crop must sit on the spindle hole and reach the label's edge. detectLabel works on a small copy:
+// the hole is the dark blob near the middle; the edge is where rays from the hole first run into black vinyl,
+// capped at the nearest frame edge so no empty band shows. Scans that fill the frame end at the frame; photos
+// of the whole record find the label's own edge.
+const isLabelSlot=s=>/^label[A-D]$/.test(s);
+function detectLabel(img){
+  const k=Math.min(1,400/Math.max(img.width,img.height)),w=Math.max(1,Math.round(img.width*k)),h=Math.max(1,Math.round(img.height*k));
+  const c=canvas(w,h),g=c.getContext('2d',{willReadFrequently:true});g.drawImage(img,0,0,w,h);
+  const d=g.getImageData(0,0,w,h).data,L=(x,y)=>{const i=(y*w+x)*4;return .299*d[i]+.587*d[i+1]+.114*d[i+2]};
+  // The hole shows whatever was behind the scan, often grey rather than black, so its threshold is set
+  // between the darkest pixel and the label's median in the middle of the frame, then the centre is refined
+  // on the pixels near the first guess.
+  const sz=Math.min(w,h),box=[];
+  for(let y=Math.round(h/2-sz*.1);y<h/2+sz*.1;y++)for(let x=Math.round(w/2-sz*.1);x<w/2+sz*.1;x++)box.push([x,y,L(x,y)]);
+  const ls=box.map(b=>b[2]).sort((a,b)=>a-b),mn=ls[0],md=ls[ls.length>>1],dark=box.filter(b=>b[2]<mn+.4*(md-mn));
+  let cx=w/2,cy=h/2,near=dark;
+  if(dark.length){cx=dark.reduce((a,b)=>a+b[0],0)/dark.length;cy=dark.reduce((a,b)=>a+b[1],0)/dark.length;
+    for(let i=0;i<2;i++){near=dark.filter(([x,y])=>(x-cx)**2+(y-cy)**2<(sz*.06)**2);if(!near.length)break;
+      cx=near.reduce((a,b)=>a+b[0],0)/near.length;cy=near.reduce((a,b)=>a+b[1],0)/near.length}}
+  // The hole is about 7% of the label across and clearly darker than it; anything else isn't trusted.
+  const holeOk=mn<md*.6&&near.length>sz*sz*.0008&&near.length<sz*sz*.03;
+  if(!holeOk){cx=w/2;cy=h/2}
+  const edge=Math.min(cx,cy,w-1-cx,h-1-cy);
+  const rs=[],need=Math.max(3,Math.round(sz*.015));
+  for(let a=0;a<72;a++){const dx=Math.cos(a*Math.PI/36),dy=Math.sin(a*Math.PI/36);let run=0;
+    for(let r=Math.round(sz*.08);r<edge;r++){if(L(Math.round(cx+dx*r),Math.round(cy+dy*r))<38){if(++run>=need){rs.push(r-run);break}}else run=0}}
+  rs.sort((a,b)=>a-b);const med=rs[rs.length>>1],agree=rs.filter(r=>Math.abs(r-med)<med*.08).length;
+  // Trust a found edge only when many rays agree on it; dark artwork on the label scatters them.
+  const r=rs.length>=12&&agree>=18&&med>sz*.1?Math.min(edge,med):edge;
+  return{cx:cx/k,cy:cy/k,r:r/k,auto:holeOk}}
+// Draw the crop as a square label texture: the hole at the centre, the label edge touching the sides.
+function renderLabel(img,c,size){const out=canvas(size,size),g=out.getContext('2d'),k=size/(2*c.r*c.zoom);
+  g.fillStyle='#0b0b0c';g.fillRect(0,0,size,size);g.translate(size/2,size/2);g.rotate(c.rot*Math.PI/180);g.scale(k,k);g.drawImage(img,-c.cx,-c.cy);return out}
+function roundThumb(img,c,size=160){const t=renderLabel(img,c,size),out=canvas(size,size),g=out.getContext('2d');
+  g.beginPath();g.arc(size/2,size/2,size/2,0,Math.PI*2);g.clip();g.drawImage(t,0,0);return out.toDataURL('image/png')}
+
 // Every slot a library image can go to; C / D labels only exist on 2LP.
 const libTargets=lps=>[['front',tr('正面','Front')],['back',tr('背面','Back')],['spine',tr('书脊','Spine')],
   ['innerLeft',tr('内页左','Inner left')],['innerRight',tr('内页右','Inner right')],['sleeve',tr('内袋','Inner sleeve')],
@@ -1357,9 +1404,15 @@ async function libConfirm(r){const turn=++libTurn;libStatus(tr('正在读取图�
       if(slot in assign||kept.includes(slot))continue;const k=own.findIndex((im,n)=>f(im)&&!Object.values(assign).includes(n));if(k<0)continue;
       // The viewer's own upload stays unless they pick this image for it.
       if(slotOrigin[slot]==='user')kept.push(slot);else assign[slot]=k}
-    const lps=(rel.media||[]).filter(isLp),sides=lps.slice(0,2).map(sideCounts);
+    const lps=(rel.media||[]).filter(isLp),sides=lps.slice(0,2).map(sideCounts),nLp=Math.min(2,lps.length)||1;
+    // Disc images go to the sides: first where the uploader's comment names one ("Side B"), then in upload order.
+    const free=['labelA','labelB','labelC','labelD'].slice(0,nLp*2).filter(sl=>{if(slotOrigin[sl]!=='user')return true;kept.push(sl);return false});
+    const discs=own.map((im,n)=>im.types.includes('Medium')?n:-1).filter(n=>n>=0);
+    for(const n of[...discs]){const m=/\bside\s*([A-D])\b/i.exec(own[n].note)||/^\s*([A-D])\s*$/.exec(own[n].note),sl=m&&'label'+m[1].toUpperCase();
+      if(sl&&free.includes(sl)){assign[sl]=n;free.splice(free.indexOf(sl),1);discs.splice(discs.indexOf(n),1)}}
+    for(const n of discs){const sl=free.shift();if(!sl)break;assign[sl]=n}
     const pack=rel.packaging,jacket=pack==='Gatefold Cover'?'gatefold':pack?'single':null;
-    libPlan={release:rel,images:[...own,...others],assign,kept,lps:Math.min(2,lps.length)||1,extraLps:Math.max(0,lps.length-2),sides,jacket};
+    libPlan={release:rel,images:[...own,...others],assign,kept,lps:nLp,extraLps:Math.max(0,lps.length-2),sides,jacket,bmp:{},crops:{},editing:null};
     libStatus('');libConfirmView()}
   catch(err){if(turn===libTurn)libFail()}}
 
@@ -1369,7 +1422,8 @@ function libConfirmView(){const p=libPlan,r=p.release,targets=libTargets(p.lps),
   const cards=p.images.map((im,k)=>`<div class="lib-card">
     <a class="lib-cover" href="${im.full.at(-1)}" target="_blank" rel="noopener" style="background-image:url('${im.thumb}')" title="${esc(imgLabel(im)+(im.note?' · '+im.note:''))}"></a>
     <div class="lib-meta">${esc(imgLabel(im))}${im.note?`<br>${esc(im.note)}`:''}</div>
-    <select class="field select" data-img="${k}" aria-label="${esc(tr(`第 ${k+1} 张图用作`,`Use image ${k+1} as`))}"><option value="">${tr('不用','Not used')}</option>${targets.map(([s,n])=>`<option value="${s}"${slotOf(k)===s?' selected':''}>${n}</option>`).join('')}</select></div>`).join('');
+    <select class="field select" data-img="${k}" aria-label="${esc(tr(`第 ${k+1} 张图用作`,`Use image ${k+1} as`))}"><option value="">${tr('不用','Not used')}</option>${targets.map(([s,n])=>`<option value="${s}"${slotOf(k)===s?' selected':''}>${n}</option>`).join('')}</select>
+    <button class="chip lib-adjust" type="button" data-crop="${k}" hidden>${tr('调整裁切','Adjust crop')}</button></div>`).join('');
   const params=[`<label class="lib-item param"><input type="checkbox" data-param="count" checked><span>${tr('唱片数量','Records')}${tr('：',': ')}${p.lps===2?'2LP':tr('单 LP','1LP')}${p.extraLps?`<div class="lib-meta">${tr(`这一版共 ${p.lps+p.extraLps} 张，只做前 2 张`,`This release has ${p.lps+p.extraLps} discs; only the first 2 are modelled`)}</div>`:''}</span></label>`];
   if(p.jacket)params.push(`<label class="lib-item param"><input type="checkbox" data-param="jacket" checked><span>${tr('封套','Jacket')}${tr('：',': ')}${p.jacket==='gatefold'?tr('双开','Gatefold'):tr('单开','Single')}</span></label>`);
   p.sides.forEach((s,i)=>{if(!s.length)return;const n=Math.min(20,Math.max(...s));
@@ -1378,23 +1432,72 @@ function libConfirmView(){const p=libPlan,r=p.release,targets=libTargets(p.lps),
   if(p.kept.length)notes.push(tr(`${p.kept.map(s=>names[s]).join('、')}已有你上传的图，默认保留；要替换就在图下面选。`,`You uploaded your own ${p.kept.map(s=>names[s].toLowerCase()).join(' and ')}; it stays unless you pick an image for it below.`));
   if(!p.images.length)notes.push(tr('这一版在曲库里没有图片，只能应用下面的唱片参数。','This release has no images in the library; only the record settings below apply.'));
   libShow(`<div class="lib-head"><button class="chip" type="button" data-back="${libReleaseList.length>1?'releases':'groups'}">← ${tr('返回','Back')}</button><span>${esc(r.title)} · ${releaseMeta(r)}</span></div>
-    ${p.images.length?`<p class="note">${tr('每张图下面选它用在哪个位置，点图看大图。','Choose where each image goes; click an image to see it full size.')}</p><div class="lib-gallery">${cards}</div>`:''}
+    ${p.images.length?`<p class="note">${tr('每张图下面选它用在哪个位置，点图看大图。','Choose where each image goes; click an image to see it full size.')}</p><div id="lib-crop"></div><div class="lib-gallery">${cards}</div>`:''}
     ${notes.map(n=>`<p class="note">${n}</p>`).join('')}
     <div class="lib-pick">${params.join('')}</div>
     <div class="row" style="justify-content:flex-start"><button class="primary" type="button" data-apply>${tr('应用','Apply')}</button>
-    <a class="note" href="https://musicbrainz.org/release/${r.id}" target="_blank" rel="noopener">${tr('在 MusicBrainz 查看','View on MusicBrainz')}</a></div>`)}
+    <a class="note" href="https://musicbrainz.org/release/${r.id}" target="_blank" rel="noopener">${tr('在 MusicBrainz 查看','View on MusicBrainz')}</a></div>`);
+  syncCards();if(p.editing!==null)openCrop(p.editing)}
+
+// Disc images used as labels load once, get an automatic crop, and show it as a round thumbnail with an Adjust button.
+function bitmapOf(k){const p=libPlan,im=p.images[k];
+  return p.bmp[k]??=(async()=>{for(const url of im.full){try{const res=await fetch(url);if(res.ok)return await createImageBitmap(await res.blob())}catch(e){}}
+    throw new Error('image')})()}
+async function ensureCrop(k){const p=libPlan,img=await bitmapOf(k);if(p!==libPlan)return null;p.crops[k]??={...detectLabel(img),zoom:1,rot:0};return img}
+function syncCards(){const p=libPlan,v=$('lib-view');if(!p)return;
+  p.images.forEach((im,k)=>{const sl=Object.keys(p.assign).find(s=>p.assign[s]===k),btn=v.querySelector(`[data-crop="${k}"]`),cover=btn?.parentElement.querySelector('.lib-cover');if(!btn)return;
+    const label=!!sl&&isLabelSlot(sl);btn.hidden=!label;
+    if(!label){cover.style.backgroundImage=`url('${im.thumb}')`;cover.classList.remove('round');return}
+    ensureCrop(k).then(img=>{if(img&&libPlan===p&&p.assign[sl]===k){cover.style.backgroundImage=`url('${roundThumb(img,p.crops[k])}')`;cover.classList.add('round')}})
+      .catch(()=>{btn.hidden=true})});
+  if(p.editing!==null&&!isLabelSlot(Object.keys(p.assign).find(s=>p.assign[s]===p.editing)||''))closeCrop()}
+
+// The fine-tune box: drag the photo so the printed hole sits in the dashed ring, then size and rotate.
+const CROP_PX=480;
+async function openCrop(k){const p=libPlan,box=$('lib-crop');if(!box)return;p.editing=k;
+  let img;try{img=await ensureCrop(k)}catch(e){libStatus(tr('这张图下载失败。','Couldn’t download this image.'));return}
+  if(!img||libPlan!==p||p.editing!==k)return;
+  const c=p.crops[k],sl=Object.keys(p.assign).find(s=>p.assign[s]===k),name=Object.fromEntries(libTargets(2))[sl]||'';
+  box.innerHTML=`<div class="lib-crop"><div class="lib-head"><b>${esc(name)}</b><span>${c.auto?tr('已按中孔自动对位，可拖动微调','Lined up on the spindle hole; drag to fine-tune'):tr('没找到中孔，请拖动让印刷的中孔对准虚线圈','Couldn’t find the hole; drag the printed hole into the dashed ring')}</span></div>
+    <canvas class="lib-crop-canvas" width="${CROP_PX}" height="${CROP_PX}" tabindex="0" aria-label="${esc(tr('标签裁切预览，拖动或用方向键移动','Label crop preview; drag or use the arrow keys to move'))}"></canvas>
+    <div class="slider"><label for="lib-crop-zoom">${tr('大小','Size')}</label><input type="range" id="lib-crop-zoom" min="60" max="140" value="${Math.round(c.zoom*100)}"><output>${Math.round(c.zoom*100)}%</output></div>
+    <div class="slider"><label for="lib-crop-rot">${tr('旋转','Rotate')}</label><input type="range" id="lib-crop-rot" min="-180" max="180" value="${Math.round(c.rot)}"><output>${Math.round(c.rot)}°</output></div>
+    <div class="row" style="justify-content:flex-start"><button class="chip" type="button" data-crop-reset>${tr('重新识别','Detect again')}</button><button class="chip" type="button" data-crop-done>${tr('完成','Done')}</button></div></div>`;
+  const cv=box.querySelector('canvas'),draw=()=>{const g=cv.getContext('2d'),S=CROP_PX;g.clearRect(0,0,S,S);g.drawImage(renderLabel(img,c,S),0,0);
+    g.save();g.fillStyle='rgba(11,11,12,.55)';g.beginPath();g.rect(0,0,S,S);g.arc(S/2,S/2,S/2,0,Math.PI*2,true);g.fill('evenodd');g.restore();
+    g.save();g.lineWidth=2;g.strokeStyle='#ffffff';g.setLineDash([6,5]);g.beginPath();g.arc(S/2,S/2,S/2*LP.hole/LP.label,0,Math.PI*2);g.stroke();
+    g.setLineDash([]);g.globalAlpha=.6;g.beginPath();g.arc(S/2,S/2,S/2-1,0,Math.PI*2);g.stroke();g.restore()};
+  const refresh=()=>{draw();syncCards()};
+  // Move the photo with the pointer: a screen step becomes a source step, undoing the crop's rotation and scale.
+  const nudge=(dx,dy)=>{const u=2*c.r*c.zoom/cv.getBoundingClientRect().width,a=-c.rot*Math.PI/180;c.cx-=(dx*Math.cos(a)-dy*Math.sin(a))*u;c.cy-=(dx*Math.sin(a)+dy*Math.cos(a))*u;draw()};
+  let last=null;
+  cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);last=[e.clientX,e.clientY]});
+  cv.addEventListener('pointermove',e=>{if(!last)return;nudge(e.clientX-last[0],e.clientY-last[1]);last=[e.clientX,e.clientY]});
+  const up=()=>{if(last){last=null;syncCards()}};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+  cv.addEventListener('keydown',e=>{const m={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[e.key];if(!m)return;e.preventDefault();const f=e.shiftKey?10:1;nudge(m[0]*f,m[1]*f);syncCards()});
+  for(const[id,key,k2,fmt]of[['lib-crop-zoom','zoom',.01,v=>v+'%'],['lib-crop-rot','rot',1,v=>v+'°']]){const el=$(id);
+    el.addEventListener('input',()=>{c[key]=+el.value*k2;el.nextElementSibling.textContent=fmt(el.value);draw()});el.addEventListener('change',syncCards)}
+  box.querySelector('[data-crop-reset]').addEventListener('click',()=>{Object.assign(c,detectLabel(img),{zoom:1,rot:0});openCrop(k);syncCards()});
+  box.querySelector('[data-crop-done]').addEventListener('click',closeCrop);
+  draw();box.scrollIntoView({block:'nearest'})}
+function closeCrop(){if(libPlan)libPlan.editing=null;const box=$('lib-crop');if(box)box.innerHTML=''}
 
 // One image per slot: picking a slot for this image takes it away from whichever image had it.
 $('lib-view').addEventListener('change',e=>{const sel=e.target.closest('[data-img]');if(!sel||!libPlan)return;
   const k=+sel.dataset.img,a=libPlan.assign;
   for(const s of Object.keys(a))if(a[s]===k)delete a[s];
   if(sel.value){const prev=a[sel.value];if(prev!==undefined){const o=$('lib-view').querySelector(`[data-img="${prev}"]`);if(o)o.value=''}
-    a[sel.value]=k;libPlan.kept=libPlan.kept.filter(s=>s!==sel.value)}});
+    a[sel.value]=k;libPlan.kept=libPlan.kept.filter(s=>s!==sel.value)}
+  syncCards();if(isLabelSlot(sel.value)&&libPlan.editing!==null&&libPlan.editing!==k)openCrop(k)});
 
 async function libApply(){const p=libPlan,v=$('lib-view'),btn=v.querySelector('[data-apply]'),turn=++libTurn,on=k=>!!v.querySelector(`[data-param="${k}"]:checked`);
   btn.disabled=true;libStatus(tr('正在下载图片…','Downloading images…'));
   const done=[],failed=[];
   await Promise.all(Object.entries(p.assign).map(async([slot,k])=>{const im=p.images[k];
+    if(isLabelSlot(slot)){try{const img=await ensureCrop(k);if(turn!==libTurn||!img)return;const c=p.crops[k];
+        await setSlotImage(slot,renderLabel(img,c,1024),roundThumb(img,c),'fetched');
+        assetLog[slot]={source:'fetched',tool:'MusicBrainz + Cover Art Archive',note:`CAA ${im.ref} · ${im.types.join('/')||'image'} · ${im.full[0]} · label crop centre ${Math.round(c.cx)},${Math.round(c.cy)} radius ${Math.round(c.r*c.zoom)} px, rotated ${Math.round(c.rot)}°`};done.push(slot)}
+      catch(e){failed.push(slot)}return}
     for(const url of im.full){
       try{const res=await fetch(url);if(!res.ok)continue;const blob=await res.blob();if(turn!==libTurn)return;
         await setSlotImage(slot,await createImageBitmap(blob),im.thumb,'fetched');
