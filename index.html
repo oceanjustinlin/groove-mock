@@ -58,6 +58,9 @@ body.resizing .stage canvas{pointer-events:none}
 .stage canvas{display:block;width:100%;height:100%;touch-action:none}
 .hint{position:absolute;left:12px;bottom:10px;font-size:12px;color:var(--muted);background:color-mix(in srgb,var(--surface) 80%,transparent);padding:3px 8px;border-radius:6px;pointer-events:none}
 .loading{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-size:13px}
+.export-overlay{position:absolute;inset:0;z-index:3;display:grid;place-content:center;justify-items:center;gap:10px;background:var(--stage);font-size:14px}
+.export-overlay progress{width:min(240px,60vw)}
+.sheet video{border-radius:8px;max-width:100%;max-height:60vh;justify-self:center;background:var(--stage)}
 .err{position:absolute;inset:0;display:grid;place-items:center;padding:24px;text-align:center}
 
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;min-height:0;display:grid;grid-template-columns:60px minmax(0,1fr)}
@@ -209,6 +212,7 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
   <div class="work">
     <main class="stage transparent" id="stage" aria-label="3D 预览">
       <div class="loading" id="loading">正在准备工作台…</div>
+      <div class="export-overlay" id="export-overlay" hidden><span id="export-status"></span><progress id="export-progress" max="1" value="0"></progress></div>
       <div class="err" id="gl-error" hidden><div><strong>无法启动 3D 预览</strong><p class="note">请使用支持 WebGL 2 的最新版浏览器，并开启硬件加速。</p></div></div>
       <span class="hint">拖动旋转 · 滚轮缩放 · 右键拖动平移</span>
       <div class="sheet-backdrop" id="picker-backdrop" hidden></div>
@@ -465,8 +469,18 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
             </div>
             <div class="slider"><label for="anim-duration">一圈时长</label><input type="range" id="anim-duration" min="1" max="30" value="6"><output id="anim-duration-v">6 s</output></div>
             <div class="slider" id="anim-angle-row" hidden><label for="anim-angle">摆幅</label><input type="range" id="anim-angle" min="5" max="90" value="25"><output id="anim-angle-v">25°</output></div>
+            <div class="row"><span class="lbl">画幅</span>
+              <div class="seg" id="anim-aspect"><button data-v="16:9" aria-pressed="true">16:9</button><button data-v="1:1" aria-pressed="false">1:1</button><button data-v="9:16" aria-pressed="false">9:16</button></div>
+            </div>
+            <div class="row"><span class="lbl">格式</span>
+              <div class="seg" id="video-format"><button data-v="mp4" aria-pressed="true">MP4</button><button data-v="gif" aria-pressed="false">GIF</button></div>
+            </div>
+            <div class="row"><span class="lbl">尺寸</span>
+              <div class="seg" id="anim-size"><button data-v="0" aria-pressed="true">自动</button><button data-v="720" aria-pressed="false">720</button><button data-v="1080" aria-pressed="false">1080</button><button data-v="2160" aria-pressed="false">2160</button></div>
+            </div>
             <p class="note" id="anim-issue" hidden></p>
-            <p class="note">点视角旁的 ▶ 在工作台预览，导出视频用同一段动画。转台会转到背面，没有背面图时用摆动；展开和抽出会停在当前设置的角度和位置，都为 0 时用常见值。</p>
+            <button class="primary" id="video-btn" type="button">导出视频</button>
+            <p class="note">尺寸指短边像素，自动时 MP4 为 1080，GIF 为 600。点视角旁的 ▶ 在工作台预览，导出视频用同一段动画。转台会转到背面，没有背面图时用摆动；展开和抽出会停在当前设置的角度和位置，都为 0 时用常见值。</p>
           </section>
         </div>
       </div>
@@ -478,7 +492,9 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="modal-title">
     <div class="row"><strong id="modal-title">PNG 已生成</strong><span class="spec" id="modal-size"></span></div>
     <img id="modal-img" alt="导出的模型图">
-    <p class="note">如果点"下载"没有反应，请右键（手机长按）图片另存。</p>
+    <video id="modal-video" controls loop muted playsinline hidden></video>
+    <p class="note" id="note-img">如果点"下载"没有反应，请右键（手机长按）图片另存。</p>
+    <p class="note" id="note-video" hidden>如果点"下载"没有反应，请右键（手机长按）视频另存。</p>
     <div class="row"><a class="primary" id="modal-dl" download="record-mockup.png" href="#" style="text-decoration:none">下载</a><button class="chip" id="modal-close">关闭</button></div>
   </div>
 </div>
@@ -543,8 +559,9 @@ const EN={
   '图片只在你的浏览器里处理，不会上传。':'Images are processed in your browser and never uploaded.',
   'PNG 已生成':'PNG ready','导出的模型图':'Exported mockup','如果点"下载"没有反应，请右键（手机长按）图片另存。':'If Download does nothing, right-click (long-press on phones) the image and save it.',
   '下载':'Download','关闭':'Close',
-  '复位':'Reset','动画':'Animation','动作':'Motion','转台':'Turntable','摆动':'Swing','自转':'Spin','展开':'Open','抽出':'Pull out','方向':'Direction','向左':'Left','向右':'Right','一圈时长':'Loop length','摆幅':'Swing angle',
-  '点视角旁的 ▶ 在工作台预览，导出视频用同一段动画。转台会转到背面，没有背面图时用摆动；展开和抽出会停在当前设置的角度和位置，都为 0 时用常见值。':'Press ▶ next to the views to preview on the stage; video export uses the same animation. Turntable shows the back, so use Swing without back artwork. Open and Pull out stop at the angle and positions set in the panel, or typical ones when those are 0.',
+  '复位':'Reset','动画':'Animation','画幅':'Aspect','格式':'Format','尺寸':'Size','自动':'Auto','导出视频':'Export video',
+  '如果点"下载"没有反应，请右键（手机长按）视频另存。':'If Download does nothing, right-click (long-press on a phone) the video and save it.','动作':'Motion','转台':'Turntable','摆动':'Swing','自转':'Spin','展开':'Open','抽出':'Pull out','方向':'Direction','向左':'Left','向右':'Right','一圈时长':'Loop length','摆幅':'Swing angle',
+  '尺寸指短边像素，自动时 MP4 为 1080，GIF 为 600。点视角旁的 ▶ 在工作台预览，导出视频用同一段动画。转台会转到背面，没有背面图时用摆动；展开和抽出会停在当前设置的角度和位置，都为 0 时用常见值。':'Size is the short side in pixels; Auto is 1080 for MP4 and 600 for GIF. Press ▶ next to the views to preview on the stage; video export uses the same animation. Turntable shows the back, so use Swing without back artwork. Open and Pull out stop at the angle and positions set in the panel, or typical ones when those are 0.',
   '源码、命令行和 Agent 用法':'Source, CLI and agent usage','源码、命令行和 Agent 用法（GitHub）':'Source, CLI and agent usage (GitHub)'};
 const LANGS=['zh','en'];
 let lang=(()=>{const q=new URLSearchParams(location.search).get('lang');if(LANGS.includes(q))return q;
@@ -577,7 +594,8 @@ const state = {
   jacketType:'single', gateOpen:0, lpCount:1, sleeve2X:.6, record2X:.3, obiOn:true, obiWidth:3.2, insertOn:true, insertX:0,
   bg:'transparent', bgColor:'#e6e3dc', scale:2, view:'quarter',
   camZoom:1, camAz:0, camEl:0, camPanX:0, camPanY:0, outW:2400, outH:1600,   // used by the agent API / CLI
-  animPreset:'turntable', animDuration:6, animFps:0, animDir:'left', animAngle:25, animAspect:'16:9', animSize:0   // 0 = per-format default
+  animPreset:'turntable', animDuration:6, animFps:0, animDir:'left', animAngle:25, animAspect:'16:9', animSize:0,   // 0 = per-format default
+  videoFormat:'mp4'   // panel only; the CLI takes the format from the output file name
 };
 const isGate=()=>state.jacketType==='gatefold';
 const frontZ=()=>isGate()?J.d/2+J.board:J.d/2;          // outer face of the front cover
@@ -1245,7 +1263,14 @@ for(const slot of Object.keys(SLOTS)){
     catch(err){alertNote(tr(`没能读取这张图片（${file.name}）。请换成 PNG、JPG 或 WebP 再试。`,`Couldn’t read this image (${file.name}). Try a PNG, JPG or WebP.`))}
     e.target.value='';});
 }
-function alertNote(msg){$('modal-title').textContent=msg;$('modal-img').hidden=true;$('modal-dl').hidden=true;$('modal-size').textContent='';$('modal').hidden=false}
+function alertNote(msg){$('modal-title').textContent=msg;for(const id of['modal-img','modal-video','modal-dl','note-img','note-video'])$(id).hidden=true;$('modal-size').textContent='';$('modal').hidden=false}
+// The export sheet: an image (PNG, GIF) or a looping video, with its download link.
+function showResult({title,url,file,size,video=false}){
+  $('modal-title').textContent=title;$('modal-size').textContent=size;
+  $('modal-img').hidden=video;$('note-img').hidden=video;$('modal-video').hidden=!video;$('note-video').hidden=!video;$('modal-dl').hidden=false;
+  if(video){$('modal-video').src=url;$('modal-video').play().catch(()=>{})}else $('modal-img').src=url;
+  $('modal-dl').href=url;$('modal-dl').download=file;$('modal').hidden=false}
+function closeModal(){$('modal').hidden=true;$('modal-video').pause()}
 
 // ---------- Panel pages and asset picker ----------
 // The settings panel shows one page at a time; the last page and the picker's open state are remembered.
@@ -1659,7 +1684,7 @@ seg('lp-count','lpCount',applyLpCount);
 seg('vinyl-style','vinyl',()=>{applyVinyl();syncPatterns()});
 seg('vinyl2-style','vinyl2',()=>{applyVinyl();syncPatterns()});
 seg('sticker-shape','stickerShape',()=>{buildSticker();stickerTexture();pose()});
-seg('bg-mode','bg',applyBg);
+seg('bg-mode','bg',()=>{applyBg();syncAnimPanel()});
 seg('export-scale','scale');
 // Picking a colour while on black switches that disc to coloured vinyl.
 for(const [cid,sid,key] of[['vinyl-color','vinyl-style','vinyl'],['vinyl2-color','vinyl2-style','vinyl2']])
@@ -1780,14 +1805,13 @@ $('export-btn').addEventListener('click',async()=>{
     renderer.setPixelRatio(1);renderer.setSize(tw,th,false);camera.aspect=tw/th;camera.updateProjectionMatrix();renderStage();
     const blob=await new Promise((res,rej)=>renderer.domElement.toBlob(b=>b?res(b):rej(new Error('toBlob')),'image/png'));
     if(lastUrl)URL.revokeObjectURL(lastUrl);lastUrl=URL.createObjectURL(blob);
-    $('modal-title').textContent=tr('PNG 已生成','PNG ready');$('modal-img').hidden=false;$('modal-dl').hidden=false;
-    $('modal-img').src=lastUrl;$('modal-dl').href=lastUrl;$('modal-size').textContent=`${tw} × ${th} px · ${(blob.size/1048576).toFixed(1)} MB`;$('modal').hidden=false;
+    showResult({title:tr('PNG 已生成','PNG ready'),url:lastUrl,file:'record-mockup.png',size:`${tw} × ${th} px · ${(blob.size/1048576).toFixed(1)} MB`});
   }catch(e){alertNote(tr('导出失败，请把分辨率调到 1× 再试。','Export failed. Set the resolution to 1× and try again.'))}
   finally{renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));resize();btn.disabled=false;btn.textContent=tr('导出 PNG','Export PNG')}
 });
-$('modal-close').addEventListener('click',()=>$('modal').hidden=true);
-$('modal').addEventListener('click',e=>{if(e.target===$('modal'))$('modal').hidden=true});
-addEventListener('keydown',e=>{if(e.key==='Escape')$('modal').hidden=true});
+$('modal-close').addEventListener('click',closeModal);
+$('modal').addEventListener('click',e=>{if(e.target===$('modal'))closeModal()});
+addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
 
 // ---------- Scene spec + agent API ----------
 // One JSON document describes everything the panel controls, in the panel's own units (mm, %, degrees).
@@ -2128,12 +2152,29 @@ $('play-reset').addEventListener('click',resetPreview);
 setPlaying(false);
 function syncAnimPanel(){const p=state.animPreset,issues=animIssues();
   $('anim-dir-row').hidden=p!=='turntable'&&p!=='swing';$('anim-angle-row').hidden=p!=='swing';
-  $('anim-issue').hidden=!issues.length;$('anim-issue').textContent=issues.map(k=>tr(ANIM_ISSUES[k][1],ANIM_ISSUES[k][2])).join(' ')}
+  const notes=issues.map(k=>tr(ANIM_ISSUES[k][1],ANIM_ISSUES[k][2]));
+  if(state.bg==='transparent')notes.push(tr('视频不支持透明背景，会用上面的背景颜色。','Video has no transparency; it uses the background colour above.'));
+  $('anim-issue').hidden=!notes.length;$('anim-issue').textContent=notes.join(' ')}
 const refitPreview=()=>{syncAnimPanel();if(previewActive())fitPreview()};
 seg('anim-preset','animPreset',refitPreview);seg('anim-dir','animDir',refitPreview);
+seg('anim-aspect','animAspect');seg('video-format','videoFormat');seg('anim-size','animSize');
+// Export video from the panel. Pressing the button again while it runs cancels.
+let videoUrl,videoAbort;
+$('video-btn').addEventListener('click',async()=>{
+  if(videoAbort){videoAbort.abort();return}
+  const btn=$('video-btn'),format=state.videoFormat,status=$('export-status'),bar=$('export-progress');
+  videoAbort=new AbortController();btn.textContent=tr('取消导出','Cancel');status.textContent=tr('正在准备…','Preparing…');bar.value=0;$('export-overlay').hidden=false;
+  try{
+    const r=await renderAnimation(format,{encoder:'software',signal:videoAbort.signal,onProgress:(d,n)=>{status.textContent=tr(`正在生成 ${d} / ${n} 帧`,`Rendering frame ${d} / ${n}`);bar.value=d/n}});
+    const blob=new Blob([r.bytes],{type:format==='gif'?'image/gif':'video/mp4'});
+    if(videoUrl)URL.revokeObjectURL(videoUrl);videoUrl=URL.createObjectURL(blob);
+    showResult({title:format==='gif'?tr('GIF 已生成','GIF ready'):tr('视频已生成','Video ready'),url:videoUrl,file:`record-mockup.${format}`,video:format==='mp4',
+      size:`${r.width} × ${r.height} px · ${r.duration} s · ${(blob.size/1048576).toFixed(1)} MB`});
+  }catch(e){if(e.name!=='AbortError')alertNote(tr(`视频导出失败：${e.message}`,`Video export failed: ${e.message}`))}
+  finally{videoAbort=null;$('export-overlay').hidden=true;btn.textContent=tr('导出视频','Export video')}});
 slider('anim-duration','animDuration','sec',()=>{});slider('anim-angle','animAngle','deg',refitPreview);
 
-async function renderAnimation(format,{onProgress=()=>{},encoder='auto'}={}){
+async function renderAnimation(format,{onProgress=()=>{},encoder='auto',signal}={}){
   if(!(encoder in ENCODERS))throw new Error(`不支持的编码方式 ${encoder}，可选：${Object.keys(ENCODERS).join(' / ')}`);
   if(!VIDEO_FORMATS.includes(format))throw new Error(`不支持的格式 ${format}，可选：${VIDEO_FORMATS.join(' / ')}`);
   const warnings=[],{fps,width:w,height:h,frames}=animSettings(format),clip=Array.from({length:frames},(_,i)=>animFrame(i/frames));
@@ -2158,9 +2199,10 @@ async function renderAnimation(format,{onProgress=()=>{},encoder='auto'}={}){
       // Wrap the canvas in a VideoFrame ourselves: it stays on the GPU, where CanvasSource's capture is ~10x slower.
       const src=new mb.VideoSampleSource(config);
       output.addVideoTrack(src,{frameRate:fps});await output.start();
-      for(let i=0;i<frames;i++){draw(i);
+      try{for(let i=0;i<frames;i++){signal?.throwIfAborted();draw(i);
         const sample=new mb.VideoSample(new VideoFrame(renderer.domElement,{timestamp:Math.round(i*1e6/fps),duration:Math.round(1e6/fps)}));
-        await src.add(sample);sample.close();onProgress(i+1,frames)}
+        await src.add(sample);sample.close();onProgress(i+1,frames)}}
+      catch(e){await output.cancel();throw e}
       await output.finalize();bytes=new Uint8Array(output.target.buffer);
     }else{
       const {GIFEncoder,quantize,applyPalette}=await import(GIFENC_URL);
@@ -2169,7 +2211,7 @@ async function renderAnimation(format,{onProgress=()=>{},encoder='auto'}={}){
       const picks=8,stride=4,sample=new Uint8Array(Math.ceil(w*h/stride)*4*picks);let n=0;
       for(let k=0;k<picks;k++){draw(Math.floor(k*frames/picks));const px=grab();for(let j=0;j<px.length;j+=4*stride){sample.set(px.subarray(j,j+4),n);n+=4}}
       const palette=quantize(sample.subarray(0,n),256),gif=GIFEncoder(),delay=Math.round(100/fps)*10;
-      for(let i=0;i<frames;i++){draw(i);gif.writeFrame(applyPalette(grab(),palette),w,h,i===0?{palette,delay,repeat:0}:{delay});
+      for(let i=0;i<frames;i++){signal?.throwIfAborted();draw(i);gif.writeFrame(applyPalette(grab(),palette),w,h,i===0?{palette,delay,repeat:0}:{delay});
         onProgress(i+1,frames);if(i%8===7)await nextFrame()}
       gif.finish();bytes=gif.bytes();
     }
