@@ -148,17 +148,30 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
 .sheet img{border-radius:8px;background-image:conic-gradient(var(--check) 25%,transparent 0 50%,var(--check) 0 75%,transparent 0);background-size:16px 16px;max-height:60vh;justify-self:center}
 .sheet .row{flex-wrap:wrap}
 
+/* Phones and narrow tablets: one screen, no page scroll. The stage keeps the top ~42% so the model stays
+   in view, the current settings page scrolls under it, and the page tabs sit at the bottom within thumb reach.
+   The asset picker opens as a bottom sheet over everything. */
+.sheet-backdrop{display:none}
 @media (max-width:860px){
-  html,body{height:auto}
-  .app{height:auto;grid-template-rows:auto auto}
-  .work{grid-template-columns:minmax(0,1fr);gap:12px}
-  .splitter{display:none}
-  .stage{height:62vh;min-height:360px}
-  .panel{overflow:visible;grid-template-columns:minmax(0,1fr)}
-  .rail{flex-direction:row;border-right:0;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:1;background:var(--surface);border-radius:12px 12px 0 0;overflow-x:auto}
-  .rail button{flex:1 0 52px}
-  .pages{overflow:visible}
-  .assets[data-open="true"]{width:auto;right:12px}
+  .app{height:100vh;height:100dvh;padding-block:8px calc(8px + env(safe-area-inset-bottom,0px));gap:8px}
+  .bar{flex-wrap:nowrap;gap:8px}
+  .brand h1{font-size:20px}
+  .brand .spec{display:none}
+  .bar .primary{padding:6px 12px}
+  .work{grid-template-columns:minmax(0,1fr);grid-template-rows:clamp(220px,42dvh,520px) minmax(0,1fr);gap:8px}
+  .splitter,.hint{display:none}
+  .stage .views{position:absolute;right:8px;bottom:8px;z-index:2}
+  .stage .views .chip{padding:4px 10px;font-size:12px}
+  .panel{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto}
+  .pages{order:1}
+  .rail{order:2;flex-direction:row;border-right:0;border-top:1px solid var(--line);overflow-x:auto;padding:4px}
+  .rail button{flex:1 0 52px;min-height:48px}
+  .assets[data-open="true"]{position:fixed;left:0;right:0;top:auto;bottom:0;width:auto;max-width:none;max-height:none;height:min(80dvh,680px);
+    border-radius:16px 16px 0 0;border-bottom:0;z-index:20;padding-bottom:env(safe-area-inset-bottom,0px)}
+  .assets[data-open="true"] .picker-toggle{padding-top:18px;position:relative}
+  .assets[data-open="true"] .picker-toggle::before{content:"";position:absolute;top:7px;left:50%;width:36px;height:4px;margin-left:-18px;border-radius:2px;background:var(--line)}
+  .sheet-backdrop{display:block;position:fixed;inset:0;z-index:19;background:color-mix(in srgb,var(--ink) 40%,transparent)}
+  .assets .lib-gallery{grid-template-columns:repeat(auto-fill,minmax(96px,1fr))}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -181,6 +194,7 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
       <div class="loading" id="loading">正在准备工作台…</div>
       <div class="err" id="gl-error" hidden><div><strong>无法启动 3D 预览</strong><p class="note">请使用支持 WebGL 2 的最新版浏览器，并开启硬件加速。</p></div></div>
       <span class="hint">拖动旋转 · 滚轮缩放 · 右键拖动平移</span>
+      <div class="sheet-backdrop" id="picker-backdrop" hidden></div>
       <div class="assets" id="picker" data-open="false">
         <button class="picker-toggle" id="picker-toggle" type="button" aria-expanded="false" aria-controls="lib"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5"/></svg>素材<small>MusicBrainz · Cover Art Archive</small><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
         <section class="picker-body" id="lib" aria-label="曲库" hidden>
@@ -1203,10 +1217,21 @@ document.querySelector('.rail').addEventListener('keydown',e=>{const step={Arrow
   const i=RAIL.findIndex(b=>b.getAttribute('aria-selected')==='true'),n=e.key==='Home'?0:e.key==='End'?RAIL.length-1:(i+step+RAIL.length)%RAIL.length;
   showPage(RAIL[n].dataset.page);RAIL[n].focus()});
 showPage((()=>{try{return localStorage.getItem('gm-page')}catch(e){}})());
+// On phones the picker is a bottom sheet with a backdrop, always starts closed and closes after Apply;
+// the view buttons move from the header onto the stage.
+const phone=matchMedia('(max-width:860px)');
+const pickerOpen=()=>$('picker').dataset.open==='true';
 function setPicker(open,focus){$('picker').dataset.open=open;$('picker-toggle').setAttribute('aria-expanded',open);$('lib').hidden=!open;
-  try{localStorage.setItem('gm-picker',open?'1':'0')}catch(e){}if(open&&focus)$('lib-artist').focus()}
-$('picker-toggle').addEventListener('click',()=>setPicker($('picker').dataset.open!=='true',true));
-setPicker((()=>{try{return localStorage.getItem('gm-picker')==='1'}catch(e){return false}})());
+  $('picker-backdrop').hidden=!(open&&phone.matches);
+  if(!phone.matches)try{localStorage.setItem('gm-picker',open?'1':'0')}catch(e){}
+  if(open&&focus)$('lib-artist').focus()}
+$('picker-toggle').addEventListener('click',()=>setPicker(!pickerOpen(),true));
+$('picker-backdrop').addEventListener('click',()=>setPicker(false));
+addEventListener('keydown',e=>{if(e.key==='Escape'&&pickerOpen()&&phone.matches){setPicker(false);$('picker-toggle').focus()}});
+setPicker(!phone.matches&&(()=>{try{return localStorage.getItem('gm-picker')==='1'}catch(e){return false}})());
+function placeViews(){const v=document.querySelector('.views');if(phone.matches)$('stage').append(v);else document.querySelector('.bar .brand').after(v)}
+placeViews();
+phone.addEventListener('change',()=>{placeViews();setPicker(pickerOpen())});
 // Panel width: drag the splitter, arrow keys nudge it, double-click goes back to 340px. Remembered per viewer.
 const PANEL_W={min:300,max:640,def:340};
 const panelMax=()=>Math.max(PANEL_W.min,Math.min(PANEL_W.max,Math.round(document.querySelector('.work').clientWidth*.5)));
@@ -1391,6 +1416,7 @@ async function libApply(){const p=libPlan,v=$('lib-view'),btn=v.querySelector('[
   if(!isGate()&&done.some(s=>s.startsWith('inner')))msg.push(tr('内页只在双开封套里看得到。','Inner pages only show on a gatefold jacket.'));
   if(state.lpCount!==2&&done.some(s=>s==='labelC'||s==='labelD'))msg.push(tr('C / D 面标签只在 2LP 时可见。','Side C / D labels only show on 2LP.'));
   libStatus(msg.join(' '));
+  if(done.length&&phone.matches)setPicker(false);
   if(done.length)showPage(pageOfSlot(done.includes('front')?'front':done[0]));
   btn.disabled=false}
 
