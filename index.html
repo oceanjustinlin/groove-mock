@@ -93,6 +93,29 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
 .picker{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
 .picker button{aspect-ratio:1;border:1px solid var(--line);border-radius:50%;padding:0;background:var(--bg) center/cover no-repeat;cursor:pointer;font-size:11px;color:var(--muted)}
 .picker button[aria-checked="true"]{outline:2px solid var(--accent);outline-offset:2px}
+.lib-form{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:6px}
+.lib-form .field{width:auto;min-width:0;font-family:var(--font-body)}
+.lib-view{display:grid;gap:8px}
+.lib-head{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+.lib-head .chip{font-size:12px;padding:3px 10px;white-space:nowrap;flex:none}
+.lib-list{display:grid;gap:2px;max-height:320px;overflow:auto}
+.lib-row{display:grid;grid-template-columns:44px minmax(0,1fr);gap:10px;align-items:center;text-align:left;border:0;border-radius:8px;background:transparent;padding:4px;cursor:pointer}
+.lib-row:hover{background:var(--bg)}
+.lib-row.noart{grid-template-columns:minmax(0,1fr)}
+.lib-cover{display:block;width:44px;aspect-ratio:1;border-radius:4px;background:var(--bg) center/cover no-repeat;border:1px solid var(--line)}
+.lib-title{font-size:13px;line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lib-meta{font-family:var(--font-mono);font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.lib-has{display:flex;flex-wrap:wrap;gap:4px;margin-top:2px}
+.lib-has span{font-size:10px;border:1px solid var(--line);border-radius:4px;padding:0 4px;color:var(--muted)}
+.lib-has span.on{color:var(--ink);border-color:var(--ink)}
+.lib-pick{display:grid;gap:6px}
+.lib-item{display:grid;grid-template-columns:auto 36px minmax(0,1fr);gap:8px;align-items:center;font-size:13px;cursor:pointer}
+.lib-item.param{grid-template-columns:auto minmax(0,1fr)}
+.lib-item input{accent-color:var(--accent);width:16px;height:16px}
+.lib-item .lib-cover{width:36px}
+.lib-media{display:flex;flex-wrap:wrap;gap:6px}
+.lib-media a{display:block;width:44px}
+.tile .tag.lib{background:var(--accent);color:var(--accent-ink)}
 .sub[hidden]{display:none!important}
 .sub{display:grid;gap:10px}
 
@@ -132,6 +155,17 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
     </main>
 
     <aside class="panel" aria-label="设置">
+      <section class="group" id="lib">
+        <h2>曲库 <small>MusicBrainz · Cover Art Archive</small></h2>
+        <form class="lib-form" id="lib-form" role="search" aria-label="曲库搜索">
+          <input class="field" id="lib-artist" type="search" placeholder="艺人" aria-label="艺人" autocomplete="off" enterkeyhint="search">
+          <input class="field" id="lib-album" type="search" placeholder="专辑名" aria-label="专辑名" autocomplete="off" enterkeyhint="search">
+          <button class="chip" type="submit">搜索</button>
+        </form>
+        <p class="note" id="lib-status" role="status" aria-live="polite" hidden></p>
+        <div class="lib-view" id="lib-view" hidden></div>
+        <p class="note">选中一个黑胶版本，自动填封面、背面等贴图和唱片参数。图片版权归原权利方，仅供预览。</p>
+      </section>
       <section class="group">
         <h2>封套 <small id="jacket-spec">单开 · 书脊 4 mm</small></h2>
         <div class="row"><span class="lbl">类型</span>
@@ -385,6 +419,8 @@ const EN={
   '正在准备工作台…':'Setting up the workbench…','无法启动 3D 预览':'Can’t start the 3D preview',
   '请使用支持 WebGL 2 的最新版浏览器，并开启硬件加速。':'Use an up-to-date browser with WebGL 2 and hardware acceleration turned on.',
   '拖动旋转 · 滚轮缩放 · 右键拖动平移':'Drag to rotate · Scroll to zoom · Right-drag to pan',
+  '曲库':'Record library','曲库搜索':'Record library search','艺人':'Artist','专辑名':'Album','搜索':'Search',
+  '选中一个黑胶版本，自动填封面、背面等贴图和唱片参数。图片版权归原权利方，仅供预览。':'Pick a vinyl release to fill the cover, back and other artwork plus the record settings. Images belong to their rights holders and are for preview only.',
   '设置':'Settings','封套':'Jacket','类型':'Type','单开':'Single','双开':'Gatefold','示例':'Sample',
   '上传封套正面':'Upload jacket front','上传封套背面':'Upload jacket back','上传书脊':'Upload spine',
   '背面':'Back','书脊':'Spine','上传内页左':'Upload inner left','上传内页右':'Upload inner right','内页左':'Inner left','内页右':'Inner right',
@@ -423,7 +459,7 @@ let lang=(()=>{const q=new URLSearchParams(location.search).get('lang');if(LANGS
   return(navigator.languages?.[0]||navigator.language||'').toLowerCase().startsWith('zh')?'zh':'en'})();
 const tr=(zh,en)=>lang==='en'?en:zh;
 // Remember each node's Chinese source once, so switching back and forth is lossless.
-const I18N_ATTRS=['aria-label','alt','title'],zhText=new Map(),zhAttr=new Map();
+const I18N_ATTRS=['aria-label','alt','title','placeholder'],zhText=new Map(),zhAttr=new Map();
 for(const root of document.querySelectorAll('.app,.modal')){
   const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
   for(let n;(n=w.nextNode());){const k=n.nodeValue.trim();if(EN[k])zhText.set(n,n.nodeValue)}
@@ -1092,11 +1128,14 @@ function thumb(slot,url){const el=document.querySelector(`[data-slot="${slot}"]`
 function markFilled(slot){const el=document.querySelector(`[data-slot="${slot}"]`);el.classList.add('filled');el.querySelector('.tag')?.remove()}
 for(const slot of['front','back','spine','labelA','labelB','labelC','labelD','sticker','innerLeft','innerRight','insertFront','insertBack'])thumb(slot,tex[slot].image.toDataURL('image/jpeg',.6));
 // One loader for every artwork slot, shared by the upload tiles and the agent API.
-async function setSlotImage(slot,img,thumbUrl){
+// slotOrigin remembers who filled each slot, so a library pick leaves the viewer's own uploads alone.
+const slotOrigin={},assetLog={};
+async function setSlotImage(slot,img,thumbUrl,origin='user'){
   if(slot==='sticker'){userSticker.img=img;stickerTexture()}
   else if(slot==='obi'){userObi.img=img;obiTexture()}
   else{const s=SLOTS[slot];setTex(slot,colorTex(fitImage(img,s.w,s.h,{rotateIfWide:s.rotateIfWide})),...s.mats());if(slot==='sleeve')sleeveMat.color.set('#ffffff')}
-  thumb(slot,thumbUrl);markFilled(slot)}
+  thumb(slot,thumbUrl);markFilled(slot);slotOrigin[slot]=origin;if(origin!=='fetched')delete assetLog[slot];
+  if(origin==='fetched'){const el=document.querySelector(`[data-slot="${slot}"] .thumb`),t=document.createElement('span');t.className='tag lib';t.textContent=tr('曲库','Library');el.append(t)}}
 for(const slot of Object.keys(SLOTS)){
   $('up-'+slot).addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;
     try{await setSlotImage(slot,await createImageBitmap(file),URL.createObjectURL(file))}
@@ -1104,6 +1143,136 @@ for(const slot of Object.keys(SLOTS)){
     e.target.value='';});
 }
 function alertNote(msg){$('modal-title').textContent=msg;$('modal-img').hidden=true;$('modal-dl').hidden=true;$('modal-size').textContent='';$('modal').hidden=false}
+
+// ---------- Record library ----------
+// Straight from the browser to MusicBrainz and the Cover Art Archive (both send CORS headers, need no key).
+// Three steps in one panel group: albums → vinyl releases → what to fill. MusicBrainz asks for at most one
+// request a second, so its calls queue; CAA images and thumbnails don't.
+const MB='https://musicbrainz.org/ws/2/',CAA='https://coverartarchive.org/';
+let mbLast=0,mbChain=Promise.resolve(),libTurn=0;
+function mbGet(path){
+  const run=async()=>{const wait=mbLast+1100-Date.now();if(wait>0)await new Promise(r=>setTimeout(r,wait));
+    for(let tryNo=0;;tryNo++){mbLast=Date.now();const res=await fetch(MB+path+(path.includes('?')?'&':'?')+'fmt=json');
+      if(res.ok)return res.json();
+      if(res.status===503&&tryNo<2){await new Promise(r=>setTimeout(r,2000));continue}
+      throw new Error('HTTP '+res.status)}};
+  const p=mbChain.then(run,run);mbChain=p.catch(()=>{});return p}
+const luceneTerm=s=>s.trim().replace(/[+\-&|!(){}[\]^"~*?:\\/]/g,' ').replace(/\s+/g,' ').trim();
+const artistName=ac=>(ac||[]).map(a=>a.name+(a.joinphrase||'')).join('');
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+// 12" and generic vinyl only; 7" and 10" don't fit a 12" jacket.
+const isLp=m=>/^(12" )?Vinyl$/.test(m.format||'');
+function libStatus(msg){const el=$('lib-status');el.textContent=msg||'';el.hidden=!msg}
+function libShow(html){const v=$('lib-view');v.innerHTML=html;v.hidden=!html}
+const libFail=()=>{libStatus(tr('曲库暂时连不上。可以稍后再试，或直接上传图片。','Couldn’t reach the record library. Try again later, or upload images directly.'));libShow('')};
+
+$('lib-form').addEventListener('submit',async e=>{e.preventDefault();
+  const artist=luceneTerm($('lib-artist').value),album=luceneTerm($('lib-album').value);
+  if(!album&&!artist){libStatus(tr('请输入艺人或专辑名。','Enter an artist or an album.'));return}
+  const turn=++libTurn;libStatus(tr('正在搜索…','Searching…'));libShow('');
+  const q=[album&&`releasegroup:(${album})`,artist&&`artist:(${artist})`].filter(Boolean).join(' AND ');
+  try{const j=await mbGet(`release-group?query=${encodeURIComponent(q)}&limit=15`);if(turn!==libTurn)return;
+    libGroups(j['release-groups']||[])}
+  catch(err){if(turn===libTurn)libFail()}});
+
+// libView redraws the current step, so switching language relabels it.
+let libGroupList=[],libReleaseList=[],libGroup=null,libView=null;
+function libGroups(groups){libGroupList=groups;libView=()=>libGroups(libGroupList);
+  if(!groups.length){libStatus(tr('没有找到这张专辑。可以换个写法，或直接上传图片。','No album found. Try different spelling, or upload images directly.'));libShow('');return}
+  libStatus('');
+  libShow(`<div class="lib-list" role="list">${groups.map((g,i)=>`<button class="lib-row" type="button" role="listitem" data-group="${i}">
+    <span class="lib-cover" style="background-image:url('${CAA}release-group/${g.id}/front-250')"></span>
+    <span><div class="lib-title">${esc(g.title)}</div><div class="lib-meta">${esc(artistName(g['artist-credit']))}${g['first-release-date']?' · '+esc(g['first-release-date'].slice(0,4)):''}${g['primary-type']?' · '+esc(g['primary-type']):''}</div></span></button>`).join('')}</div>`)}
+
+$('lib-view').addEventListener('click',e=>{
+  const g=e.target.closest('[data-group]'),r=e.target.closest('[data-release]'),b=e.target.closest('[data-back]'),a=e.target.closest('[data-apply]');
+  if(g)libReleases(libGroupList[+g.dataset.group]);
+  else if(r)libConfirm(libReleaseList[+r.dataset.release]);
+  else if(b){if(b.dataset.back==='groups')libGroups(libGroupList);else libReleaseRows()}
+  else if(a)libApply()});
+
+async function libReleases(group){libGroup=group;const turn=++libTurn;libStatus(tr('正在读取版本…','Loading releases…'));libShow('');
+  try{let all=[],offset=0,total=1;
+    // Big albums have a few hundred releases; three pages cover almost all of them.
+    while(offset<total&&offset<300){const j=await mbGet(`release?release-group=${group.id}&inc=labels+media&limit=100&offset=${offset}`);if(turn!==libTurn)return;
+      all=all.concat(j.releases||[]);total=j['release-count']||0;offset+=100}
+    const lps=all.filter(r=>(r.media||[]).some(isLp));
+    const art=r=>r['cover-art-archive']||{};
+    lps.sort((a,b)=>(art(b).count||0)-(art(a).count||0)||(+!!art(b).back)-(+!!art(a).back)||String(a.date||'9').localeCompare(String(b.date||'9')));
+    libReleaseList=lps;
+    if(!lps.length){libStatus(tr('这张专辑在曲库里没有 12″ 黑胶版本。','This album has no 12″ vinyl release in the library.'));
+      libShow(`<div class="lib-head"><button class="chip" type="button" data-back="groups">← ${tr('返回','Back')}</button></div>`);return}
+    if(lps.length===1){libConfirm(lps[0]);return}
+    libStatus('');libReleaseRows()}
+  catch(err){if(turn===libTurn)libFail()}}
+
+function releaseMeta(r){const lp=r.media.filter(isLp).length,cat=(r['label-info']||[]).map(l=>l['catalog-number']).filter(Boolean)[0];
+  return[r.date&&r.date.slice(0,4),r.country,cat,lp>1?`${lp}LP`:'1LP',r.packaging].filter(Boolean).map(esc).join(' · ')}
+function libReleaseRows(){const g=libGroup,art=r=>r['cover-art-archive']||{};libView=libReleaseRows;
+  libStatus('');
+  libShow(`<div class="lib-head"><button class="chip" type="button" data-back="groups">← ${tr('返回','Back')}</button><span>${esc(g.title)} · ${tr(`${libReleaseList.length} 个黑胶版本`,`${libReleaseList.length} vinyl releases`)}</span></div>
+  <div class="lib-list" role="list">${libReleaseList.map((r,i)=>{const c=art(r);return`<button class="lib-row${c.front?'':' noart'}" type="button" role="listitem" data-release="${i}">
+    ${c.front?`<span class="lib-cover" style="background-image:url('${CAA}release/${r.id}/front-250')"></span>`:''}
+    <span>${r.title!==g.title?`<div class="lib-title">${esc(r.title)}</div>`:''}<div class="lib-meta">${releaseMeta(r)}</div>
+    <div class="lib-has"><span class="${c.front?'on':''}">${tr('正面','Front')}</span><span class="${c.back?'on':''}">${tr('背面','Back')}</span><span class="${c.count?'on':''}">${tr(`共 ${c.count||0} 张图`,`${c.count||0} images`)}</span></div></span></button>`}).join('')}</div>`)}
+
+// Tracks per side from the A1 / B2 numbering; plain 1, 2, 3 numbering splits the disc in half.
+function sideCounts(medium){const by={};for(const t of medium.tracks||[]){const m=/^([A-Z])/i.exec(t.number||'');if(m){const k=m[1].toUpperCase();by[k]=(by[k]||0)+1}}
+  const v=Object.values(by);if(v.length)return v;const n=(medium.tracks||[]).length;return n?[Math.ceil(n/2),Math.floor(n/2)]:[]}
+
+const libSlots=()=>[['front',tr('正面','Front')],['back',tr('背面','Back')],['spine',tr('书脊','Spine')],['sleeve',tr('内袋','Inner sleeve')]];
+let libPlan=null;
+async function libConfirm(r){const turn=++libTurn;libStatus(tr('正在读取图片和曲目…','Loading images and tracks…'));
+  try{const[rel,caa]=await Promise.all([mbGet(`release/${r.id}?inc=recordings+labels`),
+      r['cover-art-archive']?.artwork?fetch(`${CAA}release/${r.id}/`).then(x=>x.ok?x.json():{images:[]}).catch(()=>({images:[]})):{images:[]}]);
+    if(turn!==libTurn)return;
+    // CAA lists http:// links; an https page can't fetch those.
+    const imgs=JSON.parse(JSON.stringify(caa.images||[]).replace(/http:\/\//g,'https://')),has=t=>i=>(i.types||[]).includes(t);
+    const pick={front:imgs.find(i=>i.front)||imgs.find(has('Front')),back:imgs.find(i=>i.back)||imgs.find(has('Back')),spine:imgs.find(has('Spine')),sleeve:imgs.find(has('Liner'))};
+    const lps=(rel.media||[]).filter(isLp),sides=lps.slice(0,2).map(sideCounts);
+    const pack=rel.packaging,jacket=pack==='Gatefold Cover'?'gatefold':pack?'single':null;
+    libPlan={release:rel,pick,lps:Math.min(2,lps.length)||1,extraLps:Math.max(0,lps.length-2),sides,jacket,media:imgs.filter(has('Medium'))};
+    libStatus('');libConfirmView()}
+  catch(err){if(turn===libTurn)libFail()}}
+
+function libConfirmView(){const p=libPlan,r=p.release,rows=[];libView=libConfirmView;
+  const thumbOf=i=>i.thumbnails?.['250']||i.thumbnails?.small||i.image;
+  for(const[slot,name]of libSlots()){const i=p.pick[slot];if(!i)continue;const mine=slotOrigin[slot]==='user';
+    rows.push(`<label class="lib-item"><input type="checkbox" data-slot-pick="${slot}"${mine?'':' checked'}><span class="lib-cover" style="background-image:url('${thumbOf(i)}')"></span>
+      <span>${name}${mine?`<div class="lib-meta">${tr('已有你上传的图，默认保留','You uploaded one; kept by default')}</div>`:''}</span></label>`)}
+  const missing=libSlots().filter(([s])=>s!=='sleeve'&&!p.pick[s]).map(([,n])=>n);
+  const params=[`<label class="lib-item param"><input type="checkbox" data-param="count" checked><span>${tr('唱片数量','Records')}${tr('：',': ')}${p.lps===2?'2LP':tr('单 LP','1LP')}${p.extraLps?`<div class="lib-meta">${tr(`这一版共 ${p.lps+p.extraLps} 张，只做前 2 张`,`This release has ${p.lps+p.extraLps} discs; only the first 2 are modelled`)}</div>`:''}</span></label>`];
+  if(p.jacket)params.push(`<label class="lib-item param"><input type="checkbox" data-param="jacket" checked><span>${tr('封套','Jacket')}${tr('：',': ')}${p.jacket==='gatefold'?tr('双开','Gatefold'):tr('单开','Single')}</span></label>`);
+  p.sides.forEach((s,i)=>{if(!s.length)return;const n=Math.min(20,Math.max(...s));
+    params.push(`<label class="lib-item param"><input type="checkbox" data-param="tracks${i+1}" checked><span>${tr(`第 ${i+1} 张每面音轨`,`Disc ${i+1} tracks per side`)}${tr('：',': ')}${n}${new Set(s).size>1?`<div class="lib-meta">${tr(`各面曲目数 ${s.join(' / ')}，按最多的一面`,`Sides have ${s.join(' / ')} tracks; using the largest`)}</div>`:''}</span></label>`)});
+  const media=p.media.length?`<div class="lib-meta">${tr('盘面照片（需要自己裁成标签后上传）','Disc photos (crop to a label and upload yourself)')}</div><div class="lib-media">${p.media.slice(0,8).map(i=>`<a href="${i.image}" target="_blank" rel="noopener" title="${esc(i.comment||tr('盘面','Disc'))}"><span class="lib-cover" style="background-image:url('${thumbOf(i)}')"></span></a>`).join('')}</div>`:'';
+  libShow(`<div class="lib-head"><button class="chip" type="button" data-back="${libReleaseList.length>1?'releases':'groups'}">← ${tr('返回','Back')}</button><span>${esc(r.title)} · ${releaseMeta(r)}</span></div>
+    <div class="lib-pick">${rows.join('')}${params.join('')}</div>${media}
+    ${missing.length?`<p class="note">${tr(`这一版没有${missing.join('、')}图，保留现在的图，可以自己上传。`,`No ${missing.join(' or ').toLowerCase()} image for this release; the current one stays, and you can upload your own.`)}</p>`:''}
+    <div class="row" style="justify-content:flex-start"><button class="primary" type="button" data-apply>${tr('应用','Apply')}</button>
+    <a class="note" href="https://musicbrainz.org/release/${r.id}" target="_blank" rel="noopener">${tr('在 MusicBrainz 查看','View on MusicBrainz')}</a></div>`)}
+
+async function libApply(){const p=libPlan,v=$('lib-view'),btn=v.querySelector('[data-apply]'),turn=++libTurn;
+  const slots=[...v.querySelectorAll('[data-slot-pick]:checked')].map(x=>x.dataset.slotPick),on=k=>!!v.querySelector(`[data-param="${k}"]:checked`);
+  btn.disabled=true;libStatus(tr('正在下载图片…','Downloading images…'));
+  const failed=[];
+  await Promise.all(slots.map(async slot=>{const i=p.pick[slot];
+    for(const url of[i.thumbnails?.['1200'],i.thumbnails?.['500']||i.thumbnails?.large,i.image].filter(Boolean)){
+      try{const res=await fetch(url);if(!res.ok)continue;const blob=await res.blob();if(turn!==libTurn)return;
+        await setSlotImage(slot,await createImageBitmap(blob),i.thumbnails?.['250']||url,'fetched');
+        assetLog[slot]={source:'fetched',tool:'MusicBrainz + Cover Art Archive',note:`release ${p.release.id} · ${(i.types||[]).join('/')||'image'} ${i.id} · ${url}`};return}
+      catch(e){}}
+    failed.push(slot)}));
+  if(turn!==libTurn)return;
+  const spec={records:{}};
+  if(on('count'))spec.records.count=p.lps;
+  if(on('jacket'))spec.jacket={type:p.jacket};
+  p.sides.forEach((s,i)=>{if(s.length&&on('tracks'+(i+1)))spec.records['disc'+(i+1)]={tracks:Math.min(20,Math.max(...s))}});
+  if(slots.includes('sleeve')&&!failed.includes('sleeve'))spec.records.sleeve={on:true};
+  await applySpec(spec);
+  const names=Object.fromEntries(libSlots());
+  libStatus(failed.length?tr(`已应用。${failed.map(s=>names[s]).join('、')}图下载失败，保留原来的图。`,`Applied. Couldn’t download the ${failed.map(s=>names[s].toLowerCase()).join(', ')} image; the previous one stays.`):tr('已应用。','Applied.'));
+  btn.disabled=false}
 
 // ---------- Controls wiring ----------
 // Every control is registered against its state key, so syncUI() can redraw the whole panel from state
@@ -1329,7 +1498,7 @@ const CAMERA_VIEWS=['quarter','front','side'];
 // Per-slot production guide for agents preparing artwork: canvas size, physical size, what the viewer
 // actually sees, what covers it in the current scene, and whether the slot suits image generation,
 // typesetting or both. Computed from state, so Obi width, gatefold and 2LP are reflected.
-const ASSET_SOURCES=['user','generated','typeset','composite','sample'];
+const ASSET_SOURCES=['user','generated','typeset','composite','sample','fetched'];
 function slotGuide(){
   const mm=v=>Math.round(v*10*10)/10,obiMm=mm(state.obiWidth),depth=mm(jacketDepth()),{total}=obiLayout(),obiPx=Math.max(64,Math.round(2048*total/J.h));
   const obiFront=state.obiOn?[`Obi 盖住左侧 ${obiMm} mm`]:[],obiBack=state.obiOn?[`Obi 盖住右侧 ${obiMm} mm（从背后看）`]:[];
@@ -1364,6 +1533,7 @@ function specFromState(){
     else if(!maskById(state['pattern'+sx]))delete d.pattern}
   s.camera={view:state.view,zoom:state.camZoom,azimuth:state.camAz,elevation:state.camEl,panX:state.camPanX,panY:state.camPanY};
   s.output={background:state.bg==='transparent'?'transparent':state.bgColor,width:state.outW,height:state.outH};
+  if(Object.keys(assetLog).length)s.meta={assets:structuredClone(assetLog)};
   return s}
 function buildSchema(){
   const root={$schema:'https://json-schema.org/draft/2020-12/schema',title:'Record Mockup scene spec',
@@ -1387,7 +1557,7 @@ function buildSchema(){
     title:{type:'string',description:'这套模型图的名称'},
     assets:{type:'object',additionalProperties:false,description:'每张贴图的来源登记，键与 images 相同',
       properties:Object.fromEntries(Object.keys(IMAGE_SLOTS).map(k=>[k,{type:'object',required:['source'],additionalProperties:false,properties:{
-        source:{enum:ASSET_SOURCES,description:'user 用户提供，generated 生图模型生成，typeset 代码排版，composite 生成底图加排版，sample 工具示例图'},
+        source:{enum:ASSET_SOURCES,description:'user 用户提供，generated 生图模型生成，typeset 代码排版，composite 生成底图加排版，sample 工具示例图，fetched 从曲库（MusicBrainz / Cover Art Archive）取得的真实发行素材'},
         tool:{type:'string',description:'使用的模型或脚本'},prompt:{type:'string',description:'生图提示词'},note:{type:'string'}}}]))}}};
   root.properties.output={type:'object',additionalProperties:false,properties:{
     background:{type:'string',default:'transparent',description:'"transparent" 为透明背景，或 #rrggbb 纯色'},
@@ -1497,7 +1667,8 @@ const fontsSettled=(document.fonts?.ready??Promise.resolve()).then(redrawSamples
 $('lang-btn').addEventListener('click',()=>{lang=lang==='en'?'zh':'en';try{localStorage.setItem('gm-lang',lang)}catch(e){}
   translateStatic();$('jacket-spec').textContent=specText();if(!userFontFace)$('num-font-custom').textContent=tr('自定义（未上传）','Custom (none uploaded)');
   else $('num-font-custom').textContent=$('num-font-custom').textContent.replace(/^(自定义|Custom) · /,tr('自定义 · ','Custom · '));redrawSamples();
-  for(const s of['','2'])buildPicker(s);syncPatterns()});
+  for(const s of['','2'])buildPicker(s);syncPatterns();
+  for(const t of document.querySelectorAll('.tag.lib'))t.textContent=tr('曲库','Library');if($('lib-view').innerHTML)libView?.()});
 const nextFrame=()=>new Promise(r=>requestAnimationFrame(()=>r()));
 const ready=fontsSettled.then(nextFrame).then(nextFrame);
 const toDataUrl=blob=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>rej(r.error);r.readAsDataURL(blob)});
