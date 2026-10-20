@@ -4,7 +4,7 @@
 
 Record Mockup 用来渲染接近实拍效果的**黑胶唱片 3D 模型图**，支持单开封套、双开封套、2LP、塑封膜、hype sticker、Obi 侧标和限量编号。你可以在浏览器里手动调整出图，也可以写一份 JSON 场景描述（spec），交给命令行工具出图。这条命令行链路也适合 Codex、Claude Code 等 AI agent 操作。
 
-**[在浏览器里直接试用 →](https://oceanjustinlin.github.io/record-mockup/)** 无需安装或注册，素材不会离开你的电脑。
+**[在浏览器里直接试用 →](https://recordmockup.com/)** 无需安装或注册，素材不会离开你的电脑。
 
 ![2LP 黑胶模型图：套着塑封膜，有首版贴纸、Obi 侧标和烫金编号，一张黑胶、一张红胶从内袋抽出](docs/images/hero.jpg)
 
@@ -139,7 +139,7 @@ node cli/record-mockup.mjs init -o output/spec.json
 
 ## 浏览器页面与网络依赖
 
-在线版本：<https://oceanjustinlin.github.io/record-mockup/>。每次推送到 `main` 且改动了页面时，`.github/workflows/pages.yml` 会运行 `node site/build.mjs` 自动发布。构建脚本会补上完整的网页头部、搜索与分享元信息、网站图标、robots.txt 和 sitemap。
+在线版本：<https://recordmockup.com/>。每次推送到 `main` 且改动了页面时，`.github/workflows/pages.yml` 会运行 `node site/build.mjs` 自动发布。构建脚本会补上完整的网页头部、搜索与分享元信息、网站图标、robots.txt 和 sitemap。
 
 本地运行时，可以用静态服务器打开页面，例如在项目根目录执行：
 

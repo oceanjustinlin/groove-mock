@@ -9,7 +9,7 @@ import {fileURLToPath} from 'node:url';
 
 const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const OUT = path.join(ROOT, '_site');
-const SITE_URL = (process.env.SITE_URL || 'https://oceanjustinlin.github.io/record-mockup/').replace(/\/?$/, '/');
+const SITE_URL = (process.env.SITE_URL || 'https://recordmockup.com/').replace(/\/?$/, '/');
 const REPO_URL = 'https://github.com/oceanjustinlin/record-mockup';
 
 const TITLE = 'Record Mockup — 3D Vinyl & LP Mockup Generator';

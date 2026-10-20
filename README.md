@@ -4,7 +4,7 @@
 
 Record Mockup renders photorealistic **3D vinyl record mockups**: LP jackets, gatefolds, 2LP sets, shrink wrap, hype stickers, obi strips and limited-edition numbers. Use it in the browser to build a release visual by hand, or drive the same renderer from a JSON scene spec through a CLI that AI coding agents can operate.
 
-**[Try it in your browser →](https://oceanjustinlin.github.io/record-mockup/)** No install or sign-up needed; your artwork never leaves your machine.
+**[Try it in your browser →](https://recordmockup.com/)** No install or sign-up needed; your artwork never leaves your machine.
 
 ![3D vinyl mockup of a 2LP release in shrink wrap with a hype sticker, obi strip, foil edition number, black and red vinyl pulled from inner sleeves](docs/images/hero.jpg)
 
@@ -133,7 +133,7 @@ Record Mockup never generates a real release's front cover, and generated compan
 
 ## Browser editor and network use
 
-The editor is published at <https://oceanjustinlin.github.io/record-mockup/> on every push to `main` that touches the page (`.github/workflows/pages.yml` runs `node site/build.mjs`, which adds the document head, search and sharing metadata, favicon, robots.txt and sitemap).
+The editor is published at <https://recordmockup.com/> on every push to `main` that touches the page (`.github/workflows/pages.yml` runs `node site/build.mjs`, which adds the document head, search and sharing metadata, favicon, robots.txt and sitemap).
 
 To run it locally, serve the page, for example from the project root:
 
