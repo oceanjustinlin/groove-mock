@@ -42,7 +42,13 @@ button,input,select{font:inherit;color:inherit}
 .primary{background:var(--accent);color:var(--accent-ink);border:0;border-radius:8px;padding:8px 16px;font-weight:700;cursor:pointer}
 .primary:disabled{opacity:.6;cursor:progress}
 
-.work{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:12px;min-height:0}
+.work{display:grid;grid-template-columns:minmax(0,1fr) 12px var(--panel-w,340px);min-height:0}
+/* Drag handle between stage and panel; the 12px column is the old gap, the line shows on hover and drag. */
+.splitter{cursor:col-resize;touch-action:none;position:relative;outline-offset:-2px}
+.splitter::after{content:"";position:absolute;top:50%;left:50%;width:4px;height:40px;transform:translate(-50%,-50%);border-radius:2px;background:var(--line);transition:background .15s,height .15s}
+.splitter:hover::after,.splitter.dragging::after,.splitter:focus-visible::after{background:var(--accent);height:72px}
+body.resizing{cursor:col-resize;user-select:none}
+body.resizing .stage canvas{pointer-events:none}
 .stage{position:relative;border-radius:12px;overflow:hidden;background:var(--stage);min-height:0}
 .stage.transparent{background-color:var(--stage);background-image:conic-gradient(var(--check) 25%,transparent 0 50%,var(--check) 0 75%,transparent 0);background-size:24px 24px}
 .stage canvas{display:block;width:100%;height:100%;touch-action:none}
@@ -65,7 +71,7 @@ button,input,select{font:inherit;color:inherit}
 .assets[data-open="false"] .picker-toggle small{display:none}
 .picker-toggle .chev{width:16px;height:16px;margin-left:auto;transition:transform .15s}
 .assets[data-open="true"] .chev{transform:rotate(180deg)}
-.picker-body{padding:0 12px 12px;overflow:auto;min-height:0;display:grid;gap:10px;align-content:start}
+.picker-body{padding:12px;border-top:1px solid var(--line);overflow:auto;min-height:0;display:grid;gap:10px;align-content:start}
 .assets .lib-list,.assets .lib-gallery{max-height:none;overflow:visible}
 .group{padding:14px 16px;border-bottom:1px solid var(--line);display:grid;gap:10px}
 .group:last-child{border-bottom:0}
@@ -145,7 +151,8 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
 @media (max-width:860px){
   html,body{height:auto}
   .app{height:auto;grid-template-rows:auto auto}
-  .work{grid-template-columns:minmax(0,1fr)}
+  .work{grid-template-columns:minmax(0,1fr);gap:12px}
+  .splitter{display:none}
   .stage{height:62vh;min-height:360px}
   .panel{overflow:visible;grid-template-columns:minmax(0,1fr)}
   .rail{flex-direction:row;border-right:0;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:1;background:var(--surface);border-radius:12px 12px 0 0;overflow-x:auto}
@@ -188,8 +195,8 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
         </section>
       </div>
     </main>
-
-    <aside class="panel" aria-label="设置">
+    <div class="splitter" id="splitter" role="separator" aria-orientation="vertical" aria-label="调整设置面板宽度" aria-controls="panel" tabindex="0"></div>
+    <aside class="panel" id="panel" aria-label="设置">
       <nav class="rail" role="tablist" aria-label="设置分页" aria-orientation="vertical">
         <button role="tab" id="tab-jacket" data-page="jacket" aria-controls="page-jacket" aria-selected="false" tabindex="-1"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="1.5"/><path d="M4 8h16"/></svg>封套</button>
         <button role="tab" id="tab-records" data-page="records" aria-controls="page-records" aria-selected="false" tabindex="-1"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2.5"/></svg>唱片</button>
@@ -458,7 +465,7 @@ const EN={
   '正在准备工作台…':'Setting up the workbench…','无法启动 3D 预览':'Can’t start the 3D preview',
   '请使用支持 WebGL 2 的最新版浏览器，并开启硬件加速。':'Use an up-to-date browser with WebGL 2 and hardware acceleration turned on.',
   '拖动旋转 · 滚轮缩放 · 右键拖动平移':'Drag to rotate · Scroll to zoom · Right-drag to pan',
-  '素材':'Assets','设置分页':'Settings sections','唱片':'Records','插页':'Insert','包装':'Packaging',
+  '调整设置面板宽度':'Resize settings panel','素材':'Assets','设置分页':'Settings sections','唱片':'Records','插页':'Insert','包装':'Packaging',
   '曲库':'Record library','曲库搜索':'Record library search','艺人':'Artist','专辑名':'Album','搜索':'Search',
   '搜到专辑后选一个黑胶版本，再给每张图选用途。图片版权归原权利方，仅供预览。':'Find an album, pick a vinyl release, then choose where each image goes. Images belong to their rights holders and are for preview only.',
   '设置':'Settings','封套':'Jacket','类型':'Type','单开':'Single','双开':'Gatefold','示例':'Sample',
@@ -1200,6 +1207,24 @@ function setPicker(open,focus){$('picker').dataset.open=open;$('picker-toggle').
   try{localStorage.setItem('gm-picker',open?'1':'0')}catch(e){}if(open&&focus)$('lib-artist').focus()}
 $('picker-toggle').addEventListener('click',()=>setPicker($('picker').dataset.open!=='true',true));
 setPicker((()=>{try{return localStorage.getItem('gm-picker')==='1'}catch(e){return false}})());
+// Panel width: drag the splitter, arrow keys nudge it, double-click goes back to 340px. Remembered per viewer.
+const PANEL_W={min:300,max:640,def:340};
+const panelMax=()=>Math.max(PANEL_W.min,Math.min(PANEL_W.max,Math.round(document.querySelector('.work').clientWidth*.5)));
+function setPanelWidth(w,save=true){w=Math.round(Math.min(panelMax(),Math.max(PANEL_W.min,w)));
+  document.querySelector('.work').style.setProperty('--panel-w',w+'px');
+  const sp=$('splitter');sp.setAttribute('aria-valuenow',w);sp.setAttribute('aria-valuemin',PANEL_W.min);sp.setAttribute('aria-valuemax',panelMax());
+  if(save)try{localStorage.setItem('gm-panel-w',w)}catch(e){}}
+{const sp=$('splitter'),panel=$('panel');
+  sp.addEventListener('pointerdown',e=>{if(e.button!==0)return;e.preventDefault();sp.setPointerCapture(e.pointerId);sp.classList.add('dragging');document.body.classList.add('resizing')});
+  sp.addEventListener('pointermove',e=>{if(!sp.hasPointerCapture(e.pointerId))return;setPanelWidth(panel.getBoundingClientRect().right-e.clientX,false)});
+  const end=e=>{if(!sp.classList.contains('dragging'))return;sp.classList.remove('dragging');document.body.classList.remove('resizing');setPanelWidth(panel.getBoundingClientRect().width)};
+  sp.addEventListener('pointerup',end);sp.addEventListener('pointercancel',end);
+  sp.addEventListener('dblclick',()=>setPanelWidth(PANEL_W.def));
+  sp.addEventListener('keydown',e=>{const d={ArrowLeft:16,ArrowRight:-16}[e.key];if(e.key==='Home'||e.key==='End'){e.preventDefault();setPanelWidth(e.key==='Home'?PANEL_W.max:PANEL_W.min)}
+    else if(d){e.preventDefault();setPanelWidth(panel.getBoundingClientRect().width+d*(e.shiftKey?4:1))}});
+  setPanelWidth(+((()=>{try{return localStorage.getItem('gm-panel-w')}catch(e){}})()||PANEL_W.def),false);
+  // A narrower window can't keep a wide panel; re-clamp without overwriting the saved width.
+  addEventListener('resize',()=>{const w=+(()=>{try{return localStorage.getItem('gm-panel-w')}catch(e){}})()||PANEL_W.def;setPanelWidth(w,false)})}
 // Bring up the page that holds a slot, so a library pick lands where the viewer can see it.
 const pageOfSlot=slot=>document.querySelector(`[data-slot="${slot}"]`)?.closest('.page')?.dataset.page;
 
