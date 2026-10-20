@@ -2126,6 +2126,33 @@ function fitClipCamera(){
   const target=c.clone().add(new THREE.Vector3(state.camPanX/10,state.camPanY/10,0));
   controls.target.copy(target);camera.position.copy(target).addScaledVector(d,dist/state.camZoom);camera.lookAt(target);
   return{pivot,reach:reach+5}}
+// GIF workers. gifenc's source is fetched by the page (so the CLI can serve it locally) and handed to each
+// worker as a blob module; a worker quantizes the palette or encodes one frame as a standalone chunk
+// (gifenc's manual mode), which the page then joins in order between the GIF header and trailer.
+const GIF_WORKER=lib=>`import {GIFEncoder,quantize,applyPalette} from '${lib}';
+onmessage=({data:m})=>{try{
+  if(m.type==='palette'){postMessage({id:m.id,result:quantize(m.rgba,256)});return}
+  const enc=GIFEncoder({auto:false});
+  enc.writeFrame(applyPalette(m.rgba,m.palette),m.w,m.h,{first:m.first,palette:m.first?m.palette:null,delay:m.delay,repeat:0});
+  const bytes=enc.bytes();postMessage({id:m.id,result:bytes},[bytes.buffer])}
+  catch(e){postMessage({id:m.id,error:String(e&&e.message||e)})}}`;
+async function gifPool(){
+  const lib=URL.createObjectURL(new Blob([await (await fetch(GIFENC_URL)).text()],{type:'text/javascript'}));
+  const code=URL.createObjectURL(new Blob([GIF_WORKER(lib)],{type:'text/javascript'}));
+  const size=Math.max(1,Math.min(4,(navigator.hardwareConcurrency||2)-1)),idle=[],queue=[],waiting=new Map();let next=0,failure=null;
+  const fail=e=>{failure=e;for(const{reject}of waiting.values())reject(e);waiting.clear()};
+  const pump=()=>{while(idle.length&&queue.length){const wk=idle.pop(),{msg,transfer,resolve,reject}=queue.shift(),id=next++;
+    waiting.set(id,{resolve,reject,wk});wk.postMessage({...msg,id},transfer)}};
+  const workers=Array.from({length:size},()=>{const wk=new Worker(code,{type:'module'});
+    wk.onmessage=({data})=>{const job=waiting.get(data.id);waiting.delete(data.id);idle.push(wk);
+      if(data.error)job.reject(new Error(`GIF 编码失败：${data.error}`));else job.resolve(data.result);pump()};
+    wk.onerror=e=>{e.preventDefault();fail(new Error(`GIF 编码线程出错：${e.message||'无法启动'}`))};
+    idle.push(wk);return wk});
+  return{size,
+    run:(msg,transfer=[])=>failure?Promise.reject(failure):new Promise((resolve,reject)=>{queue.push({msg,transfer,resolve,reject});pump()}),
+    close(){for(const wk of workers)wk.terminate();URL.revokeObjectURL(lib);URL.revokeObjectURL(code)}}}
+// Yields to the event loop without timer throttling, so a background tab keeps exporting.
+const yieldTask=()=>new Promise(r=>{const c=new MessageChannel();c.port1.onmessage=()=>r();c.port2.postMessage(0)});
 // encoder: 'software' starts at once; 'hardware' is faster per frame but its first use in a browser can stall
 // for many seconds (macOS headless: ~18 s); 'auto' leaves the choice to the browser.
 const ENCODERS={auto:'no-preference',software:'prefer-software',hardware:'prefer-hardware'};
@@ -2205,15 +2232,24 @@ async function renderAnimation(format,{onProgress=()=>{},encoder='auto',signal}=
       catch(e){await output.cancel();throw e}
       await output.finalize();bytes=new Uint8Array(output.target.buffer);
     }else{
-      const {GIFEncoder,quantize,applyPalette}=await import(GIFENC_URL);
       const cv=canvas(w,h),g=cv.getContext('2d',{willReadFrequently:true}),grab=()=>{g.drawImage(renderer.domElement,0,0);return g.getImageData(0,0,w,h).data};
-      // One palette for the whole clip, sampled from frames spread across the loop, so colours don't flicker.
-      const picks=8,stride=4,sample=new Uint8Array(Math.ceil(w*h/stride)*4*picks);let n=0;
-      for(let k=0;k<picks;k++){draw(Math.floor(k*frames/picks));const px=grab();for(let j=0;j<px.length;j+=4*stride){sample.set(px.subarray(j,j+4),n);n+=4}}
-      const palette=quantize(sample.subarray(0,n),256),gif=GIFEncoder(),delay=Math.round(100/fps)*10;
-      for(let i=0;i<frames;i++){signal?.throwIfAborted();draw(i);gif.writeFrame(applyPalette(grab(),palette),w,h,i===0?{palette,delay,repeat:0}:{delay});
-        onProgress(i+1,frames);if(i%8===7)await nextFrame()}
-      gif.finish();bytes=gif.bytes();
+      const pool=await gifPool();
+      try{
+        // One palette for the whole clip, sampled from frames spread across the loop, so colours don't flicker.
+        const picks=8,stride=4,sample=new Uint8Array(Math.ceil(w*h/stride)*4*picks);let n=0;
+        for(let k=0;k<picks;k++){draw(Math.floor(k*frames/picks));const px=grab();for(let j=0;j<px.length;j+=4*stride){sample.set(px.subarray(j,j+4),n);n+=4}}
+        const palette=await pool.run({type:'palette',rgba:sample.subarray(0,n)}),delay=Math.round(100/fps)*10;
+        // The main thread only draws and reads pixels; workers map them to the palette and LZW-encode each frame
+        // on its own. A few frames stay in flight, so memory stays flat however long the clip is.
+        const chunks=new Array(frames),inFlight=new Set();let done=0;
+        for(let i=0;i<frames;i++){signal?.throwIfAborted();draw(i);const rgba=grab();
+          const job=pool.run({type:'frame',rgba,palette,w,h,delay,first:i===0},[rgba.buffer]).then(b=>{chunks[i]=b;onProgress(++done,frames)});
+          inFlight.add(job);job.then(()=>inFlight.delete(job),()=>{});   // failures surface through race / all
+          if(inFlight.size>=2*pool.size)await Promise.race(inFlight);else await yieldTask()}
+        await Promise.all(inFlight);
+        const header=new TextEncoder().encode('GIF89a'),total=chunks.reduce((t,c)=>t+c.length,header.length+1);
+        bytes=new Uint8Array(total);bytes.set(header);let at=header.length;for(const c of chunks){bytes.set(c,at);at+=c.length}bytes[at]=0x3b;   // trailer
+      }finally{pool.close()}
     }
     const real=format==='gif'?100/Math.round(100/fps):fps;   // GIF delays count in 1/100 s
     return{format,width:w,height:h,fps:Math.round(real*100)/100,frames,duration:Math.round(frames/real*100)/100,bytes,warnings}
