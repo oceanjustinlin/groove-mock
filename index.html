@@ -35,6 +35,10 @@ button,input,select{font:inherit;color:inherit}
 .brand h1{margin:0;white-space:nowrap;font-family:var(--font-display);font-stretch:78%;font-weight:800;font-size:24px;letter-spacing:.01em;line-height:1}
 .spec{font-family:var(--font-mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
 .views{display:flex;gap:4px}
+.play{display:inline-grid;place-items:center;width:30px;padding:5px 0}
+.play svg{width:14px;height:14px;fill:currentColor}
+.play .i-pause,.play[aria-pressed="true"] .i-play{display:none}
+.play[aria-pressed="true"] .i-pause{display:block}
 .chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;cursor:pointer;font-size:13px}
 .chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .gh{display:inline-grid;place-items:center;width:30px;height:30px;padding:0;color:var(--ink)}
@@ -193,6 +197,8 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
       <button class="chip" data-view="quarter" aria-pressed="true">斜侧</button>
       <button class="chip" data-view="front" aria-pressed="false">正面</button>
       <button class="chip" data-view="side" aria-pressed="false">侧面</button>
+      <button class="chip play" id="play-btn" aria-pressed="false"><svg class="i-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9.5-5.5z"/></svg><svg class="i-pause" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 2.5h3v11h-3zM9.5 2.5h3v11h-3z"/></svg></button>
+      <button class="chip" id="play-reset" hidden>复位</button>
     </div>
     <a class="chip gh" href="https://github.com/oceanjustinlin/record-mockup" target="_blank" rel="noopener" title="源码、命令行和 Agent 用法" aria-label="源码、命令行和 Agent 用法（GitHub）"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
     <button class="chip" id="lang-btn" lang="en" aria-label="Switch language">EN</button>
@@ -448,6 +454,18 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
             </div>
             <p class="note">图片只在你的浏览器里处理，不会上传。</p>
           </section>
+          <section class="group">
+            <h2>旋转动画</h2>
+            <div class="row"><span class="lbl">轨迹</span>
+              <div class="seg" id="anim-preset"><button data-v="turntable" aria-pressed="true">转台</button><button data-v="swing" aria-pressed="false">摆动</button></div>
+            </div>
+            <div class="row"><span class="lbl">方向</span>
+              <div class="seg" id="anim-dir"><button data-v="left" aria-pressed="true">向左</button><button data-v="right" aria-pressed="false">向右</button></div>
+            </div>
+            <div class="slider"><label for="anim-duration">一圈时长</label><input type="range" id="anim-duration" min="1" max="30" value="6"><output id="anim-duration-v">6 s</output></div>
+            <div class="slider" id="anim-angle-row" hidden><label for="anim-angle">摆幅</label><input type="range" id="anim-angle" min="5" max="90" value="25"><output id="anim-angle-v">25°</output></div>
+            <p class="note">点视角旁的 ▶ 在工作台预览。转台会转到背面，没有背面图时用摆动。</p>
+          </section>
         </div>
       </div>
     </aside>
@@ -523,6 +541,8 @@ const EN={
   '图片只在你的浏览器里处理，不会上传。':'Images are processed in your browser and never uploaded.',
   'PNG 已生成':'PNG ready','导出的模型图':'Exported mockup','如果点"下载"没有反应，请右键（手机长按）图片另存。':'If Download does nothing, right-click (long-press on phones) the image and save it.',
   '下载':'Download','关闭':'Close',
+  '复位':'Reset','旋转动画':'Turn animation','轨迹':'Motion','转台':'Turntable','摆动':'Swing','方向':'Direction','向左':'Left','向右':'Right','一圈时长':'Loop length','摆幅':'Swing angle',
+  '点视角旁的 ▶ 在工作台预览。转台会转到背面，没有背面图时用摆动。':'Press ▶ next to the views to preview on the stage. Turntable shows the back; use Swing if there is no back artwork.',
   '源码、命令行和 Agent 用法':'Source, CLI and agent usage','源码、命令行和 Agent 用法（GitHub）':'Source, CLI and agent usage (GitHub)'};
 const LANGS=['zh','en'];
 let lang=(()=>{const q=new URLSearchParams(location.search).get('lang');if(LANGS.includes(q))return q;
@@ -1175,7 +1195,8 @@ function setView(name){userMoved=false;const v=VIEWS[name],half=Math.tan(THREE.M
   const reach=isGate()?Math.max(0,-J.w*Math.cos(THREE.MathUtils.degToRad(state.gateOpen))):0,t=[v.t[0]-reach/2,v.t[1],v.t[2]];
   const dist=Math.max(v.fit[1]/(2*half),(v.fit[0]+reach)/(2*half*camera.aspect)),dir=new THREE.Vector3(...v.dir).normalize().multiplyScalar(dist);
   controls.target.set(...t);camera.position.set(t[0]+dir.x,t[1]+dir.y,t[2]+dir.z);controls.update();state.view=name;
-  for(const b of document.querySelectorAll('[data-view]'))b.setAttribute('aria-pressed',b.dataset.view===name)}
+  for(const b of document.querySelectorAll('[data-view]'))b.setAttribute('aria-pressed',b.dataset.view===name);
+  if(previewTurned())fitPreview()}
 
 // ---------- Resize / loop ----------
 // Re-frame on resize until the viewer moves the camera themselves.
@@ -1183,7 +1204,14 @@ let userMoved=false;controls.addEventListener('start',()=>{userMoved=true});
 function resize(){const w=stage.clientWidth,h=stage.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();if(!userMoved)setView(state.view)}
 function applyBg(){stage.classList.toggle('transparent',state.bg==='transparent');scene.background=state.bg==='color'?new THREE.Color(state.bgColor):null;stage.style.backgroundColor=state.bg==='color'?state.bgColor:''}
 let first=true;
-const loop=()=>{controls.update();renderer.render(scene,camera);if(first){first=false;$('loading').hidden=true}};
+// Stage preview of spec.animation: phase is the loop position in [0, 1); paused keeps the turned pose.
+const preview={playing:false,phase:0,last:0};
+const previewTurned=()=>preview.playing||preview.phase>0;
+const SHADOW_BOX=(({left,right,top,bottom})=>({left,right,top,bottom}))(key.shadow.camera);
+const loop=now=>{controls.update();
+  if(preview.playing){preview.phase=(preview.phase+Math.min(.1,(now-preview.last)/1000)/state.animDuration)%1;preview.last=now}
+  if(previewTurned())renderTurned(animAngle(preview.phase),productBox(productParts()).getCenter(new THREE.Vector3()));else renderer.render(scene,camera);
+  if(first){first=false;$('loading').hidden=true}};
 renderer.setAnimationLoop(loop);
 
 // ---------- Texture swapping ----------
@@ -1608,7 +1636,7 @@ async function libApply(){const p=libPlan,v=$('lib-view'),btn=v.querySelector('[
 // Every control is registered against its state key, so syncUI() can redraw the whole panel from state
 // after a spec is applied through window.recordMockup.
 const CONTROLS=[];
-const UNITS={pct:{toState:v=>v/100,toUI:v=>Math.round(v*100),fmt:v=>v+'%'},mm:{toState:v=>v/10,toUI:v=>Math.round(v*10),fmt:v=>v+' mm'},deg:{toState:v=>v,toUI:v=>Math.round(v),fmt:v=>v+'°'},count:{toState:v=>v,toUI:v=>Math.round(v),fmt:v=>String(v)}};
+const UNITS={pct:{toState:v=>v/100,toUI:v=>Math.round(v*100),fmt:v=>v+'%'},mm:{toState:v=>v/10,toUI:v=>Math.round(v*10),fmt:v=>v+' mm'},deg:{toState:v=>v,toUI:v=>Math.round(v),fmt:v=>v+'°'},count:{toState:v=>v,toUI:v=>Math.round(v),fmt:v=>String(v)},sec:{toState:v=>v,toUI:v=>Math.round(v),fmt:v=>v+' s'}};
 function seg(id,key,after){CONTROLS.push({kind:'seg',id,key});const root=$(id);root.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;state[key]=isNaN(+b.dataset.v)?b.dataset.v:+b.dataset.v;for(const x of root.children)x.setAttribute('aria-pressed',x===b);after?.()})}
 function slider(id,key,unit,after=pose){CONTROLS.push({kind:'slider',id,key,unit});const el=$(id),out=$(id+'-v'),u=UNITS[unit];const f=()=>{state[key]=u.toState(+el.value);out.textContent=u.fmt(+el.value);after()};el.addEventListener('input',f);f()}
 function toggle(id,key,sub,after=pose){CONTROLS.push({kind:'toggle',id,key,sub});$(id).addEventListener('change',e=>{state[key]=e.target.checked;if(sub)$(sub).hidden=!state[key];after()})}
@@ -1619,7 +1647,7 @@ function syncUI(){
     else if(c.kind==='slider'){const u=UNITS[c.unit],x=u.toUI(v);el.value=x;$(c.id+'-v').textContent=u.fmt(x)}
     else if(c.kind==='toggle'){el.checked=!!v;if(c.sub)$(c.sub).hidden=!v}
     else el.value=v}
-  $('lp2-sub').hidden=state.lpCount!==2;$('vinyl-same').checked=state.vinylSame;$('vinyl2-own').hidden=state.vinylSame;$('gate-sub').hidden=!isGate();$('jacket-spec').textContent=specText();
+  $('lp2-sub').hidden=state.lpCount!==2;$('vinyl-same').checked=state.vinylSame;$('vinyl2-own').hidden=state.vinylSame;$('gate-sub').hidden=!isGate();$('jacket-spec').textContent=specText();$('anim-angle-row').hidden=state.animPreset!=='swing';
   for(const b of document.querySelectorAll('[data-view]'))b.setAttribute('aria-pressed',b.dataset.view===state.view);
   syncPatterns()}
 
@@ -1747,7 +1775,7 @@ let lastUrl;
 $('export-btn').addEventListener('click',async()=>{
   const btn=$('export-btn');btn.disabled=true;btn.textContent=tr('生成中…','Rendering…');
   try{const w=stage.clientWidth,h=stage.clientHeight,k=Math.min(state.scale,4096/Math.max(w,h)),tw=Math.round(w*k),th=Math.round(h*k);
-    renderer.setPixelRatio(1);renderer.setSize(tw,th,false);camera.aspect=tw/th;camera.updateProjectionMatrix();renderer.render(scene,camera);
+    renderer.setPixelRatio(1);renderer.setSize(tw,th,false);camera.aspect=tw/th;camera.updateProjectionMatrix();renderStage();
     const blob=await new Promise((res,rej)=>renderer.domElement.toBlob(b=>b?res(b):rej(new Error('toBlob')),'image/png'));
     if(lastUrl)URL.revokeObjectURL(lastUrl);lastUrl=URL.createObjectURL(blob);
     $('modal-title').textContent=tr('PNG 已生成','PNG ready');$('modal-img').hidden=false;$('modal-dl').hidden=false;
@@ -2014,7 +2042,7 @@ function animSettings(format){
 // Turn of the product (radians about the vertical axis) at loop phase u in [0, 1).
 function animAngle(u){const s=state.animDir==='left'?-1:1;
   return state.animPreset==='swing'?s*THREE.MathUtils.degToRad(state.animAngle)*Math.sin(2*Math.PI*u):s*2*Math.PI*u}
-const productParts=()=>scene.children.filter(o=>o.visible&&!o.isLight&&o!==ground);
+function productParts(){return scene.children.filter(o=>o.visible&&!o.isLight&&o!==ground)}
 function productBox(parts){
   scene.updateMatrixWorld();const box=new THREE.Box3(),b=new THREE.Box3();
   for(const p of parts)p.traverseVisible(m=>{if(!m.geometry)return;m.geometry.boundingBox||m.geometry.computeBoundingBox();box.union(b.copy(m.geometry.boundingBox).applyMatrix4(m.matrixWorld))});
@@ -2035,24 +2063,44 @@ function fitTurningCamera(box,angles){
 // encoder: 'software' starts at once; 'hardware' is faster per frame but its first use in a browser can stall
 // for many seconds (macOS headless: ~18 s); 'auto' leaves the choice to the browser.
 const ENCODERS={auto:'no-preference',software:'prefer-software',hardware:'prefer-hardware'};
+// Draws the scene with the product turned by angle about the vertical axis through c, then puts it back,
+// so pose() and the panel never see a turned product.
+function renderTurned(angle,c){
+  if(!angle){renderer.render(scene,camera);return}
+  const parts=productParts(),saved=parts.map(o=>[o.position.clone(),o.quaternion.clone()]),turn=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),angle);
+  for(const o of parts){o.position.sub(c).applyQuaternion(turn).add(c);o.quaternion.premultiply(turn)}
+  try{renderer.render(scene,camera)}finally{parts.forEach((o,i)=>{o.position.copy(saved[i][0]);o.quaternion.copy(saved[i][1])})}}
+function renderStage(){if(previewTurned())renderTurned(animAngle(preview.phase),productBox(productParts()).getCenter(new THREE.Vector3()));else renderer.render(scene,camera)}
+// The key light's shadow box must cover the product at every turn, not only facing front; 0 restores it.
+function shadowReach(r){const sh=key.shadow.camera;Object.assign(sh,r?{left:-r,right:r,top:r,bottom:-r}:SHADOW_BOX);sh.updateProjectionMatrix()}
+function turnReach(box,c){return box.getBoundingSphere(new THREE.Sphere()).radius+c.length()+5}
+function fitPreview(){const box=productBox(productParts()),c=fitTurningCamera(box,Array.from({length:72},(_,i)=>animAngle(i/72)));shadowReach(turnReach(box,c))}
+function setPlaying(on){
+  preview.playing=on;if(on){preview.last=performance.now();fitPreview()}
+  const b=$('play-btn'),label=on?tr('暂停','Pause'):tr('播放旋转','Play turn');b.setAttribute('aria-pressed',on);b.setAttribute('aria-label',label);b.title=label;
+  $('play-reset').hidden=on||preview.phase===0}
+function resetPreview(){preview.playing=false;preview.phase=0;shadowReach(0);setPlaying(false);setView(state.view)}
+$('play-btn').addEventListener('click',()=>setPlaying(!preview.playing));
+$('play-reset').addEventListener('click',resetPreview);
+setPlaying(false);
+const refitPreview=()=>{$('anim-angle-row').hidden=state.animPreset!=='swing';if(previewTurned())fitPreview()};
+seg('anim-preset','animPreset',refitPreview);seg('anim-dir','animDir',refitPreview);
+slider('anim-duration','animDuration','sec',()=>{});slider('anim-angle','animAngle','deg',refitPreview);
+
 async function renderAnimation(format,{onProgress=()=>{},encoder='auto'}={}){
   if(!(encoder in ENCODERS))throw new Error(`不支持的编码方式 ${encoder}，可选：${Object.keys(ENCODERS).join(' / ')}`);
   if(!VIDEO_FORMATS.includes(format))throw new Error(`不支持的格式 ${format}，可选：${VIDEO_FORMATS.join(' / ')}`);
   const warnings=[],{fps,width:w,height:h,frames}=animSettings(format),phases=Array.from({length:frames},(_,i)=>i/frames),angles=phases.map(animAngle);
   if(state.bg==='transparent')warnings.push(`视频不支持透明背景，已改用纯色 ${state.bgColor}（output.background 可指定颜色）`);
   if(format==='gif'&&fps>50)warnings.push('GIF 帧率超过 50 时，多数播放器会放慢播放');
-  const parts=productParts(),saved=parts.map(o=>[o,o.position.clone(),o.quaternion.clone()]);
-  const cam={pos:camera.position.clone(),target:controls.target.clone()},sh=key.shadow.camera,shadow={l:sh.left,r:sh.right,t:sh.top,b:sh.bottom};
+  const parts=productParts(),cam={pos:camera.position.clone(),target:controls.target.clone()};
   renderer.setAnimationLoop(null);
   try{
     renderer.setPixelRatio(1);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();
     scene.background=new THREE.Color(state.bgColor);
     const box=productBox(parts),c=fitTurningCamera(box,angles);
-    // The key light's shadow box must cover the product at every turn, not only facing front.
-    const reach=box.getBoundingSphere(new THREE.Sphere()).radius+c.length()+5;
-    Object.assign(sh,{left:-reach,right:reach,top:reach,bottom:-reach});sh.updateProjectionMatrix();
-    const turn=new THREE.Quaternion(),axis=new THREE.Vector3(0,1,0);
-    const turnTo=a=>{turn.setFromAxisAngle(axis,a);for(const[o,p,q]of saved){o.position.copy(p).sub(c).applyQuaternion(turn).add(c);o.quaternion.copy(turn).multiply(q)}renderer.render(scene,camera)};
+    shadowReach(turnReach(box,c));
+    const turnTo=a=>renderTurned(a,c);
     let bytes;
     if(format==='mp4'){
       const mb=await import(MEDIABUNNY_URL);
@@ -2082,8 +2130,7 @@ async function renderAnimation(format,{onProgress=()=>{},encoder='auto'}={}){
     const real=format==='gif'?100/Math.round(100/fps):fps;   // GIF delays count in 1/100 s
     return{format,width:w,height:h,fps:Math.round(real*100)/100,frames,duration:Math.round(frames/real*100)/100,bytes,warnings}
   }finally{
-    for(const[o,p,q]of saved){o.position.copy(p);o.quaternion.copy(q)}
-    Object.assign(sh,{left:shadow.l,right:shadow.r,top:shadow.t,bottom:shadow.b});sh.updateProjectionMatrix();
+    if(previewTurned())fitPreview();else shadowReach(0);
     camera.position.copy(cam.pos);controls.target.copy(cam.target);applyBg();
     renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));resize();renderer.setAnimationLoop(loop)}}
 
@@ -2104,6 +2151,8 @@ $('lang-btn').addEventListener('click',()=>{lang=lang==='en'?'zh':'en';try{local
   else $('num-font-custom').textContent=$('num-font-custom').textContent.replace(/^(自定义|Custom) · /,tr('自定义 · ','Custom · '));redrawSamples();
   for(const s of['','2'])buildPicker(s);syncPatterns();
   for(const t of document.querySelectorAll('.tag.lib'))t.textContent=tr('曲库','Library');if($('lib-view').innerHTML)libView?.()});
+// The play button's label follows its state, so it is relabelled after translateStatic, not by it.
+$('lang-btn').addEventListener('click',()=>setPlaying(preview.playing));
 const nextFrame=()=>new Promise(r=>requestAnimationFrame(()=>r()));
 const ready=fontsSettled.then(nextFrame).then(nextFrame);
 const toDataUrl=blob=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>rej(r.error);r.readAsDataURL(blob)});
