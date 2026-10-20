@@ -1,0 +1,63 @@
+# Deploy each pull request's editor to Cloudflare Pages as a noindex preview and link it on the PR.
+# The public site stays on GitHub Pages (pages.yml); this only publishes branch previews.
+# Needs repository secrets CLOUDFLARE_API_TOKEN (Cloudflare Pages: Edit) and CLOUDFLARE_ACCOUNT_ID.
+name: Preview
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - index.html
+      - site/**
+      - vinyl-masks/**
+      - docs/images/social-preview.png
+      - .github/workflows/preview.yml
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    # Pull requests from forks get no secrets, so they are skipped rather than failed.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22   # wrangler 4 needs Node 22
+      - run: node site/build.mjs
+        env:
+          SITE_PREVIEW: '1'
+      - id: deploy
+        name: Deploy to Cloudflare Pages
+        working-directory: _site
+        shell: bash   # -o pipefail, so a failed deploy is not hidden behind tee
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          BRANCH: ${{ github.head_ref }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          npx -y wrangler@4.148.0 pages deploy . --project-name=record-mockup \
+            --branch="$BRANCH" --commit-hash="$SHA" --commit-dirty=true | tee deploy.log
+          # The branch alias stays the same across pushes; fall back to this deployment's own URL.
+          url=$(grep -oE 'https://[^ ]+\.pages\.dev' deploy.log | tail -1)
+          if [ -z "$url" ]; then echo "::error::No preview URL in the wrangler output"; exit 1; fi
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+      - name: Comment the preview link
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          URL: ${{ steps.deploy.outputs.url }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          body="Preview: $URL (noindex, built from ${SHA:0:7})"
+          gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" --body "$body" --edit-last --create-if-none

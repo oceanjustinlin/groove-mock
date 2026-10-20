@@ -2,9 +2,10 @@
   "version": 1,
   "jacket": {"type": "gatefold", "finish": "satin", "gateOpen": 0},
   "records": {
+    "sleeve": {"on": true},
     "count": 2,
-    "disc1": {"vinyl": "black", "sleeveOut": 30, "recordOut": 35},
-    "disc2": {"vinyl": "color", "color": "#d64b3a", "sleeveOut": 55, "recordOut": 40}
+    "disc1": {"vinyl": "black", "sleeveOut": 55, "recordOut": 40},
+    "disc2": {"vinyl": "color", "color": "#d64b3a", "sleeveOut": 30, "recordOut": 35}
   },
   "obi": {"on": true, "width": 32},
   "wrap": {"on": true},

@@ -1,7 +1,7 @@
 # 彩胶位图资产：图生图流程、提示词与交付契约
 
 日期：2026-10-19  
-适用项目：Groove Mock  
+适用项目：Record Mockup  
 用途：供素材制作 agent、Claude 和人工操作图生图工具时共同使用。
 
 ## 1. 目标与适用范围
@@ -172,7 +172,7 @@
 
 单层生成源图可以表示覆盖率，但现有 VinylLab 聚类母版的 `field.png` 通常是非底色颜料的综合标量场，不能自动等同于任一独立 accent 的 alpha。
 
-如需交付兼容 VinylLab 的 `field.png + layers.png + meta.json`，应沿用其烘焙管线并注明模式。多通道转 field 前必须定义合成语义，不默认求和、平均或取最大值。Groove Mock 当前运行时主要使用打包的 RGB 覆盖图。
+如需交付兼容 VinylLab 的 `field.png + layers.png + meta.json`，应沿用其烘焙管线并注明模式。多通道转 field 前必须定义合成语义，不默认求和、平均或取最大值。Record Mockup 当前运行时主要使用打包的 RGB 覆盖图。
 
 ## 6. 运行时打包与资产登记
 
@@ -259,7 +259,7 @@ python3 tools/bake-vinyl-masks.py --src <母版根目录> --preview <预览目�
 
 ### 7.3 3D 与 CLI
 
-使用当前 CLI schema 写场景，通过 `node cli/groove-mock.mjs render <spec.json> -o <out.png> --json` 渲染并检查图片及 warnings。
+使用当前 CLI schema 写场景，通过 `node cli/record-mockup.mjs render <spec.json> -o <out.png> --json` 渲染并检查图片及 warnings。
 
 - [ ] 正面近景、倾斜视角下形态清晰，无盘外条纹或盘缘接缝。
 - [ ] 放射状形态的中心与唱片中心重合。

@@ -5,6 +5,7 @@
     "finish": "gloss"
   },
   "records": {
+    "sleeve": {"on": true},
     "count": 2,
     "labelRotation": -20,
     "disc1": {

@@ -1,6 +1,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Groove Mock</title>
+<title>Record Mockup</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -35,20 +35,52 @@ button,input,select{font:inherit;color:inherit}
 .brand h1{margin:0;white-space:nowrap;font-family:var(--font-display);font-stretch:78%;font-weight:800;font-size:24px;letter-spacing:.01em;line-height:1}
 .spec{font-family:var(--font-mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
 .views{display:flex;gap:4px}
+/* Icon-only: no side padding, including the phone rule that pads .stage .views .chip. */
+.chip.play,.stage .views .chip.play{display:inline-grid;place-items:center;width:30px;padding:0}
+.play svg{width:14px;height:14px;fill:currentColor}
+.play .i-pause,.play[aria-pressed="true"] .i-play{display:none}
+.play[aria-pressed="true"] .i-pause{display:block}
 .chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;cursor:pointer;font-size:13px}
 .chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.gh{display:inline-grid;place-items:center;width:30px;height:30px;padding:0;color:var(--ink)}
+.gh svg{width:16px;height:16px;fill:currentColor}
 .primary{background:var(--accent);color:var(--accent-ink);border:0;border-radius:8px;padding:8px 16px;font-weight:700;cursor:pointer}
 .primary:disabled{opacity:.6;cursor:progress}
 
-.work{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:12px;min-height:0}
+.work{display:grid;grid-template-columns:minmax(0,1fr) 12px var(--panel-w,340px);min-height:0}
+/* Drag handle between stage and panel; the 12px column is the old gap, the line shows on hover and drag. */
+.splitter{cursor:col-resize;touch-action:none;position:relative;outline-offset:-2px}
+.splitter::after{content:"";position:absolute;top:50%;left:50%;width:4px;height:40px;transform:translate(-50%,-50%);border-radius:2px;background:var(--line);transition:background .15s,height .15s}
+.splitter:hover::after,.splitter.dragging::after,.splitter:focus-visible::after{background:var(--accent);height:72px}
+body.resizing{cursor:col-resize;user-select:none}
+body.resizing .stage canvas{pointer-events:none}
 .stage{position:relative;border-radius:12px;overflow:hidden;background:var(--stage);min-height:0}
 .stage.transparent{background-color:var(--stage);background-image:conic-gradient(var(--check) 25%,transparent 0 50%,var(--check) 0 75%,transparent 0);background-size:24px 24px}
 .stage canvas{display:block;width:100%;height:100%;touch-action:none}
 .hint{position:absolute;left:12px;bottom:10px;font-size:12px;color:var(--muted);background:color-mix(in srgb,var(--surface) 80%,transparent);padding:3px 8px;border-radius:6px;pointer-events:none}
 .loading{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-size:13px}
+.export-overlay{position:absolute;inset:0;z-index:3;display:grid;place-content:center;justify-items:center;gap:10px;background:var(--stage);font-size:14px}
+.export-overlay progress{width:min(240px,60vw)}
+.sheet video{border-radius:8px;max-width:100%;max-height:60vh;justify-self:center;background:var(--stage)}
 .err{position:absolute;inset:0;display:grid;place-items:center;padding:24px;text-align:center}
 
-.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:auto;min-height:0}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;min-height:0;display:grid;grid-template-columns:60px minmax(0,1fr)}
+.rail{display:flex;flex-direction:column;gap:2px;padding:8px 6px;border-right:1px solid var(--line);overflow:auto}
+.rail button{display:grid;justify-items:center;gap:3px;border:0;background:transparent;border-radius:8px;padding:8px 0 6px;font-size:11px;line-height:1.2;color:var(--muted);cursor:pointer}
+.rail button:hover{background:var(--bg);color:var(--ink)}
+.rail button[aria-selected="true"]{background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);font-weight:700}
+.rail svg,.picker-toggle svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.pages{overflow:auto;min-height:0}
+/* Asset picker: floats over the stage's top-left corner and folds down to one button. */
+.assets{position:absolute;left:12px;top:12px;z-index:2;max-width:calc(100% - 24px);max-height:calc(100% - 24px);display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 2px 10px color-mix(in srgb,var(--ink) 10%,transparent)}
+.assets[data-open="true"]{width:340px}
+.picker-toggle{display:flex;align-items:center;gap:8px;border:0;background:transparent;padding:8px 12px;cursor:pointer;font-family:var(--font-display);font-stretch:85%;font-weight:700;font-size:14px;text-align:left;border-radius:12px}
+.picker-toggle small{font-family:var(--font-mono);font-weight:400;font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.assets[data-open="false"] .picker-toggle small{display:none}
+.picker-toggle .chev{width:16px;height:16px;margin-left:auto;transition:transform .15s}
+.assets[data-open="true"] .chev{transform:rotate(180deg)}
+.picker-body{padding:12px;border-top:1px solid var(--line);overflow:auto;min-height:0;display:grid;gap:10px;align-content:start}
+.assets .lib-list,.assets .lib-gallery{max-height:none;overflow:visible}
 .group{padding:14px 16px;border-bottom:1px solid var(--line);display:grid;gap:10px}
 .group:last-child{border-bottom:0}
 .group h2{margin:0;display:flex;align-items:baseline;justify-content:space-between;gap:8px;font-family:var(--font-display);font-stretch:85%;font-weight:700;font-size:15px;letter-spacing:.02em}
@@ -69,20 +101,23 @@ button,input,select{font:inherit;color:inherit}
 .tile.filled .thumb{border-style:solid}
 .tile .tag{position:absolute;right:4px;top:4px;font-size:10px;background:var(--surface);color:var(--muted);border-radius:4px;padding:0 4px}
 .tile:focus-within .thumb{outline:2px solid var(--accent);outline-offset:2px}
-.row{display:flex;align-items:center;gap:10px;justify-content:space-between}
-.row label,.lbl{font-size:13px}
-.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
-.seg button{border:0;background:transparent;padding:4px 10px;cursor:pointer;font-size:13px}
-.seg button+button{border-left:1px solid var(--line)}
+/* Rows wrap instead of widening the panel: at narrow widths the control drops under its label. */
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;justify-content:space-between}
+.group>*,.sub>*,.disc>*{min-width:0}
+.row>.lbl:first-child+*{margin-left:auto}
+.row label,.lbl{font-size:13px;white-space:nowrap}
+/* Dividers are the 1px gap showing the border colour, so a group that wraps onto two lines keeps clean lines. */
+.seg{display:inline-flex;flex-wrap:wrap;max-width:100%;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{flex:1 0 auto;border:0;background:var(--surface);padding:4px 10px;cursor:pointer;font-size:13px;white-space:nowrap}
+#anim-preset button{padding:4px 8px}
 .seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
 .slider{display:grid;grid-template-columns:72px minmax(0,1fr) 58px;align-items:center;gap:8px;font-size:13px}
 .slider input{width:100%;accent-color:var(--accent)}
-.field{border:1px solid var(--line);border-radius:6px;background:var(--surface);padding:3px 8px;font-family:var(--font-mono);font-size:13px;width:84px;font-variant-numeric:tabular-nums}
+.field{border:1px solid var(--line);border-radius:6px;background:var(--surface);padding:3px 8px;font-family:var(--font-mono);font-size:13px;width:84px;max-width:100%;min-width:0;font-variant-numeric:tabular-nums}
 .field.wide{width:120px}
 .field.select{width:158px;font-family:var(--font-body);padding:3px 4px}
 .chip.upload{font-size:12px;padding:4px 10px;white-space:nowrap}
 .vh{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none}
-.seg.wrap{flex-wrap:wrap}
 .slider output{font-family:var(--font-mono);font-size:12px;text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
 .switch{display:inline-flex;align-items:center;gap:6px;font-size:13px;cursor:pointer}
 .switch input{accent-color:var(--accent);width:16px;height:16px}
@@ -91,6 +126,41 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
 .picker{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
 .picker button{aspect-ratio:1;border:1px solid var(--line);border-radius:50%;padding:0;background:var(--bg) center/cover no-repeat;cursor:pointer;font-size:11px;color:var(--muted)}
 .picker button[aria-checked="true"]{outline:2px solid var(--accent);outline-offset:2px}
+.lib-form{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:6px}
+.lib-form .field{width:auto;min-width:0;font-family:var(--font-body)}
+.lib-view{display:grid;gap:8px}
+.lib-head{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+.lib-head .chip{font-size:12px;padding:3px 10px;white-space:nowrap;flex:none}
+.lib-list{display:grid;gap:2px;max-height:320px;overflow:auto}
+.lib-row{display:grid;grid-template-columns:44px minmax(0,1fr);gap:10px;align-items:center;text-align:left;border:0;border-radius:8px;background:transparent;padding:4px;cursor:pointer}
+.lib-row:hover{background:var(--bg)}
+.lib-row.noart{grid-template-columns:minmax(0,1fr)}
+.lib-cover{display:block;width:44px;aspect-ratio:1;border-radius:4px;background:var(--bg) center/cover no-repeat;border:1px solid var(--line)}
+.lib-title{font-size:13px;line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lib-meta{font-family:var(--font-mono);font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.lib-has{display:flex;flex-wrap:wrap;gap:4px;margin-top:2px}
+.lib-has span{font-size:10px;border:1px solid var(--line);border-radius:4px;padding:0 4px;color:var(--muted)}
+.lib-has span.on{color:var(--ink);border-color:var(--ink)}
+.lib-sec{margin:6px 4px 2px;font-size:11px;color:var(--muted);font-family:var(--font-mono)}
+.lib-pick{display:grid;gap:6px}
+.lib-item{display:grid;grid-template-columns:auto 36px minmax(0,1fr);gap:8px;align-items:center;font-size:13px;cursor:pointer}
+.lib-item.param{grid-template-columns:auto minmax(0,1fr)}
+.lib-item input{accent-color:var(--accent);width:16px;height:16px}
+.lib-item .lib-cover{width:36px}
+.lib-gallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 8px;max-height:420px;overflow:auto;padding:2px}
+.lib-card{display:grid;grid-template-rows:auto 1fr auto auto;gap:6px;min-width:0}
+.lib-card .lib-cover{width:100%;height:0;padding-bottom:100%;aspect-ratio:auto}
+.lib-uses{display:flex;flex-wrap:wrap;gap:4px}
+.lib-uses:empty{display:none}
+.lib-use{display:inline-flex;align-items:center;gap:2px;border:1px solid var(--accent);color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,transparent);border-radius:999px;padding:0 4px 0 8px;font-size:11px;line-height:20px;cursor:pointer}
+.lib-use span{font-size:13px;line-height:1;padding:0 2px}
+.lib-card .field.select{width:100%;font-size:12px}
+.lib-card .lib-adjust{font-size:11px;padding:2px 8px;justify-self:start}
+.lib-cover.round{border-color:transparent;background-color:transparent}
+.lib-crop{border:1px solid var(--line);border-radius:10px;padding:10px;display:grid;gap:8px}
+.lib-crop-canvas{width:100%;max-width:260px;aspect-ratio:1;justify-self:center;cursor:grab;touch-action:none;border-radius:8px;background:#0b0b0c}
+.lib-crop-canvas:active{cursor:grabbing}
+.tile .tag.lib{background:var(--accent);color:var(--accent-ink)}
 .sub[hidden]{display:none!important}
 .sub{display:grid;gap:10px}
 
@@ -99,24 +169,45 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
 .sheet img{border-radius:8px;background-image:conic-gradient(var(--check) 25%,transparent 0 50%,var(--check) 0 75%,transparent 0);background-size:16px 16px;max-height:60vh;justify-self:center}
 .sheet .row{flex-wrap:wrap}
 
+/* Phones and narrow tablets: one screen, no page scroll. The stage keeps the top ~42% so the model stays
+   in view, the current settings page scrolls under it, and the page tabs sit at the bottom within thumb reach.
+   The asset picker opens as a bottom sheet over everything. */
+.sheet-backdrop{display:none}
 @media (max-width:860px){
-  html,body{height:auto}
-  .app{height:auto;grid-template-rows:auto auto}
-  .work{grid-template-columns:minmax(0,1fr)}
-  .stage{height:62vh;min-height:360px}
-  .panel{overflow:visible}
+  .app{height:100vh;height:100dvh;padding-block:8px calc(8px + env(safe-area-inset-bottom,0px));gap:8px}
+  .bar{flex-wrap:nowrap;gap:8px}
+  .brand h1{font-size:20px}
+  .brand .spec{display:none}
+  .bar .primary{padding:6px 12px}
+  .work{grid-template-columns:minmax(0,1fr);grid-template-rows:clamp(220px,42dvh,520px) minmax(0,1fr);gap:8px}
+  .splitter,.hint{display:none}
+  .stage .views{position:absolute;right:8px;bottom:8px;z-index:2}
+  .stage .views .chip{padding:4px 10px;font-size:12px}
+  .panel{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto}
+  .pages{order:1}
+  .rail{order:2;flex-direction:row;border-right:0;border-top:1px solid var(--line);overflow-x:auto;padding:4px}
+  .rail button{flex:1 0 52px;min-height:48px}
+  .assets[data-open="true"]{position:fixed;left:0;right:0;top:auto;bottom:0;width:auto;max-width:none;max-height:none;height:min(80dvh,680px);
+    border-radius:16px 16px 0 0;border-bottom:0;z-index:20;padding-bottom:env(safe-area-inset-bottom,0px)}
+  .assets[data-open="true"] .picker-toggle{padding-top:18px;position:relative}
+  .assets[data-open="true"] .picker-toggle::before{content:"";position:absolute;top:7px;left:50%;width:36px;height:4px;margin-left:-18px;border-radius:2px;background:var(--line)}
+  .sheet-backdrop{display:block;position:fixed;inset:0;z-index:19;background:color-mix(in srgb,var(--ink) 40%,transparent)}
+  .assets .lib-gallery{grid-template-columns:repeat(auto-fill,minmax(96px,1fr))}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
 <div class="app">
   <header class="bar">
-    <div class="brand"><h1>Groove Mock</h1><span class="spec">12″ LP · 封套 314 × 314 mm · 唱片 Ø302 mm</span></div>
+    <div class="brand"><h1>Record Mockup</h1><span class="spec">12″ LP · 封套 314 × 314 mm · 唱片 Ø302 mm</span></div>
     <div class="views" role="group" aria-label="视角">
       <button class="chip" data-view="quarter" aria-pressed="true">斜侧</button>
       <button class="chip" data-view="front" aria-pressed="false">正面</button>
       <button class="chip" data-view="side" aria-pressed="false">侧面</button>
+      <button class="chip play" id="play-btn" aria-pressed="false"><svg class="i-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 2.5v11l9-5.5z"/></svg><svg class="i-pause" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 2.5h3v11h-3zM9.5 2.5h3v11h-3z"/></svg></button>
+      <button class="chip" id="play-reset" hidden>复位</button>
     </div>
+    <a class="chip gh" href="https://github.com/oceanjustinlin/record-mockup" target="_blank" rel="noopener" title="源码、命令行和 Agent 用法" aria-label="源码、命令行和 Agent 用法（GitHub）"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
     <button class="chip" id="lang-btn" lang="en" aria-label="Switch language">EN</button>
     <button class="primary" id="export-btn">导出 PNG</button>
   </header>
@@ -124,223 +215,281 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
   <div class="work">
     <main class="stage transparent" id="stage" aria-label="3D 预览">
       <div class="loading" id="loading">正在准备工作台…</div>
+      <div class="export-overlay" id="export-overlay" hidden><span id="export-status"></span><progress id="export-progress" max="1" value="0"></progress></div>
       <div class="err" id="gl-error" hidden><div><strong>无法启动 3D 预览</strong><p class="note">请使用支持 WebGL 2 的最新版浏览器，并开启硬件加速。</p></div></div>
       <span class="hint">拖动旋转 · 滚轮缩放 · 右键拖动平移</span>
+      <div class="sheet-backdrop" id="picker-backdrop" hidden></div>
+      <div class="assets" id="picker" data-open="false">
+        <button class="picker-toggle" id="picker-toggle" type="button" aria-expanded="false" aria-controls="lib"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5"/></svg>素材<small>MusicBrainz · Cover Art Archive</small><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+        <section class="picker-body" id="lib" aria-label="曲库" hidden>
+          <form class="lib-form" id="lib-form" role="search" aria-label="曲库搜索">
+            <input class="field" id="lib-artist" type="search" placeholder="艺人" aria-label="艺人" autocomplete="off" enterkeyhint="search">
+            <input class="field" id="lib-album" type="search" placeholder="专辑名" aria-label="专辑名" autocomplete="off" enterkeyhint="search">
+            <button class="chip" type="submit">搜索</button>
+          </form>
+          <p class="note" id="lib-status" role="status" aria-live="polite" hidden></p>
+          <div class="lib-view" id="lib-view" hidden></div>
+          <p class="note">搜到专辑后选一个版本（黑胶优先，其他版本只取图片），再给每张图选用途。图片版权归原权利方，仅供预览。</p>
+        </section>
+      </div>
     </main>
-
-    <aside class="panel" aria-label="设置">
-      <section class="group">
-        <h2>封套 <small id="jacket-spec">单开 · 书脊 4 mm</small></h2>
-        <div class="row"><span class="lbl">类型</span>
-          <div class="seg" id="jacket-type"><button data-v="single" aria-pressed="true">单开</button><button data-v="gatefold" aria-pressed="false">双开</button></div>
-        </div>
-        <div class="tiles">
-          <label class="tile" data-slot="front"><span class="thumb"><span class="tag">示例</span></span><input id="up-front" type="file" accept="image/*" aria-label="上传封套正面">正面</label>
-          <label class="tile" data-slot="back"><span class="thumb"><span class="tag">示例</span></span><input id="up-back" type="file" accept="image/*" aria-label="上传封套背面">背面</label>
-          <label class="tile" data-slot="spine"><span class="thumb"><span class="tag">示例</span></span><input id="up-spine" type="file" accept="image/*" aria-label="上传书脊">书脊</label>
-        </div>
-        <div class="sub" id="gate-sub" hidden>
-          <div class="tiles two">
-            <label class="tile" data-slot="innerLeft"><span class="thumb"><span class="tag">示例</span></span><input id="up-innerLeft" type="file" accept="image/*" aria-label="上传内页左">内页左</label>
-            <label class="tile" data-slot="innerRight"><span class="thumb"><span class="tag">示例</span></span><input id="up-innerRight" type="file" accept="image/*" aria-label="上传内页右">内页右</label>
-          </div>
-          <div class="slider"><label for="gate-open">打开角度</label><input type="range" id="gate-open" min="0" max="180" value="0"><output id="gate-open-v">0°</output></div>
-          <p class="note">打开后，塑封膜、贴纸和侧标会一起拆掉。</p>
-        </div>
-        <div class="row"><span class="lbl">纸张工艺</span>
-          <div class="seg" id="finish"><button data-v="matte" aria-pressed="false">哑光</button><button data-v="satin" aria-pressed="true">缎面</button><button data-v="gloss" aria-pressed="false">亮面</button></div>
-        </div>
-      </section>
-
-      <section class="group">
-        <h2>Obi 侧标 <small>包住书脊一侧</small></h2>
-        <label class="switch"><input type="checkbox" id="obi-on" checked>显示侧标</label>
-        <div class="sub" id="obi-sub">
-          <div class="row" style="align-items:flex-start">
-            <div class="tiles one" style="flex:0 0 31%"><label class="tile" data-slot="obi"><span class="thumb contain"><span class="tag">示例</span></span><input id="up-obi" type="file" accept="image/*" aria-label="上传侧标展开图">展开图</label></div>
-            <p class="note" style="flex:1">上传一张竖长条图，从左到右依次是：背面、书脊、正面。正面和背面宽度相同。</p>
-          </div>
-          <div class="slider"><label for="obi-width">正面宽度</label><input type="range" id="obi-width" min="20" max="80" value="32"><output id="obi-width-v">32 mm</output></div>
-        </div>
-      </section>
-
-      <section class="group">
-        <h2>限量编号 <small id="num-preview">No. 0123 / 1000</small></h2>
-        <label class="switch"><input type="checkbox" id="num-on" checked>显示编号</label>
-        <div class="sub" id="num-sub">
-          <div class="row"><label class="lbl" for="num-cur">编号</label>
-            <div class="row" style="justify-content:flex-end;gap:6px"><input class="field" type="number" id="num-cur" min="1" value="123" aria-label="当前编号"><span class="lbl">/</span><input class="field" type="number" id="num-total" min="1" value="1000" aria-label="限量总数"></div>
-          </div>
-          <div class="row"><label class="lbl" for="num-prefix">前缀</label><input class="field wide" type="text" id="num-prefix" value="No." maxlength="10"></div>
-          <div class="row"><span class="lbl">格式</span>
-            <div class="seg" id="num-format"><button data-v="slash" aria-pressed="true">No. 0123/1000</button><button data-v="compact" aria-pressed="false">0123/1000</button><button data-v="cn" aria-pressed="false">中文</button></div>
-          </div>
-          <div class="row"><label class="lbl" for="num-font">字体</label>
-            <div class="row" style="justify-content:flex-end;gap:6px">
-              <select class="field select" id="num-font">
-                <option value="auto" selected>跟随工艺</option>
-                <option value="sans">无衬线 · Archivo</option>
-                <option value="mono">等宽 · Plex Mono</option>
-                <option value="serif">衬线 · Noto Serif</option>
-                <option value="type">打字机 · Special Elite</option>
-                <option value="hand">手写 · Caveat</option>
-                <option value="hei">中文黑体 · Noto Sans</option>
-                <option value="custom" id="num-font-custom" disabled>自定义（未上传）</option>
-              </select>
-              <label class="chip upload" for="up-font">上传字体</label><input class="vh" id="up-font" type="file" accept=".ttf,.otf,.woff,.woff2" tabindex="-1" aria-label="上传字体文件">
+    <div class="splitter" id="splitter" role="separator" aria-orientation="vertical" aria-label="调整设置面板宽度" aria-controls="panel" tabindex="0"></div>
+    <aside class="panel" id="panel" aria-label="设置">
+      <nav class="rail" role="tablist" aria-label="设置分页" aria-orientation="vertical">
+        <button role="tab" id="tab-jacket" data-page="jacket" aria-controls="page-jacket" aria-selected="false" tabindex="-1"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="1.5"/><path d="M4 8h16"/></svg>封套</button>
+        <button role="tab" id="tab-records" data-page="records" aria-controls="page-records" aria-selected="false" tabindex="-1"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2.5"/></svg>唱片</button>
+        <button role="tab" id="tab-insert" data-page="insert" aria-controls="page-insert" aria-selected="false" tabindex="-1"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h8l4 4v13H6z"/><path d="M14 3.5v4h4"/></svg>插页</button>
+        <button role="tab" id="tab-pack" data-page="pack" aria-controls="page-pack" aria-selected="false" tabindex="-1"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l8 4.5v8l-8 4.5-8-4.5v-8z"/><path d="M4 8l8 4.5L20 8M12 12.5v8"/></svg>包装</button>
+        <button role="tab" id="tab-number" data-page="number" aria-controls="page-number" aria-selected="false" tabindex="-1"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4L7 20M17 4l-2 16M4.5 9h15M3.5 15h15"/></svg>编号</button>
+        <button role="tab" id="tab-output" data-page="output" aria-controls="page-output" aria-selected="false" tabindex="-1"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="14" rx="1.5"/><circle cx="9" cy="10" r="1.6"/><path d="M20.5 16l-5-5-8.5 8"/></svg>输出</button>
+      </nav>
+      <div class="pages">
+        <div class="page" id="page-jacket" data-page="jacket" role="tabpanel" aria-labelledby="tab-jacket" hidden>
+          <section class="group">
+            <h2>封套 <small id="jacket-spec">单开 · 书脊 4 mm</small></h2>
+            <div class="row"><span class="lbl">类型</span>
+              <div class="seg" id="jacket-type"><button data-v="single" aria-pressed="true">单开</button><button data-v="gatefold" aria-pressed="false">双开</button></div>
             </div>
-          </div>
-          <div class="row"><span class="lbl">位置</span>
-            <div class="seg" id="num-place"><button data-v="back" aria-pressed="true">背面</button><button data-v="front" aria-pressed="false">正面</button><button data-v="obi" aria-pressed="false">Obi</button><button data-v="sticker" aria-pressed="false">贴纸</button></div>
-          </div>
-          <div class="row"><span class="lbl">工艺</span>
-            <div class="row" style="justify-content:flex-end">
-              <div class="seg" id="num-finish"><button data-v="print" aria-pressed="false">印刷</button><button data-v="stamp" aria-pressed="true">印章</button><button data-v="foil" aria-pressed="false">烫金</button><button data-v="hand" aria-pressed="false">手写</button></div>
-              <input type="color" id="num-color" value="#25336f" aria-label="编号颜色">
+            <div class="tiles">
+              <label class="tile" data-slot="front"><span class="thumb"><span class="tag">示例</span></span><input id="up-front" type="file" accept="image/*" aria-label="上传封套正面">正面</label>
+              <label class="tile" data-slot="back"><span class="thumb"><span class="tag">示例</span></span><input id="up-back" type="file" accept="image/*" aria-label="上传封套背面">背面</label>
+              <label class="tile" data-slot="spine"><span class="thumb"><span class="tag">示例</span></span><input id="up-spine" type="file" accept="image/*" aria-label="上传书脊">书脊</label>
             </div>
-          </div>
-          <div class="slider"><label for="num-x">水平</label><input type="range" id="num-x" min="-150" max="150" value="105"><output id="num-x-v">105 mm</output></div>
-          <div class="slider"><label for="num-y">垂直</label><input type="range" id="num-y" min="-150" max="150" value="-136"><output id="num-y-v">-136 mm</output></div>
-          <div class="slider"><label for="num-size">字高</label><input type="range" id="num-size" min="3" max="20" value="5"><output id="num-size-v">5 mm</output></div>
-          <div class="slider"><label for="num-rot">角度</label><input type="range" id="num-rot" min="-90" max="90" value="-3"><output id="num-rot-v">-3°</output></div>
-          <p class="note">切换位置时，坐标会回到该位置的默认值。烫金在转动视角时会反光。只含英文的字体遇到中文时，会用黑体补齐。上传的字体只在本地使用。</p>
-        </div>
-      </section>
-
-      <section class="group">
-        <h2>唱片与内袋 <small>33⅓ RPM · 标签 Ø100</small></h2>
-        <div class="row"><span class="lbl">数量</span>
-          <div class="seg" id="lp-count"><button data-v="1" aria-pressed="true">单 LP</button><button data-v="2" aria-pressed="false">2LP</button></div>
-        </div>
-        <div class="slider"><label for="record-rot">标签角度</label><input type="range" id="record-rot" min="-180" max="180" value="0"><output id="record-rot-v">0°</output></div>
-        <div class="row">
-          <label class="switch"><input type="checkbox" id="sleeve-on" checked>显示内袋</label>
-          <div class="row" style="justify-content:flex-end">
-            <label class="tile mini" data-slot="sleeve"><span class="thumb"></span><input id="up-sleeve" type="file" accept="image/*" aria-label="上传内袋印刷图">印刷图</label>
-            <input type="color" id="sleeve-color" value="#f3f1ea" aria-label="内袋颜色">
-          </div>
-        </div>
-
-        <div class="disc">
-          <h3>第 1 张 <small>A / B 面</small></h3>
-          <div class="tiles two">
-            <label class="tile" data-slot="labelA"><span class="thumb"><span class="tag">示例</span></span><input id="up-labelA" type="file" accept="image/*" aria-label="上传 A 面标签">A 面标签</label>
-            <label class="tile" data-slot="labelB"><span class="thumb"><span class="tag">示例</span></span><input id="up-labelB" type="file" accept="image/*" aria-label="上传 B 面标签">B 面标签</label>
-          </div>
-          <div class="row"><span class="lbl">胶色</span>
-            <div class="seg" id="vinyl-style"><button data-v="black" aria-pressed="true">黑胶</button><button data-v="color" aria-pressed="false">彩胶</button></div>
-          </div>
-          <div class="sub" id="vinyl-colored" hidden>
-            <div class="row"><span class="lbl">样式</span>
-              <div class="seg" id="vinyl-look"><button data-v="solid" aria-pressed="true">纯色</button><button data-v="pattern" aria-pressed="false">纹路</button></div>
+            <div class="sub" id="gate-sub" hidden>
+              <div class="tiles two">
+                <label class="tile" data-slot="innerLeft"><span class="thumb"><span class="tag">示例</span></span><input id="up-innerLeft" type="file" accept="image/*" aria-label="上传内页左">内页左</label>
+                <label class="tile" data-slot="innerRight"><span class="thumb"><span class="tag">示例</span></span><input id="up-innerRight" type="file" accept="image/*" aria-label="上传内页右">内页右</label>
+              </div>
+              <div class="slider"><label for="gate-open">打开角度</label><input type="range" id="gate-open" min="0" max="180" value="0"><output id="gate-open-v">0°</output></div>
+              <p class="note">打开后，塑封膜、贴纸和侧标会一起拆掉。</p>
             </div>
-            <div class="row" data-look="pattern"><span class="lbl">纹路</span><span class="note" id="pattern-name"></span></div>
-            <div class="picker" id="pattern-pick" role="radiogroup" aria-label="第 1 张纹路" data-look="pattern"></div>
-            <p class="note" id="pattern-hint" data-look="pattern"></p>
-            <div class="row"><span class="lbl" id="vinyl-color-lbl">颜色</span><input type="color" id="vinyl-color" value="#c8392b" aria-label="第 1 张胶色"></div>
-            <div class="row" id="pattern-colors" data-look="pattern"><span class="lbl" id="pattern-colors-lbl">纹路色</span>
+            <div class="row"><span class="lbl">纸张工艺</span>
+              <div class="seg" id="finish"><button data-v="matte" aria-pressed="false">哑光</button><button data-v="satin" aria-pressed="true">缎面</button><button data-v="gloss" aria-pressed="false">亮面</button></div>
+            </div>
+          </section>
+        </div>
+        <div class="page" id="page-records" data-page="records" role="tabpanel" aria-labelledby="tab-records" hidden>
+          <section class="group">
+            <h2>唱片与内袋 <small>33⅓ RPM · 标签 Ø100</small></h2>
+            <div class="row"><span class="lbl">数量</span>
+              <div class="seg" id="lp-count"><button data-v="1" aria-pressed="true">单 LP</button><button data-v="2" aria-pressed="false">2LP</button></div>
+            </div>
+            <div class="row" id="lp-layout-row" hidden><span class="lbl">分装</span>
+              <div class="seg" id="lp-layout"><button data-v="split" aria-pressed="true">左右各一张</button><button data-v="stacked" aria-pressed="false">同一口袋</button></div>
+            </div>
+            <div class="slider"><label for="record-rot">标签角度</label><input type="range" id="record-rot" min="-180" max="180" value="0"><output id="record-rot-v">0°</output></div>
+            <div class="row">
+              <label class="switch"><input type="checkbox" id="sleeve-on">显示内袋</label>
               <div class="row" style="justify-content:flex-end">
-                <input type="color" id="pattern-color" aria-label="第 1 张纹路色">
-                <input type="color" id="pattern-alt" aria-label="第 1 张第三块颜色">
+                <label class="tile mini" data-slot="sleeve"><span class="thumb"></span><input id="up-sleeve" type="file" accept="image/*" aria-label="上传内袋印刷图">印刷图</label>
+                <input type="color" id="sleeve-color" value="#f3f1ea" aria-label="内袋颜色">
               </div>
             </div>
-            <div class="slider" id="pattern-contrast-row" data-look="pattern"><label for="pattern-contrast">反差</label><input type="range" id="pattern-contrast" min="0" max="200" value="100"><output id="pattern-contrast-v">100%</output></div>
-            <div class="slider"><label for="vinyl-clear">透明度</label><input type="range" id="vinyl-clear" min="0" max="80" value="0"><output id="vinyl-clear-v">0%</output></div>
-            <div class="slider" data-look="pattern"><label for="pattern-rot">纹路角度</label><input type="range" id="pattern-rot" min="-180" max="180" value="0"><output id="pattern-rot-v">0°</output></div>
-            <div class="row" style="justify-content:flex-start" data-look="pattern"><button class="chip" id="pattern-cover">从封面取色</button></div>
-          </div>
-          <div class="slider"><label for="sleeve-x">内袋抽出</label><input type="range" id="sleeve-x" min="0" max="100" value="35"><output id="sleeve-x-v">35%</output></div>
-          <div class="slider"><label for="record-x">唱片抽出</label><input type="range" id="record-x" min="0" max="100" value="40"><output id="record-x-v">40%</output></div>
-        </div>
 
-        <div class="disc" id="lp2-sub" hidden>
-          <h3>第 2 张 <small>C / D 面 · 放在第 1 张后面</small></h3>
-          <div class="tiles two">
-            <label class="tile" data-slot="labelC"><span class="thumb"><span class="tag">示例</span></span><input id="up-labelC" type="file" accept="image/*" aria-label="上传 C 面标签">C 面标签</label>
-            <label class="tile" data-slot="labelD"><span class="thumb"><span class="tag">示例</span></span><input id="up-labelD" type="file" accept="image/*" aria-label="上传 D 面标签">D 面标签</label>
-          </div>
-          <label class="switch"><input type="checkbox" id="vinyl-same" checked>胶色和纹路与第 1 张相同</label>
-          <div class="sub" id="vinyl2-own" hidden>
-            <div class="row"><span class="lbl">胶色</span>
-              <div class="seg" id="vinyl2-style"><button data-v="black" aria-pressed="true">黑胶</button><button data-v="color" aria-pressed="false">彩胶</button></div>
-            </div>
-            <div class="sub" id="vinyl2-colored" hidden>
-              <div class="row"><span class="lbl">样式</span>
-                <div class="seg" id="vinyl2-look"><button data-v="solid" aria-pressed="true">纯色</button><button data-v="pattern" aria-pressed="false">纹路</button></div>
+            <div class="disc">
+              <h3>第 1 张 <small>A / B 面</small></h3>
+              <div class="tiles two">
+                <label class="tile" data-slot="labelA"><span class="thumb"><span class="tag">示例</span></span><input id="up-labelA" type="file" accept="image/*" aria-label="上传 A 面标签">A 面标签</label>
+                <label class="tile" data-slot="labelB"><span class="thumb"><span class="tag">示例</span></span><input id="up-labelB" type="file" accept="image/*" aria-label="上传 B 面标签">B 面标签</label>
               </div>
-              <div class="row" data-look="pattern"><span class="lbl">纹路</span><span class="note" id="pattern2-name"></span></div>
-              <div class="picker" id="pattern2-pick" role="radiogroup" aria-label="第 2 张纹路" data-look="pattern"></div>
-              <p class="note" id="pattern2-hint" data-look="pattern"></p>
-              <div class="row"><span class="lbl" id="vinyl2-color-lbl">颜色</span><input type="color" id="vinyl2-color" value="#d9a441" aria-label="第 2 张胶色"></div>
-              <div class="row" id="pattern2-colors" data-look="pattern"><span class="lbl" id="pattern2-colors-lbl">纹路色</span>
-                <div class="row" style="justify-content:flex-end">
-                  <input type="color" id="pattern2-color" aria-label="第 2 张纹路色">
-                  <input type="color" id="pattern2-alt" aria-label="第 2 张第三块颜色">
+              <div class="row"><span class="lbl">胶色</span>
+                <div class="seg" id="vinyl-style"><button data-v="black" aria-pressed="true">黑胶</button><button data-v="color" aria-pressed="false">彩胶</button></div>
+              </div>
+              <div class="sub" id="vinyl-colored" hidden>
+                <div class="row"><span class="lbl">样式</span>
+                  <div class="seg" id="vinyl-look"><button data-v="solid" aria-pressed="true">纯色</button><button data-v="pattern" aria-pressed="false">纹路</button></div>
+                </div>
+                <div class="row" data-look="pattern"><span class="lbl">纹路</span><span class="note" id="pattern-name"></span></div>
+                <div class="picker" id="pattern-pick" role="radiogroup" aria-label="第 1 张纹路" data-look="pattern"></div>
+                <p class="note" id="pattern-hint" data-look="pattern"></p>
+                <div class="row"><span class="lbl" id="vinyl-color-lbl">颜色</span><input type="color" id="vinyl-color" value="#c8392b" aria-label="第 1 张胶色"></div>
+                <div class="row" id="pattern-colors" data-look="pattern"><span class="lbl" id="pattern-colors-lbl">纹路色</span>
+                  <div class="row" style="justify-content:flex-end">
+                    <input type="color" id="pattern-color" aria-label="第 1 张纹路色">
+                    <input type="color" id="pattern-alt" aria-label="第 1 张第三块颜色">
+                  </div>
+                </div>
+                <div class="slider" id="pattern-contrast-row" data-look="pattern"><label for="pattern-contrast">反差</label><input type="range" id="pattern-contrast" min="0" max="200" value="100"><output id="pattern-contrast-v">100%</output></div>
+                <div class="slider"><label for="vinyl-clear">透明度</label><input type="range" id="vinyl-clear" min="0" max="80" value="0"><output id="vinyl-clear-v">0%</output></div>
+                <div class="slider" data-look="pattern"><label for="pattern-rot">纹路角度</label><input type="range" id="pattern-rot" min="-180" max="180" value="0"><output id="pattern-rot-v">0°</output></div>
+                <div class="row" style="justify-content:flex-start" data-look="pattern"><button class="chip" id="pattern-cover">从封面取色</button></div>
+              </div>
+              <div class="slider"><label for="sleeve-x">内袋抽出</label><input type="range" id="sleeve-x" min="0" max="100" value="35"><output id="sleeve-x-v">35%</output></div>
+              <div class="slider"><label for="record-x">唱片抽出</label><input type="range" id="record-x" min="0" max="100" value="40"><output id="record-x-v">40%</output></div>
+              <div class="slider"><label for="tracks">每面音轨</label><input type="range" id="tracks" min="1" max="20" value="6"><output id="tracks-v">6</output></div>
+            </div>
+
+            <div class="disc" id="lp2-sub" hidden>
+              <h3>第 2 张 <small id="lp2-where">C / D 面 · 放在第 1 张后面</small></h3>
+              <div class="tiles two">
+                <label class="tile" data-slot="labelC"><span class="thumb"><span class="tag">示例</span></span><input id="up-labelC" type="file" accept="image/*" aria-label="上传 C 面标签">C 面标签</label>
+                <label class="tile" data-slot="labelD"><span class="thumb"><span class="tag">示例</span></span><input id="up-labelD" type="file" accept="image/*" aria-label="上传 D 面标签">D 面标签</label>
+              </div>
+              <label class="switch"><input type="checkbox" id="vinyl-same" checked>胶色和纹路与第 1 张相同</label>
+              <div class="sub" id="vinyl2-own" hidden>
+                <div class="row"><span class="lbl">胶色</span>
+                  <div class="seg" id="vinyl2-style"><button data-v="black" aria-pressed="true">黑胶</button><button data-v="color" aria-pressed="false">彩胶</button></div>
+                </div>
+                <div class="sub" id="vinyl2-colored" hidden>
+                  <div class="row"><span class="lbl">样式</span>
+                    <div class="seg" id="vinyl2-look"><button data-v="solid" aria-pressed="true">纯色</button><button data-v="pattern" aria-pressed="false">纹路</button></div>
+                  </div>
+                  <div class="row" data-look="pattern"><span class="lbl">纹路</span><span class="note" id="pattern2-name"></span></div>
+                  <div class="picker" id="pattern2-pick" role="radiogroup" aria-label="第 2 张纹路" data-look="pattern"></div>
+                  <p class="note" id="pattern2-hint" data-look="pattern"></p>
+                  <div class="row"><span class="lbl" id="vinyl2-color-lbl">颜色</span><input type="color" id="vinyl2-color" value="#d9a441" aria-label="第 2 张胶色"></div>
+                  <div class="row" id="pattern2-colors" data-look="pattern"><span class="lbl" id="pattern2-colors-lbl">纹路色</span>
+                    <div class="row" style="justify-content:flex-end">
+                      <input type="color" id="pattern2-color" aria-label="第 2 张纹路色">
+                      <input type="color" id="pattern2-alt" aria-label="第 2 张第三块颜色">
+                    </div>
+                  </div>
+                  <div class="slider" id="pattern2-contrast-row" data-look="pattern"><label for="pattern2-contrast">反差</label><input type="range" id="pattern2-contrast" min="0" max="200" value="100"><output id="pattern2-contrast-v">100%</output></div>
+                  <div class="slider"><label for="vinyl2-clear">透明度</label><input type="range" id="vinyl2-clear" min="0" max="80" value="0"><output id="vinyl2-clear-v">0%</output></div>
+                  <div class="slider" data-look="pattern"><label for="pattern2-rot">纹路角度</label><input type="range" id="pattern2-rot" min="-180" max="180" value="0"><output id="pattern2-rot-v">0°</output></div>
+                  <div class="row" style="justify-content:flex-start" data-look="pattern"><button class="chip" id="pattern2-cover">从封面取色</button></div>
                 </div>
               </div>
-              <div class="slider" id="pattern2-contrast-row" data-look="pattern"><label for="pattern2-contrast">反差</label><input type="range" id="pattern2-contrast" min="0" max="200" value="100"><output id="pattern2-contrast-v">100%</output></div>
-              <div class="slider"><label for="vinyl2-clear">透明度</label><input type="range" id="vinyl2-clear" min="0" max="80" value="0"><output id="vinyl2-clear-v">0%</output></div>
-              <div class="slider" data-look="pattern"><label for="pattern2-rot">纹路角度</label><input type="range" id="pattern2-rot" min="-180" max="180" value="0"><output id="pattern2-rot-v">0°</output></div>
-              <div class="row" style="justify-content:flex-start" data-look="pattern"><button class="chip" id="pattern2-cover">从封面取色</button></div>
+              <div class="slider"><label for="sleeve2-x">内袋抽出</label><input type="range" id="sleeve2-x" min="0" max="100" value="60"><output id="sleeve2-x-v">60%</output></div>
+              <div class="slider"><label for="record2-x">唱片抽出</label><input type="range" id="record2-x" min="0" max="100" value="30"><output id="record2-x-v">30%</output></div>
+              <div class="slider"><label for="tracks2">每面音轨</label><input type="range" id="tracks2" min="1" max="20" value="6"><output id="tracks2-v">6</output></div>
             </div>
-          </div>
-          <div class="slider"><label for="sleeve2-x">内袋抽出</label><input type="range" id="sleeve2-x" min="0" max="100" value="60"><output id="sleeve2-x-v">60%</output></div>
-          <div class="slider"><label for="record2-x">唱片抽出</label><input type="range" id="record2-x" min="0" max="100" value="30"><output id="record2-x-v">30%</output></div>
+            <p class="note">内袋抽出：内袋连同唱片一起从封套开口拉出。唱片抽出：唱片再从内袋里往外拉。</p>
+          </section>
         </div>
-        <p class="note">内袋抽出：内袋连同唱片一起从封套开口拉出。唱片抽出：唱片再从内袋里往外拉。</p>
-      </section>
-
-      <section class="group">
-        <h2>Insert 插页 <small>304 × 304 mm · 双面</small></h2>
-        <label class="switch"><input type="checkbox" id="insert-on" checked>放入插页</label>
-        <div class="sub" id="insert-sub">
-          <div class="tiles two">
-            <label class="tile" data-slot="insertFront"><span class="thumb"><span class="tag">示例</span></span><input id="up-insertFront" type="file" accept="image/*" aria-label="上传插页正面">正面</label>
-            <label class="tile" data-slot="insertBack"><span class="thumb"><span class="tag">示例</span></span><input id="up-insertBack" type="file" accept="image/*" aria-label="上传插页背面">背面</label>
-          </div>
-          <div class="slider"><label for="insert-x">抽出</label><input type="range" id="insert-x" min="0" max="100" value="0"><output id="insert-x-v">0%</output></div>
-          <p class="note">插页在内袋后面，抽得比内袋多才看得到。</p>
+        <div class="page" id="page-insert" data-page="insert" role="tabpanel" aria-labelledby="tab-insert" hidden>
+          <section class="group">
+            <h2>Insert 插页 <small>304 × 304 mm · 双面</small></h2>
+            <label class="switch"><input type="checkbox" id="insert-on" checked>放入插页</label>
+            <div class="sub" id="insert-sub">
+              <div class="tiles two">
+                <label class="tile" data-slot="insertFront"><span class="thumb"><span class="tag">示例</span></span><input id="up-insertFront" type="file" accept="image/*" aria-label="上传插页正面">正面</label>
+                <label class="tile" data-slot="insertBack"><span class="thumb"><span class="tag">示例</span></span><input id="up-insertBack" type="file" accept="image/*" aria-label="上传插页背面">背面</label>
+              </div>
+              <div class="slider"><label for="insert-x">抽出</label><input type="range" id="insert-x" min="0" max="100" value="0"><output id="insert-x-v">0%</output></div>
+              <p class="note">插页在内袋后面，抽得比内袋多才看得到。</p>
+            </div>
+          </section>
         </div>
-      </section>
-
-      <section class="group">
-        <h2>塑封膜 <small>Shrink wrap</small></h2>
-        <label class="switch"><input type="checkbox" id="wrap-on" checked>套上塑封膜</label>
-        <div class="sub" id="wrap-sub">
-          <div class="slider"><label for="wrap-wrinkle">褶皱</label><input type="range" id="wrap-wrinkle" min="0" max="200" value="100"><output id="wrap-wrinkle-v">100%</output></div>
-          <div class="slider"><label for="wrap-gloss">反光</label><input type="range" id="wrap-gloss" min="0" max="200" value="100"><output id="wrap-gloss-v">100%</output></div>
-          <p class="note">唱片抽出时，开口一侧的膜会被视为已拆开。</p>
+        <div class="page" id="page-pack" data-page="pack" role="tabpanel" aria-labelledby="tab-pack" hidden>
+          <section class="group">
+            <h2>Obi 侧标 <small>包住书脊一侧</small></h2>
+            <label class="switch"><input type="checkbox" id="obi-on" checked>显示侧标</label>
+            <div class="sub" id="obi-sub">
+              <div class="row" style="align-items:flex-start">
+                <div class="tiles one" style="flex:0 0 31%"><label class="tile" data-slot="obi"><span class="thumb contain"><span class="tag">示例</span></span><input id="up-obi" type="file" accept="image/*" aria-label="上传侧标展开图">展开图</label></div>
+                <p class="note" style="flex:1">上传一张竖长条图，从左到右依次是：背面、书脊、正面。正面和背面宽度相同。</p>
+              </div>
+              <div class="slider"><label for="obi-width">正面宽度</label><input type="range" id="obi-width" min="20" max="80" value="32"><output id="obi-width-v">32 mm</output></div>
+            </div>
+          </section>
+          <section class="group">
+            <h2>塑封膜 <small>Shrink wrap</small></h2>
+            <label class="switch"><input type="checkbox" id="wrap-on" checked>套上塑封膜</label>
+            <div class="sub" id="wrap-sub">
+              <div class="slider"><label for="wrap-wrinkle">褶皱</label><input type="range" id="wrap-wrinkle" min="0" max="200" value="100"><output id="wrap-wrinkle-v">100%</output></div>
+              <div class="slider"><label for="wrap-gloss">反光</label><input type="range" id="wrap-gloss" min="0" max="200" value="100"><output id="wrap-gloss-v">100%</output></div>
+              <p class="note">唱片抽出时，开口一侧的膜会被视为已拆开。</p>
+            </div>
+          </section>
+          <section class="group">
+            <h2>Hype sticker <small>贴在塑封膜上</small></h2>
+            <label class="switch"><input type="checkbox" id="sticker-on" checked>显示贴纸</label>
+            <div class="sub" id="sticker-sub">
+              <div class="row">
+                <div class="tiles" style="flex:1"><label class="tile" data-slot="sticker"><span class="thumb"><span class="tag">示例</span></span><input id="up-sticker" type="file" accept="image/*" aria-label="上传贴纸">贴纸图</label></div>
+                <div class="seg" id="sticker-shape"><button data-v="circle" aria-pressed="true">圆形</button><button data-v="rect" aria-pressed="false">长方形</button></div>
+              </div>
+              <div class="slider"><label for="sticker-size">尺寸</label><input type="range" id="sticker-size" min="40" max="140" value="76"><output id="sticker-size-v">76 mm</output></div>
+              <div class="slider"><label for="sticker-x">水平</label><input type="range" id="sticker-x" min="-120" max="120" value="88"><output id="sticker-x-v">88 mm</output></div>
+              <div class="slider"><label for="sticker-y">垂直</label><input type="range" id="sticker-y" min="-120" max="120" value="92"><output id="sticker-y-v">92 mm</output></div>
+              <div class="slider"><label for="sticker-rot">角度</label><input type="range" id="sticker-rot" min="-45" max="45" value="0"><output id="sticker-rot-v">0°</output></div>
+            </div>
+          </section>
         </div>
-      </section>
-
-      <section class="group">
-        <h2>Hype sticker <small>贴在塑封膜上</small></h2>
-        <label class="switch"><input type="checkbox" id="sticker-on" checked>显示贴纸</label>
-        <div class="sub" id="sticker-sub">
-          <div class="row">
-            <div class="tiles" style="flex:1"><label class="tile" data-slot="sticker"><span class="thumb"><span class="tag">示例</span></span><input id="up-sticker" type="file" accept="image/*" aria-label="上传贴纸">贴纸图</label></div>
-            <div class="seg" id="sticker-shape"><button data-v="circle" aria-pressed="true">圆形</button><button data-v="rect" aria-pressed="false">长方形</button></div>
-          </div>
-          <div class="slider"><label for="sticker-size">尺寸</label><input type="range" id="sticker-size" min="40" max="140" value="76"><output id="sticker-size-v">76 mm</output></div>
-          <div class="slider"><label for="sticker-x">水平</label><input type="range" id="sticker-x" min="-120" max="120" value="88"><output id="sticker-x-v">88 mm</output></div>
-          <div class="slider"><label for="sticker-y">垂直</label><input type="range" id="sticker-y" min="-120" max="120" value="92"><output id="sticker-y-v">92 mm</output></div>
-          <div class="slider"><label for="sticker-rot">角度</label><input type="range" id="sticker-rot" min="-45" max="45" value="0"><output id="sticker-rot-v">0°</output></div>
+        <div class="page" id="page-number" data-page="number" role="tabpanel" aria-labelledby="tab-number" hidden>
+          <section class="group">
+            <h2>限量编号 <small id="num-preview">No. 0123 / 1000</small></h2>
+            <label class="switch"><input type="checkbox" id="num-on" checked>显示编号</label>
+            <div class="sub" id="num-sub">
+              <div class="row"><label class="lbl" for="num-cur">编号</label>
+                <div class="row" style="justify-content:flex-end;gap:6px"><input class="field" type="number" id="num-cur" min="1" value="123" aria-label="当前编号"><span class="lbl">/</span><input class="field" type="number" id="num-total" min="1" value="1000" aria-label="限量总数"></div>
+              </div>
+              <div class="row"><label class="lbl" for="num-prefix">前缀</label><input class="field wide" type="text" id="num-prefix" value="No." maxlength="10"></div>
+              <div class="row"><span class="lbl">格式</span>
+                <div class="seg" id="num-format"><button data-v="slash" aria-pressed="true">No. 0123/1000</button><button data-v="compact" aria-pressed="false">0123/1000</button><button data-v="cn" aria-pressed="false">中文</button></div>
+              </div>
+              <div class="row"><label class="lbl" for="num-font">字体</label>
+                <div class="row" style="justify-content:flex-end;gap:6px">
+                  <select class="field select" id="num-font">
+                    <option value="auto" selected>跟随工艺</option>
+                    <option value="sans">无衬线 · Archivo</option>
+                    <option value="mono">等宽 · Plex Mono</option>
+                    <option value="serif">衬线 · Noto Serif</option>
+                    <option value="type">打字机 · Special Elite</option>
+                    <option value="hand">手写 · Caveat</option>
+                    <option value="hei">中文黑体 · Noto Sans</option>
+                    <option value="custom" id="num-font-custom" disabled>自定义（未上传）</option>
+                  </select>
+                  <label class="chip upload" for="up-font">上传字体</label><input class="vh" id="up-font" type="file" accept=".ttf,.otf,.woff,.woff2" tabindex="-1" aria-label="上传字体文件">
+                </div>
+              </div>
+              <div class="row"><span class="lbl">位置</span>
+                <div class="seg" id="num-place"><button data-v="back" aria-pressed="true">背面</button><button data-v="front" aria-pressed="false">正面</button><button data-v="obi" aria-pressed="false">Obi</button><button data-v="sticker" aria-pressed="false">贴纸</button></div>
+              </div>
+              <div class="row"><span class="lbl">工艺</span>
+                <div class="row" style="justify-content:flex-end">
+                  <div class="seg" id="num-finish"><button data-v="print" aria-pressed="false">印刷</button><button data-v="stamp" aria-pressed="true">印章</button><button data-v="foil" aria-pressed="false">烫金</button><button data-v="hand" aria-pressed="false">手写</button></div>
+                  <input type="color" id="num-color" value="#25336f" aria-label="编号颜色">
+                </div>
+              </div>
+              <div class="slider"><label for="num-x">水平</label><input type="range" id="num-x" min="-150" max="150" value="105"><output id="num-x-v">105 mm</output></div>
+              <div class="slider"><label for="num-y">垂直</label><input type="range" id="num-y" min="-150" max="150" value="-136"><output id="num-y-v">-136 mm</output></div>
+              <div class="slider"><label for="num-size">字高</label><input type="range" id="num-size" min="3" max="20" value="5"><output id="num-size-v">5 mm</output></div>
+              <div class="slider"><label for="num-rot">角度</label><input type="range" id="num-rot" min="-90" max="90" value="0"><output id="num-rot-v">0°</output></div>
+              <p class="note">切换位置时，坐标会回到该位置的默认值。烫金在转动视角时会反光。只含英文的字体遇到中文时，会用黑体补齐。上传的字体只在本地使用。</p>
+            </div>
+          </section>
         </div>
-      </section>
-
-      <section class="group">
-        <h2>输出</h2>
-        <div class="row"><span class="lbl">背景</span>
-          <div class="row" style="justify-content:flex-end">
-            <div class="seg" id="bg-mode"><button data-v="transparent" aria-pressed="true">透明</button><button data-v="color" aria-pressed="false">纯色</button></div>
-            <input type="color" id="bg-color" value="#e6e3dc" aria-label="背景颜色">
-          </div>
+        <div class="page" id="page-output" data-page="output" role="tabpanel" aria-labelledby="tab-output" hidden>
+          <section class="group">
+            <h2>输出</h2>
+            <div class="row"><span class="lbl">背景</span>
+              <div class="row" style="justify-content:flex-end">
+                <div class="seg" id="bg-mode"><button data-v="transparent" aria-pressed="true">透明</button><button data-v="color" aria-pressed="false">纯色</button></div>
+                <input type="color" id="bg-color" value="#e6e3dc" aria-label="背景颜色">
+              </div>
+            </div>
+            <div class="row"><span class="lbl">分辨率</span>
+              <div class="seg" id="export-scale"><button data-v="1" aria-pressed="false">1×</button><button data-v="2" aria-pressed="true">2×</button><button data-v="3" aria-pressed="false">3×</button></div>
+            </div>
+            <p class="note">图片只在你的浏览器里处理，不会上传。</p>
+          </section>
+          <section class="group">
+            <h2>动画</h2>
+            <div class="row"><span class="lbl">动作</span>
+              <div class="seg" id="anim-preset"><button data-v="turntable" aria-pressed="true">转台</button><button data-v="swing" aria-pressed="false">摆动</button><button data-v="spin" aria-pressed="false">自转</button><button data-v="gatefold" aria-pressed="false">展开</button><button data-v="pull" aria-pressed="false">抽出</button></div>
+            </div>
+            <div class="row" id="anim-dir-row"><span class="lbl">方向</span>
+              <div class="seg" id="anim-dir"><button data-v="left" aria-pressed="true">向左</button><button data-v="right" aria-pressed="false">向右</button></div>
+            </div>
+            <div class="slider"><label for="anim-duration">时长</label><input type="range" id="anim-duration" min="1" max="30" value="6"><output id="anim-duration-v">6 s</output></div>
+            <div class="slider" id="anim-angle-row" hidden><label for="anim-angle">摆幅</label><input type="range" id="anim-angle" min="5" max="90" value="25"><output id="anim-angle-v">25°</output></div>
+            <div class="row"><span class="lbl">画幅</span>
+              <div class="seg" id="anim-aspect"><button data-v="16:9" aria-pressed="true">16:9</button><button data-v="1:1" aria-pressed="false">1:1</button><button data-v="9:16" aria-pressed="false">9:16</button></div>
+            </div>
+            <div class="row"><span class="lbl">格式</span>
+              <div class="seg" id="video-format"><button data-v="mp4" aria-pressed="true">MP4</button><button data-v="gif" aria-pressed="false">GIF</button></div>
+            </div>
+            <div class="row"><span class="lbl">尺寸</span>
+              <div class="seg" id="anim-size"><button data-v="0" aria-pressed="true">自动</button><button data-v="720" aria-pressed="false">720</button><button data-v="1080" aria-pressed="false">1080</button><button data-v="2160" aria-pressed="false">2160</button></div>
+            </div>
+            <p class="note" id="anim-issue" hidden></p>
+            <button class="primary" id="video-btn" type="button">导出视频</button>
+            <p class="note">尺寸指短边像素，自动时 MP4 为 1080，GIF 为 600。点视角旁的 ▶ 在工作台预览，导出视频用同一段动画。转台会转到背面，没有背面图时用摆动；展开和抽出会停在当前设置的角度和位置，都为 0 时用常见值。</p>
+          </section>
         </div>
-        <div class="row"><span class="lbl">分辨率</span>
-          <div class="seg" id="export-scale"><button data-v="1" aria-pressed="false">1×</button><button data-v="2" aria-pressed="true">2×</button><button data-v="3" aria-pressed="false">3×</button></div>
-        </div>
-        <p class="note">图片只在你的浏览器里处理，不会上传。</p>
-      </section>
+      </div>
     </aside>
   </div>
 </div>
@@ -349,8 +498,10 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="modal-title">
     <div class="row"><strong id="modal-title">PNG 已生成</strong><span class="spec" id="modal-size"></span></div>
     <img id="modal-img" alt="导出的模型图">
-    <p class="note">如果点"下载"没有反应，请右键（手机长按）图片另存。</p>
-    <div class="row"><a class="primary" id="modal-dl" download="groove-mock.png" href="#" style="text-decoration:none">下载</a><button class="chip" id="modal-close">关闭</button></div>
+    <video id="modal-video" controls loop muted playsinline hidden></video>
+    <p class="note" id="note-img">如果点"下载"没有反应，请右键（手机长按）图片另存。</p>
+    <p class="note" id="note-video" hidden>如果点"下载"没有反应，请右键（手机长按）视频另存。</p>
+    <div class="row"><a class="primary" id="modal-dl" download="record-mockup.png" href="#" style="text-decoration:none">下载</a><button class="chip" id="modal-close">关闭</button></div>
   </div>
 </div>
 
@@ -380,6 +531,9 @@ const EN={
   '正在准备工作台…':'Setting up the workbench…','无法启动 3D 预览':'Can’t start the 3D preview',
   '请使用支持 WebGL 2 的最新版浏览器，并开启硬件加速。':'Use an up-to-date browser with WebGL 2 and hardware acceleration turned on.',
   '拖动旋转 · 滚轮缩放 · 右键拖动平移':'Drag to rotate · Scroll to zoom · Right-drag to pan',
+  '调整设置面板宽度':'Resize settings panel','素材':'Assets','设置分页':'Settings sections','唱片':'Records','插页':'Insert','包装':'Packaging',
+  '曲库':'Record library','曲库搜索':'Record library search','艺人':'Artist','专辑名':'Album','搜索':'Search',
+  '搜到专辑后选一个版本（黑胶优先，其他版本只取图片），再给每张图选用途。图片版权归原权利方，仅供预览。':'Find an album, pick a release (vinyl first; other formats lend images only), then choose where each image goes. Images belong to their rights holders and are for preview only.',
   '设置':'Settings','封套':'Jacket','类型':'Type','单开':'Single','双开':'Gatefold','示例':'Sample',
   '上传封套正面':'Upload jacket front','上传封套背面':'Upload jacket back','上传书脊':'Upload spine',
   '背面':'Back','书脊':'Spine','上传内页左':'Upload inner left','上传内页右':'Upload inner right','内页左':'Inner left','内页右':'Inner right',
@@ -394,10 +548,10 @@ const EN={
   '位置':'Position','贴纸':'Sticker','工艺':'Finish','印刷':'Print','印章':'Stamp','烫金':'Foil','手写':'Hand','编号颜色':'Number colour',
   '水平':'Horizontal','垂直':'Vertical','字高':'Height','角度':'Angle',
   '切换位置时，坐标会回到该位置的默认值。烫金在转动视角时会反光。只含英文的字体遇到中文时，会用黑体补齐。上传的字体只在本地使用。':'Switching position resets the coordinates to that position’s defaults. Foil catches the light as you turn the view. Latin-only fonts fall back to a Chinese sans for CJK characters. Uploaded fonts stay on your device.',
-  '唱片与内袋':'Records & sleeves','33⅓ RPM · 标签 Ø100':'33⅓ RPM · Label Ø100','数量':'Count','单 LP':'1LP','标签角度':'Label angle',
+  '唱片与内袋':'Records & sleeves','33⅓ RPM · 标签 Ø100':'33⅓ RPM · Label Ø100','数量':'Count','分装':'Layout','左右各一张':'One per panel','同一口袋':'Both in one pocket','单 LP':'1LP','标签角度':'Label angle',
   '显示内袋':'Show inner sleeve','上传内袋印刷图':'Upload inner sleeve art','印刷图':'Artwork','内袋颜色':'Sleeve colour',
   '第 1 张':'Disc 1','A / B 面':'Sides A / B','上传 A 面标签':'Upload side A label','上传 B 面标签':'Upload side B label','A 面标签':'Side A label','B 面标签':'Side B label',
-  '胶色':'Vinyl','黑胶':'Black','彩胶':'Colour','第 1 张胶色':'Disc 1 vinyl colour','内袋抽出':'Sleeve out','唱片抽出':'Record out',
+  '胶色':'Vinyl','黑胶':'Black','彩胶':'Colour','第 1 张胶色':'Disc 1 vinyl colour','内袋抽出':'Sleeve out','唱片抽出':'Record out','每面音轨':'Tracks per side',
   '第 2 张':'Disc 2','C / D 面 · 放在第 1 张后面':'Sides C / D · behind disc 1','上传 C 面标签':'Upload side C label','上传 D 面标签':'Upload side D label',
   'C 面标签':'Side C label','D 面标签':'Side D label','第 2 张胶色':'Disc 2 vinyl colour',
   '纹路':'Pattern','第 1 张纹路':'Disc 1 pattern','第 2 张纹路':'Disc 2 pattern','纹路色':'Pattern colour','第 1 张纹路色':'Disc 1 pattern colour','第 2 张纹路色':'Disc 2 pattern colour',
@@ -410,14 +564,18 @@ const EN={
   '输出':'Output','背景':'Background','透明':'Transparent','纯色':'Solid','背景颜色':'Background colour','分辨率':'Resolution',
   '图片只在你的浏览器里处理，不会上传。':'Images are processed in your browser and never uploaded.',
   'PNG 已生成':'PNG ready','导出的模型图':'Exported mockup','如果点"下载"没有反应，请右键（手机长按）图片另存。':'If Download does nothing, right-click (long-press on phones) the image and save it.',
-  '下载':'Download','关闭':'Close'};
+  '下载':'Download','关闭':'Close',
+  '复位':'Reset','动画':'Animation','画幅':'Aspect','格式':'Format','尺寸':'Size','自动':'Auto','导出视频':'Export video',
+  '如果点"下载"没有反应，请右键（手机长按）视频另存。':'If Download does nothing, right-click (long-press on a phone) the video and save it.','动作':'Motion','转台':'Turntable','摆动':'Swing','自转':'Spin','展开':'Open','抽出':'Pull out','方向':'Direction','向左':'Left','向右':'Right','时长':'Duration','摆幅':'Swing angle',
+  '尺寸指短边像素，自动时 MP4 为 1080，GIF 为 600。点视角旁的 ▶ 在工作台预览，导出视频用同一段动画。转台会转到背面，没有背面图时用摆动；展开和抽出会停在当前设置的角度和位置，都为 0 时用常见值。':'Size is the short side in pixels; Auto is 1080 for MP4 and 600 for GIF. Press ▶ next to the views to preview on the stage; video export uses the same animation. Turntable shows the back, so use Swing without back artwork. Open and Pull out stop at the angle and positions set in the panel, or typical ones when those are 0.',
+  '源码、命令行和 Agent 用法':'Source, CLI and agent usage','源码、命令行和 Agent 用法（GitHub）':'Source, CLI and agent usage (GitHub)'};
 const LANGS=['zh','en'];
 let lang=(()=>{const q=new URLSearchParams(location.search).get('lang');if(LANGS.includes(q))return q;
   try{const v=localStorage.getItem('gm-lang');if(LANGS.includes(v))return v}catch(e){}
   return(navigator.languages?.[0]||navigator.language||'').toLowerCase().startsWith('zh')?'zh':'en'})();
 const tr=(zh,en)=>lang==='en'?en:zh;
 // Remember each node's Chinese source once, so switching back and forth is lossless.
-const I18N_ATTRS=['aria-label','alt'],zhText=new Map(),zhAttr=new Map();
+const I18N_ATTRS=['aria-label','alt','title','placeholder'],zhText=new Map(),zhAttr=new Map();
 for(const root of document.querySelectorAll('.app,.modal')){
   const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
   for(let n;(n=w.nextNode());){const k=n.nodeValue.trim();if(EN[k])zhText.set(n,n.nodeValue)}
@@ -431,20 +589,27 @@ function translateStatic(){
   b.setAttribute('aria-label',lang==='en'?'切换到中文':'Switch to English')}
 translateStatic();
 const state = {
-  finish:'satin', sleeveOn:true, sleeveColor:'#f3f1ea', sleeveX:.35, recordX:.40, recordRot:0,
+  finish:'satin', sleeveOn:false, sleeveColor:'#f3f1ea', sleeveX:.35, recordX:.40, recordRot:0,
   vinyl:'black', vinylColor:'#c8392b', vinyl2:'black', vinyl2Color:'#d9a441', wrapOn:true, wrinkle:1, gloss:1,
   pattern:'none', patternColor:'#1b1b1b', patternAlt:'#2a6f4e', patternContrast:1, patternRot:0, patternFromCover:false,
   pattern2:'none', pattern2Color:'#1b1b1b', pattern2Alt:'#2a6f4e', pattern2Contrast:1, pattern2Rot:0, pattern2FromCover:false, vinylSame:true,
-  vinylClear:0, vinyl2Clear:0,
+  vinylClear:0, vinyl2Clear:0, tracks:6, tracks2:6,
   stickerOn:true, stickerShape:'circle', stickerSize:7.6, stickerX:8.8, stickerY:9.2, stickerRot:0,
   numOn:true, numCur:123, numTotal:1000, numPrefix:'No.', numFormat:'slash', numFont:'auto', numPlace:'back', numFinish:'stamp', numColor:'#25336f',
-  numX:10.5, numY:-13.6, numSize:.5, numRot:-3,
-  jacketType:'single', gateOpen:0, lpCount:1, sleeve2X:.6, record2X:.3, obiOn:true, obiWidth:3.2, insertOn:true, insertX:0,
+  numX:10.5, numY:-13.6, numSize:.5, numRot:0,
+  jacketType:'single', gateOpen:0, lpCount:1, lpLayout:'split', sleeve2X:.6, record2X:.3, obiOn:true, obiWidth:3.2, insertOn:true, insertX:0,
   bg:'transparent', bgColor:'#e6e3dc', scale:2, view:'quarter',
-  camZoom:1, camAz:0, camEl:0, camPanX:0, camPanY:0, outW:2400, outH:1600   // used by the agent API / CLI
+  camZoom:1, camAz:0, camEl:0, camPanX:0, camPanY:0, outW:2400, outH:1600,   // used by the agent API / CLI
+  animPreset:'turntable', animDuration:6, animFps:0, animDir:'left', animAngle:25, animAspect:'16:9', animSize:0,   // 0 = per-format default
+  videoFormat:'mp4'   // panel only; the CLI takes the format from the output file name
 };
 const isGate=()=>state.jacketType==='gatefold';
-const frontZ=()=>isGate()?J.d/2+J.board:J.d/2;          // outer face of the front cover
+// A gatefold 2LP keeps one disc in each panel unless records.layout stacks them: the front cover is then a
+// second 1LP pocket, open at its free edge.
+const isSplit=()=>isGate()&&state.lpCount===2&&state.lpLayout==='split';
+const pocketDepth=()=>POCKET_D[isSplit()?1:state.lpCount];
+const coverDepth=()=>isSplit()?POCKET_D[1]:J.board;
+const frontZ=()=>isGate()?J.d/2+coverDepth():J.d/2;      // outer face of the front cover
 const jacketDepth=()=>frontZ()+J.d/2;
 const gateOpened=()=>isGate()&&state.gateOpen>.5;
 const specText=()=>`${isGate()?tr('双开','Gatefold'):tr('单开','Single')} · ${state.lpCount===2?'2LP':tr('单 LP','1LP')} · ${tr('书脊','Spine')} ${+(jacketDepth()*10).toFixed(1)} mm`;
@@ -549,17 +714,20 @@ function fitImage(src,w,h,{rotateIfWide=false}={}){
 
 // ---------- Procedural material maps ----------
 // Vinyl: roughness (G) and anisotropy (RG = radial direction, B = strength) from one radial profile.
-function grooveMaps(){
+// Tracks are cut at a constant pitch, so equal radial widths mean equal playing time. One map per track count.
+const grooveCache=new Map();
+function grooveMaps(tracks){if(!grooveCache.has(tracks))grooveCache.set(tracks,makeGrooveMaps(tracks));return grooveCache.get(tracks)}
+function makeGrooveMaps(tracks){
   const N=2048,R=LP.r,bins=4096,rough=new Float32Array(bins),aniso=new Float32Array(bins),r=rng(11);
-  // Track boundaries between run-out (≈61 mm) and lead-in (≈147 mm radius).
-  const gaps=[6.95,8.3,9.9,11.2,12.9].map(x=>[x,x+.07]);
+  // Track boundaries, evenly spaced between run-out (≈61 mm) and lead-in (≈147 mm radius).
+  const runOut=6.1,leadIn=14.72,gaps=Array.from({length:tracks-1},(_,k)=>runOut+(k+1)*(leadIn-runOut)/tracks).map(x=>[x-.035,x+.035]);
   let noise=0;
   for(let i=0;i<bins;i++){const rr=i/bins*R;noise=noise*.55+(r()*2-1)*.45;
     let gap=0;
     if(rr<LP.label+.02)gap=1;
-    else if(rr<6.1)gap=.92;                 // run-out / dead wax
+    else if(rr<runOut)gap=.92;                // run-out / dead wax
     else if(rr>14.95)gap=1;                  // outer rim
-    else if(rr>14.72)gap=.55;                // lead-in
+    else if(rr>leadIn)gap=.55;                // lead-in
     for(const[a,b]of gaps)if(rr>a&&rr<b)gap=Math.max(gap,.9);
     rough[i]=THREE.MathUtils.lerp(.34+.07*noise,.09,gap);
     aniso[i]=THREE.MathUtils.lerp(.92,.12,gap);
@@ -649,7 +817,7 @@ ground.rotation.x=-Math.PI/2;ground.position.y=GROUND_Y;ground.receiveShadow=tru
 const tex={front:colorTex(sampleFront()),back:colorTex(sampleBack()),spine:colorTex(sampleSpine()),labelA:colorTex(sampleLabel('A')),labelB:colorTex(sampleLabel('B')),labelC:colorTex(sampleLabel('C')),labelD:colorTex(sampleLabel('D')),sticker:colorTex(sampleSticker('circle')),sleeve:null,
   innerLeft:colorTex(sampleInnerLeft()),innerRight:colorTex(sampleInnerRight()),insertFront:colorTex(sampleInsert('front')),insertBack:colorTex(sampleInsert('back')),obi:null};
 const userSticker={img:null},userObi={img:null};
-const grooves=grooveMaps(),wrapNormal=wrapNormalMap(),bump=paperBump();
+const wrapNormal=wrapNormalMap(),bump=paperBump();
 
 // ---------- Materials ----------
 function paper(map){return new THREE.MeshPhysicalMaterial({map,roughness:.6,metalness:0,clearcoat:.03,clearcoatRoughness:.4,bumpMap:bump,bumpScale:.35})}
@@ -661,7 +829,7 @@ const stockInner=new THREE.MeshStandardMaterial({color:0xb9b3a4,roughness:.95});
 function applyFinish(){const f=state.finish;for(const m of[frontMat,backMat,spineMat,innerLeftMat,innerRightMat,insertFrontMat,insertBackMat]){m.roughness=f==='gloss'?.26:f==='matte'?.92:.6;m.clearcoat=f==='gloss'?.55:.03;m.clearcoatRoughness=f==='gloss'?.1:.4;m.bumpScale=f==='gloss'?.12:.35}}
 
 // Each disc gets its own face/edge materials, so a 2LP can mix black and coloured vinyl.
-function vinylMats(){return{face:new THREE.MeshPhysicalMaterial({color:0x0b0b0c,metalness:0,roughness:1,roughnessMap:grooves.rough,anisotropy:.9,anisotropyMap:grooves.aniso,envMap:studioEnv,envMapIntensity:.32,side:THREE.FrontSide}),
+function vinylMats(){return{face:new THREE.MeshPhysicalMaterial({color:0x0b0b0c,metalness:0,roughness:1,anisotropy:.9,envMap:studioEnv,envMapIntensity:.32,side:THREE.FrontSide}),
   edge:new THREE.MeshPhysicalMaterial({color:0x0b0b0c,metalness:0,roughness:.3,envMap:studioEnv,envMapIntensity:.3})}}
 const vinyl1=vinylMats(),vinyl2=vinylMats();
 const labelMatA=new THREE.MeshStandardMaterial({map:tex.labelA,roughness:.62});
@@ -716,6 +884,26 @@ function derivePattern(m,base,color,alt,contrast){
   const[Lb]=B,Cb=Math.hypot(B[1],B[2]),hb=Math.atan2(B[2],B[1]);
   return derive.map(p=>{const dL=p.dL*contrast;let L=Lb+dL>=.1?Lb+dL:Lb-dL;L=Math.min(.98,Math.max(.05,L));
     const C=Cb<.02?Cb:Math.max(0,Cb+p.dC*contrast);return oklabToHex([L,C*Math.cos(hb),C*Math.sin(hb)])})}
+// Pattern colours for a base the user already has: the pattern's default palette relation (lightness gap,
+// chroma shift, hue turn) moved onto that base, so picking a pattern changes the look, not the disc colour.
+// The lightness gap is kept within limits (a near-white default base would otherwise push a mid colour to black),
+// goes the other way when the base has no room, and chroma is cut back to stay inside sRGB.
+// Returns [pattern colour, third region]; tonal patterns use neither.
+function patternColorsFor(m,base){
+  const lch=h=>{const[L,a,b]=hexToOklab(h);return[L,Math.hypot(a,b),Math.atan2(b,a)]},regions=m.palette.mode==='regions';
+  const inGamut=lab=>{const[L,a,b]=lab,l=(L+.3963377774*a+.2158037573*b)**3,mm=(L-.1055613458*a-.0638541728*b)**3,s=(L-.0894841775*a-1.2914855480*b)**3;
+    return[4.0767416621*l-3.3077115913*mm+.2309699292*s,-1.2684380046*l+2.6097574011*mm-.3413193965*s,-.0041960863*l-.7034186147*mm+1.7076147010*s].every(c=>c>=-1e-4&&c<=1.0001)};
+  const[Lb,Cb,hb]=lch(base),[L0,C0,h0]=lch(m.base),[lo,hi]=regions?[.05,.15]:[.22,.35];
+  return m.colors.map(c=>{const[L1,C1,h1]=lch(c);
+    const gap=Math.min(hi,Math.max(lo,Math.abs(L1-L0))),dir=L1<L0?-1:1,fits=L=>L>=.28&&L<=.94;
+    let L=fits(Lb+dir*gap)?Lb+dir*gap:fits(Lb-dir*gap)?Lb-dir*gap:Lb>.58?Lb-gap:Lb+gap;L=Math.min(.94,Math.max(.28,L));
+    // A neutral base (black, white, grey) has no hue to carry: the pattern colour keeps the default's hue and
+    // chroma. A neutral default base has no hue to turn from: splits take the opposite hue, accents the base's.
+    const h=Cb<.03?h1:hb+(C0>.04&&C1>.04?h1-h0:regions?Math.PI:0);
+    let C=Cb<.03?C1:Math.min(.3,Math.max(.03,Cb+C1-C0));
+    const at=C=>[L,C*Math.cos(h),C*Math.sin(h)];
+    if(!inGamut(at(C))){let a=0,b=C;for(let k=0;k<20;k++){const mid=(a+b)/2;if(inGamut(at(mid)))a=mid;else b=mid}C=a}
+    return oklabToHex(at(C))})}
 // Colours from the front cover: k-means in OKLab on a 64 px copy, then (base, pattern, third) candidates
 // ranked so the base is a large, colourful area and the pattern colour contrasts with it. Each call moves
 // to the next candidate; disc 2 starts one further on, so a 2LP does not get two identical discs.
@@ -794,6 +982,8 @@ function applyVinylTo(i,mats){
   const{black,base,clear,mask}=discLook(i),see=clear>0;
   for(const m of[mats.face,mats.edge]){m.color.set(base);m.transparent=see;m.opacity=1-clear;m.depthWrite=!see;m.needsUpdate=true}
   mats.face.envMapIntensity=black?.32:.22;
+  const g=grooveMaps(state[i===2?'tracks2':'tracks']);
+  if(mats.face.roughnessMap!==g.rough){mats.face.roughnessMap=g.rough;mats.face.anisotropyMap=g.aniso;mats.face.needsUpdate=true}
   return applyPatternTo(i,mats);
 }
 // Resolves once both discs carry their pattern textures; spec rendering waits on it.
@@ -837,14 +1027,30 @@ function buildJacket(){
   const front=pocketFront=mesh(new THREE.BoxGeometry(w,h,t),[stock,stock,stock,stock,frontMat,stockInner]);front.position.z=d/2-t/2;
   const back=mesh(new THREE.BoxGeometry(w,h,t),[stock,stock,stock,stock,stockInner,backMat]);back.position.z=-d/2+t/2;
   const spine=mesh(new THREE.BoxGeometry(t,h,d-2*t),[stockInner,spineMat,stock,stock,stock,stock]);spine.position.x=-w/2+t/2;
+  // A split gatefold's spine art runs on across the cover's hinge edge: this half also covers the front
+  // board's edge (a hair proud of it) so the two halves meet without a seam.
+  if(isSplit()){const c=coverDepth();spine.geometry=spanU(new THREE.BoxGeometry(t,h,d-t),0,(d-t)/(d+c-2*t));spine.position.set(-w/2+t/2-.002,0,t/2)}
   jacket.add(front,back,spine);
   for(const s of[-1,1]){const flap=mesh(new THREE.BoxGeometry(w-t,t,d-2*t),stock);flap.position.set(t/2,s*(h/2-t/2),0);jacket.add(flap)}
-  coverPivot.position.z=d/2;
+  buildCover();
 }
+// Stretch the -x face's u (the spine side, back to front) over [u0, u1] of the texture.
+function spanU(geo,u0,u1){const uv=geo.attributes.uv;for(let i=4;i<8;i++)uv.setX(i,u0+uv.getX(i)*(u1-u0));return geo}
 // Gatefold: a separate front cover board hinged on the spine edge, laid over the pocket. Its inside is
 // the left page of the spread; the pocket's front face becomes the right page.
+// On a split 2LP the cover is a pocket of its own: closed at the hinge, open at the free edge, and disc 2
+// rides in it (pose() parents that sleeve set to the pivot), so it swings with the cover and slides out left.
 const coverPivot=new THREE.Group();coverPivot.position.set(-J.w/2,0,J.d/2);scene.add(coverPivot);
-const coverMesh=mesh(new THREE.BoxGeometry(J.w,J.h,J.board),[stock,stock,stock,stock,frontMat,innerLeftMat]);coverMesh.position.set(J.w/2,0,J.board/2);coverPivot.add(coverMesh);
+let coverFront;
+function buildCover(){
+  for(const c of[...coverPivot.children])if(c.isMesh){c.geometry.dispose();coverPivot.remove(c)}
+  const {w,h,board:t}=J,c=coverDepth();coverPivot.position.z=J.d/2;
+  if(!isSplit()){coverFront=mesh(new THREE.BoxGeometry(w,h,t),[stock,stock,stock,stock,frontMat,innerLeftMat]);coverFront.position.set(w/2,0,t/2);coverPivot.add(coverFront);return}
+  coverFront=mesh(new THREE.BoxGeometry(w,h,t),[stock,stock,stock,stock,frontMat,stockInner]);coverFront.position.set(w/2,0,c-t/2);
+  const inner=mesh(new THREE.BoxGeometry(w,h,t),[stock,stock,stock,stock,stockInner,innerLeftMat]);inner.position.set(w/2,0,t/2);
+  const hinge=mesh(spanU(new THREE.BoxGeometry(t,h,c-t),(J.d-t)/(J.d+c-2*t),1),[stockInner,spineMat,stock,stock,stock,stock]);hinge.position.set(t/2-.002,0,(c-t)/2);
+  coverPivot.add(coverFront,inner,hinge);
+  for(const s of[-1,1]){const flap=mesh(new THREE.BoxGeometry(w-t,t,c-2*t),stock);flap.position.set(w/2+t/2,s*(h/2-t/2),c/2);coverPivot.add(flap)}}
 buildJacket();
 
 // Insert: one double-sided printed sheet.
@@ -941,7 +1147,7 @@ function stickerTexture(){
 // ---------- Limited-edition number ----------
 // A decal: a transparent plane laid on the chosen face with its own material, so foil can be metallic
 // and the uploaded artwork underneath is never altered.
-const NUM_DEFAULTS={back:{x:10.5,y:-13.6,size:.5,rot:-3},front:{x:10.5,y:-13.6,size:.5,rot:-3},obi:{x:0,y:-12.6,size:.4,rot:90},sticker:{x:0,y:-2.9,size:.35,rot:0}};
+const NUM_DEFAULTS={back:{x:10.5,y:-13.6,size:.5,rot:0},front:{x:10.5,y:-13.6,size:.5,rot:0},obi:{x:0,y:-12.6,size:.4,rot:90},sticker:{x:0,y:-2.9,size:.35,rot:0}};
 const NUM_INK={print:'#1a1e1b',stamp:'#25336f',foil:'#e0b85c',hand:'#1a1e1b'};
 function numberText(){
   const total=Math.max(1,Math.round(state.numTotal)||1),cur=Math.min(total,Math.max(1,Math.round(state.numCur)||1)),c=String(cur).padStart(String(total).length,'0'),pre=state.numPrefix.trim();
@@ -984,7 +1190,7 @@ function numTexture(){
 function placeNumber(){
   const p=state.numPlace,eps=.004;numAnchor.removeFromParent();numAnchor.rotation.set(0,0,0);numAnchor.scale.setScalar(1);
   if(p==='back'){scene.add(numAnchor);numAnchor.position.set(0,0,-J.d/2-eps);numAnchor.rotation.y=Math.PI}
-  else if(p==='front'){if(isGate()){coverMesh.add(numAnchor);numAnchor.position.set(0,0,J.board/2+eps)}else{scene.add(numAnchor);numAnchor.position.set(0,0,J.d/2+eps)}}
+  else if(p==='front'){if(isGate()){coverFront.add(numAnchor);numAnchor.position.set(0,0,J.board/2+eps)}else{scene.add(numAnchor);numAnchor.position.set(0,0,J.d/2+eps)}}
   else if(p==='obi'){const {F,eps:oe}=obiLayout();obi.add(numAnchor);numAnchor.position.set(-J.w/2+F/2,0,frontZ()+oe+eps)}
   else{sticker.add(numAnchor);const k=1/state.stickerSize;numAnchor.scale.set(k,k,1);numAnchor.position.set(0,0,.03)}
   numAnchor.visible=state.numOn;
@@ -995,23 +1201,30 @@ function pose(){
   const gate=isGate(),opened=gateOpened();
   pocketFront.material[4]=gate?innerRightMat:frontMat;
   coverPivot.visible=gate;coverPivot.rotation.y=-THREE.MathUtils.degToRad(state.gateOpen);
-  // 1LP rides at the pocket centre; 2LP stacks two sleeve sets front/back, insert behind both.
-  const two=state.lpCount===2,zc=two?.1:0;
+  // 1LP rides at the pocket centre; 2LP stacks two sleeve sets front/back, insert behind both, unless the
+  // gatefold splits them: then each pocket holds one set and disc 2 sits in the cover, turned to face the
+  // spread when it is open.
+  const two=state.lpCount===2,split=isSplit(),zc=two&&!split?.1:0;
   // Anything still partly inside its container rests on that container's floor; only once it has fully
   // cleared the mouth does it settle onto the ground. This keeps a disc from poking out under its sleeve.
   const jacketFloor=-(J.h/2-J.board),settle=clear=>THREE.MathUtils.smoothstep(clear,0,1.5);
-  const placeSet=(sl,rec,sX,rX,z,on)=>{
+  // host is the container's frame and ox the pocket centre in it; x runs from the pocket centre to its mouth.
+  const placeSet=(sl,rec,sX,rX,z,on,host=scene,ox=0,flip=0)=>{
+    for(const o of[sl,rec])if(o.parent!==host)host.add(o);
     const S=SLV.s,x=sX*24,sy=THREE.MathUtils.lerp(jacketFloor+S/2,GROUND_Y+S/2,settle(x-S/2-J.w/2));
-    sl.visible=on&&state.sleeveOn;sl.position.set(x,sy,z);rec.visible=on;
+    sl.visible=on&&state.sleeveOn;sl.position.set(ox+x,sy,z);sl.rotation.y=flip;rec.visible=on;
     const rx=x+rX*27,floor=state.sleeveOn?sy-S/2+.04:jacketFloor,mouth=state.sleeveOn?x+S/2:J.w/2;
-    rec.position.set(rx,THREE.MathUtils.lerp(floor+LP.r,GROUND_Y+LP.r,settle(rx-LP.r-mouth)),z);
-    rec.rotation.z=THREE.MathUtils.degToRad(state.recordRot)};
+    rec.position.set(ox+rx,THREE.MathUtils.lerp(floor+LP.r,GROUND_Y+LP.r,settle(rx-LP.r-mouth)),z);
+    rec.rotation.set(0,flip,THREE.MathUtils.degToRad(state.recordRot))};
   placeSet(sleeve,record,state.sleeveX,state.recordX,zc,true);
-  placeSet(sleeve2,record2,state.sleeve2X,state.record2X,-zc,two);
+  // Disc 2 shows side C to the camera: facing out while the cover is shut, turned over once it opens past
+  // 90°. A gatefold clip fixes the face for its whole loop (disc2Flip) so the label never swaps mid-swing.
+  if(split)placeSet(sleeve2,record2,state.sleeve2X,state.record2X,coverDepth()/2,true,coverPivot,J.w/2,(state.disc2Flip??state.gateOpen>90)?Math.PI:0);
+  else placeSet(sleeve2,record2,state.sleeve2X,state.record2X,-zc,two);
   const ix=state.insertX*25;
-  insert.visible=state.insertOn;insert.position.set(ix,THREE.MathUtils.lerp(jacketFloor+INS.s/2,GROUND_Y+INS.s/2,settle(ix-INS.s/2-J.w/2)),two?-.23:INS.z);
+  insert.visible=state.insertOn;insert.position.set(ix,THREE.MathUtils.lerp(jacketFloor+INS.s/2,GROUND_Y+INS.s/2,settle(ix-INS.s/2-J.w/2)),two&&!split?-.23:INS.z);
   const mouthOpen=state.sleeveX>.005||state.recordX>.005||(state.insertOn&&state.insertX>.005)||(two&&(state.sleeve2X>.005||state.record2X>.005));
-  const wrapZ=gate?J.board/2:0,wrapFront=wrapZ+(jacketDepth()+WRAP.extra)/2;
+  const wrapZ=gate?coverDepth()/2:0,wrapFront=wrapZ+(jacketDepth()+WRAP.extra)/2;
   wrap.visible=state.wrapOn&&!opened;wrap.position.z=wrapZ;wrapMouthMat.visible=!mouthOpen;
   wrapStrength.value=state.gloss;wrapMat.normalScale.setScalar(.35*state.wrinkle);wrapMouthMat.normalScale.setScalar(.35*state.wrinkle);
   obi.visible=state.obiOn&&!opened;
@@ -1021,9 +1234,13 @@ function pose(){
   placeNumber();
 }
 function applyLpCount(){
-  J.d=POCKET_D[state.lpCount];$('lp2-sub').hidden=state.lpCount!==2;buildJacket();applyJacketType();
+  $('lp2-sub').hidden=state.lpCount!==2;applyJacketType();
 }
+const syncLayoutRow=()=>{$('lp-layout-row').hidden=!(isGate()&&state.lpCount===2)};
+const lp2Where=()=>{$('lp2-where').textContent=isSplit()?tr('C / D 面 · 装在左扇','Sides C / D · in the left panel'):tr('C / D 面 · 放在第 1 张后面','Sides C / D · behind disc 1')};
 function applyJacketType(){
+  J.d=pocketDepth();buildJacket();
+  lp2Where();syncLayoutRow();
   const gate=isGate();$('gate-sub').hidden=!gate;$('jacket-spec').textContent=specText();
   buildWrap(state.wrinkle);buildObi();pose();if(!userMoved)setView(state.view);
 }
@@ -1031,12 +1248,17 @@ function applyJacketType(){
 // ---------- Views ----------
 // Each view frames a box of the given size (scene units) so it fits any stage aspect ratio.
 const VIEWS={quarter:{t:[9,-.5,0],dir:[-.36,.1,1],fit:[62,35]},front:{t:[9,0,0],dir:[0,0,1],fit:[64,35]},side:{t:[5,-1,0],dir:[-.86,.12,.5],fit:[56,36]}};
+// How far the cover's contents reach from the hinge: the board, or disc 2 and its sleeve pulled past it.
+function coverReach(){if(!isSplit())return J.w;const x=state.sleeve2X*24,rx=x+state.record2X*27;
+  return Math.max(J.w,J.w/2+Math.max(state.sleeveOn?x+SLV.s/2:0,rx+LP.r))}
 function setView(name){userMoved=false;const v=VIEWS[name],half=Math.tan(THREE.MathUtils.degToRad(camera.fov/2));
-  // An opening gatefold cover reaches left of the jacket; widen the frame by that reach.
-  const reach=isGate()?Math.max(0,-J.w*Math.cos(THREE.MathUtils.degToRad(state.gateOpen))):0,t=[v.t[0]-reach/2,v.t[1],v.t[2]];
+  // An opening gatefold cover reaches left of the jacket, and on a split 2LP so does disc 2 pulled from it;
+  // widen the frame by that reach.
+  const reach=isGate()?Math.max(0,-coverReach()*Math.cos(THREE.MathUtils.degToRad(state.gateOpen))):0,t=[v.t[0]-reach/2,v.t[1],v.t[2]];
   const dist=Math.max(v.fit[1]/(2*half),(v.fit[0]+reach)/(2*half*camera.aspect)),dir=new THREE.Vector3(...v.dir).normalize().multiplyScalar(dist);
   controls.target.set(...t);camera.position.set(t[0]+dir.x,t[1]+dir.y,t[2]+dir.z);controls.update();state.view=name;
-  for(const b of document.querySelectorAll('[data-view]'))b.setAttribute('aria-pressed',b.dataset.view===name)}
+  for(const b of document.querySelectorAll('[data-view]'))b.setAttribute('aria-pressed',b.dataset.view===name);
+  if(previewActive())fitPreview()}
 
 // ---------- Resize / loop ----------
 // Re-frame on resize until the viewer moves the camera themselves.
@@ -1044,7 +1266,15 @@ let userMoved=false;controls.addEventListener('start',()=>{userMoved=true});
 function resize(){const w=stage.clientWidth,h=stage.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();if(!userMoved)setView(state.view)}
 function applyBg(){stage.classList.toggle('transparent',state.bg==='transparent');scene.background=state.bg==='color'?new THREE.Color(state.bgColor):null;stage.style.backgroundColor=state.bg==='color'?state.bgColor:''}
 let first=true;
-renderer.setAnimationLoop(()=>{controls.update();renderer.render(scene,camera);if(first){first=false;$('loading').hidden=true}});
+// Stage preview of spec.animation: phase is the loop position in [0, 1); paused keeps the turned pose.
+const preview={playing:false,phase:0,last:0};
+const previewActive=()=>preview.playing||preview.phase>0;
+const SHADOW_BOX=(({left,right,top,bottom})=>({left,right,top,bottom}))(key.shadow.camera);
+const loop=now=>{controls.update();
+  if(preview.playing){preview.phase=(preview.phase+Math.min(.1,(now-preview.last)/1000)/state.animDuration)%1;preview.last=now}
+  renderStage();
+  if(first){first=false;$('loading').hidden=true}};
+renderer.setAnimationLoop(loop);
 
 // ---------- Texture swapping ----------
 function setTex(slot,t,...mats){const old=tex[slot];tex[slot]=t;for(const m of mats){const had=!!m.map;m.map=t;if(!had||!t)m.needsUpdate=true}if(old&&old!==t)old.dispose()}
@@ -1061,24 +1291,421 @@ function thumb(slot,url){const el=document.querySelector(`[data-slot="${slot}"]`
 function markFilled(slot){const el=document.querySelector(`[data-slot="${slot}"]`);el.classList.add('filled');el.querySelector('.tag')?.remove()}
 for(const slot of['front','back','spine','labelA','labelB','labelC','labelD','sticker','innerLeft','innerRight','insertFront','insertBack'])thumb(slot,tex[slot].image.toDataURL('image/jpeg',.6));
 // One loader for every artwork slot, shared by the upload tiles and the agent API.
-async function setSlotImage(slot,img,thumbUrl){
+// slotOrigin remembers who filled each slot, so a library pick leaves the viewer's own uploads alone.
+const slotOrigin={},assetLog={};
+async function setSlotImage(slot,img,thumbUrl,origin='user'){
   if(slot==='sticker'){userSticker.img=img;stickerTexture()}
   else if(slot==='obi'){userObi.img=img;obiTexture()}
   else{const s=SLOTS[slot];setTex(slot,colorTex(fitImage(img,s.w,s.h,{rotateIfWide:s.rotateIfWide})),...s.mats());if(slot==='sleeve')sleeveMat.color.set('#ffffff')}
-  thumb(slot,thumbUrl);markFilled(slot)}
+  thumb(slot,thumbUrl);markFilled(slot);slotOrigin[slot]=origin;if(origin!=='fetched')delete assetLog[slot];
+  if(origin==='fetched'){const el=document.querySelector(`[data-slot="${slot}"] .thumb`),t=document.createElement('span');t.className='tag lib';t.textContent=tr('曲库','Library');el.append(t)}}
 for(const slot of Object.keys(SLOTS)){
   $('up-'+slot).addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;
     try{await setSlotImage(slot,await createImageBitmap(file),URL.createObjectURL(file))}
     catch(err){alertNote(tr(`没能读取这张图片（${file.name}）。请换成 PNG、JPG 或 WebP 再试。`,`Couldn’t read this image (${file.name}). Try a PNG, JPG or WebP.`))}
     e.target.value='';});
 }
-function alertNote(msg){$('modal-title').textContent=msg;$('modal-img').hidden=true;$('modal-dl').hidden=true;$('modal-size').textContent='';$('modal').hidden=false}
+function alertNote(msg){$('modal-title').textContent=msg;for(const id of['modal-img','modal-video','modal-dl','note-img','note-video'])$(id).hidden=true;$('modal-size').textContent='';$('modal').hidden=false}
+// The export sheet: an image (PNG, GIF) or a looping video, with its download link.
+function showResult({title,url,file,size,video=false}){
+  $('modal-title').textContent=title;$('modal-size').textContent=size;
+  $('modal-img').hidden=video;$('note-img').hidden=video;$('modal-video').hidden=!video;$('note-video').hidden=!video;$('modal-dl').hidden=false;
+  if(video){$('modal-video').src=url;$('modal-video').play().catch(()=>{})}else $('modal-img').src=url;
+  $('modal-dl').href=url;$('modal-dl').download=file;$('modal').hidden=false}
+function closeModal(){$('modal').hidden=true;$('modal-video').pause()}
+
+// ---------- Panel pages and asset picker ----------
+// The settings panel shows one page at a time; the last page and the picker's open state are remembered.
+const RAIL=[...document.querySelectorAll('.rail [role="tab"]')];
+function showPage(id){if(!RAIL.some(b=>b.dataset.page===id))id='jacket';
+  for(const b of RAIL){const on=b.dataset.page===id;b.setAttribute('aria-selected',on);b.tabIndex=on?0:-1}
+  for(const pg of document.querySelectorAll('.page'))pg.hidden=pg.dataset.page!==id;
+  document.querySelector('.pages').scrollTop=0;try{localStorage.setItem('gm-page',id)}catch(e){}}
+document.querySelector('.rail').addEventListener('click',e=>{const b=e.target.closest('[role="tab"]');if(!b)return;showPage(b.dataset.page);if(b.dataset.page==='output')syncAnimPanel()});
+document.querySelector('.rail').addEventListener('keydown',e=>{const step={ArrowDown:1,ArrowRight:1,ArrowUp:-1,ArrowLeft:-1}[e.key];if(!step&&e.key!=='Home'&&e.key!=='End')return;e.preventDefault();
+  const i=RAIL.findIndex(b=>b.getAttribute('aria-selected')==='true'),n=e.key==='Home'?0:e.key==='End'?RAIL.length-1:(i+step+RAIL.length)%RAIL.length;
+  showPage(RAIL[n].dataset.page);RAIL[n].focus()});
+showPage((()=>{try{return localStorage.getItem('gm-page')}catch(e){}})());
+// On phones the picker is a bottom sheet with a backdrop, always starts closed and closes after Apply;
+// the view buttons move from the header onto the stage.
+const phone=matchMedia('(max-width:860px)');
+const pickerOpen=()=>$('picker').dataset.open==='true';
+function setPicker(open,focus){$('picker').dataset.open=open;$('picker-toggle').setAttribute('aria-expanded',open);$('lib').hidden=!open;
+  $('picker-backdrop').hidden=!(open&&phone.matches);
+  if(!phone.matches)try{localStorage.setItem('gm-picker',open?'1':'0')}catch(e){}
+  if(open&&focus)$('lib-artist').focus()}
+$('picker-toggle').addEventListener('click',()=>setPicker(!pickerOpen(),true));
+$('picker-backdrop').addEventListener('click',()=>setPicker(false));
+addEventListener('keydown',e=>{if(e.key==='Escape'&&pickerOpen()&&phone.matches){setPicker(false);$('picker-toggle').focus()}});
+setPicker(!phone.matches&&(()=>{try{return localStorage.getItem('gm-picker')==='1'}catch(e){return false}})());
+function placeViews(){const v=document.querySelector('.views');if(phone.matches)$('stage').append(v);else document.querySelector('.bar .brand').after(v)}
+placeViews();
+phone.addEventListener('change',()=>{placeViews();setPicker(pickerOpen())});
+// Panel width: drag the splitter, arrow keys nudge it, double-click goes back to 340px. Remembered per viewer.
+const PANEL_W={min:300,max:640,def:340};
+const panelMax=()=>Math.max(PANEL_W.min,Math.min(PANEL_W.max,Math.round(document.querySelector('.work').clientWidth*.5)));
+function setPanelWidth(w,save=true){w=Math.round(Math.min(panelMax(),Math.max(PANEL_W.min,w)));
+  document.querySelector('.work').style.setProperty('--panel-w',w+'px');
+  const sp=$('splitter');sp.setAttribute('aria-valuenow',w);sp.setAttribute('aria-valuemin',PANEL_W.min);sp.setAttribute('aria-valuemax',panelMax());
+  if(save)try{localStorage.setItem('gm-panel-w',w)}catch(e){}}
+{const sp=$('splitter'),panel=$('panel');
+  sp.addEventListener('pointerdown',e=>{if(e.button!==0)return;e.preventDefault();sp.setPointerCapture(e.pointerId);sp.classList.add('dragging');document.body.classList.add('resizing')});
+  sp.addEventListener('pointermove',e=>{if(!sp.hasPointerCapture(e.pointerId))return;setPanelWidth(panel.getBoundingClientRect().right-e.clientX,false)});
+  const end=e=>{if(!sp.classList.contains('dragging'))return;sp.classList.remove('dragging');document.body.classList.remove('resizing');setPanelWidth(panel.getBoundingClientRect().width)};
+  sp.addEventListener('pointerup',end);sp.addEventListener('pointercancel',end);
+  sp.addEventListener('dblclick',()=>setPanelWidth(PANEL_W.def));
+  sp.addEventListener('keydown',e=>{const d={ArrowLeft:16,ArrowRight:-16}[e.key];if(e.key==='Home'||e.key==='End'){e.preventDefault();setPanelWidth(e.key==='Home'?PANEL_W.max:PANEL_W.min)}
+    else if(d){e.preventDefault();setPanelWidth(panel.getBoundingClientRect().width+d*(e.shiftKey?4:1))}});
+  setPanelWidth(+((()=>{try{return localStorage.getItem('gm-panel-w')}catch(e){}})()||PANEL_W.def),false);
+  // A narrower window can't keep a wide panel; re-clamp without overwriting the saved width.
+  addEventListener('resize',()=>{const w=+(()=>{try{return localStorage.getItem('gm-panel-w')}catch(e){}})()||PANEL_W.def;setPanelWidth(w,false)})}
+// Bring up the page that holds a slot, so a library pick lands where the viewer can see it.
+const pageOfSlot=slot=>document.querySelector(`[data-slot="${slot}"]`)?.closest('.page')?.dataset.page;
+
+// ---------- Record library ----------
+// Straight from the browser to MusicBrainz and the Cover Art Archive (both send CORS headers, need no key).
+// Three steps in one panel group: albums → vinyl releases → what to fill. MusicBrainz asks for at most one
+// request a second, so its calls queue; CAA images and thumbnails don't.
+const MB='https://musicbrainz.org/ws/2/',CAA='https://coverartarchive.org/';
+let mbLast=0,mbChain=Promise.resolve(),libTurn=0;
+function mbGet(path){
+  const run=async()=>{const wait=mbLast+1100-Date.now();if(wait>0)await new Promise(r=>setTimeout(r,wait));
+    for(let tryNo=0;;tryNo++){mbLast=Date.now();const res=await fetch(MB+path+(path.includes('?')?'&':'?')+'fmt=json');
+      if(res.ok)return res.json();
+      // 503 is MusicBrainz shedding load; back off and retry a few times before giving up.
+      if(res.status===503&&tryNo<3){await new Promise(r=>setTimeout(r,2000*(tryNo+1)));continue}
+      throw new Error('HTTP '+res.status)}};
+  const p=mbChain.then(run,run);mbChain=p.catch(()=>{});return p}
+const luceneTerm=s=>s.trim().replace(/[+\-&|!(){}[\]^"~*?:\\/]/g,' ').replace(/\s+/g,' ').trim();
+const artistName=ac=>(ac||[]).map(a=>a.name+(a.joinphrase||'')).join('');
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+// 12" and generic vinyl only; 7" and 10" don't fit a 12" jacket.
+const isLp=m=>/^(12" )?Vinyl$/.test(m.format||'');
+function libStatus(msg){const el=$('lib-status');el.textContent=msg||'';el.hidden=!msg}
+function libShow(html){const v=$('lib-view');v.innerHTML=html;v.hidden=!html}
+const libFail=()=>{libStatus(tr('曲库暂时连不上。可以稍后再试，或直接上传图片。','Couldn’t reach the record library. Try again later, or upload images directly.'));libShow('')};
+
+$('lib-form').addEventListener('submit',async e=>{e.preventDefault();
+  const artist=luceneTerm($('lib-artist').value),album=luceneTerm($('lib-album').value);
+  if(!album&&!artist){libStatus(tr('请输入艺人或专辑名。','Enter an artist or an album.'));return}
+  const turn=++libTurn;libStatus(tr('正在搜索…','Searching…'));libShow('');
+  // Every artist word must match ("Jay Chou" shouldn't find any Jay); album words stay loose.
+  const q=[album&&`releasegroup:(${album})`,artist&&`artist:(${artist.split(' ').join(' AND ')})`].filter(Boolean).join(' AND ');
+  try{const j=await mbGet(`release-group?query=${encodeURIComponent(q)}&limit=15`);if(turn!==libTurn)return;
+    const groups=sortGroups(j['release-groups']||[]);
+    if(groups.length||!artist){libGroups(groups);return}
+    // Release-group search only sees the credited name, so "Jay Chou" misses 周杰倫. Artist search also reads
+    // aliases: look the artist up that way and let the viewer pick, since the top hit isn't always the one meant.
+    libStatus(tr('没有直接匹配，正在按艺人别名查找…','No direct match; looking the artist up by alias…'));
+    const a=await mbGet(`artist?query=${encodeURIComponent(artist)}&limit=6`);if(turn!==libTurn)return;
+    const found=(a.artists||[]).filter(x=>(x.score??0)>=60);
+    if(!found.length){libGroups([]);return}
+    libArtistList=found;libAlbumQuery=album;
+    if(found.length===1)libArtistAlbums(found[0]);else libArtists()}
+  catch(err){if(turn===libTurn)libFail()}});
+// Equal matches: albums before EPs, singles and the rest, since a mockup is usually for an album.
+const sortGroups=gs=>{const rank=g=>({Album:0,EP:1,Single:2}[g['primary-type']]??3);
+  return gs.map((g,i)=>({g,i})).sort((a,b)=>(b.g.score??0)-(a.g.score??0)||rank(a.g)-rank(b.g)||a.i-b.i).map(x=>x.g)};
+
+// Alias path: pick the artist, then their albums whose title matches, or all their albums when none does.
+let libArtistList=[],libAlbumQuery='',libArtistPick=null;
+function libArtists(){libView=libArtists;libGroupOpts=null;libStatus('');
+  libShow(`<p class="note">${tr('没有直接匹配的专辑。你找的是哪位艺人？','No album matched directly. Which artist do you mean?')}</p>
+  <div class="lib-list" role="list">${libArtistList.map((x,i)=>`<button class="lib-row noart" type="button" role="listitem" data-artist="${i}">
+    <span><div class="lib-title">${esc(x.name)}</div><div class="lib-meta">${[x.disambiguation,x.type,x.country,x['life-span']?.begin?.slice(0,4)].filter(Boolean).map(esc).join(' · ')||esc(x['sort-name']||'')}</div></span></button>`).join('')}</div>`)}
+async function libArtistAlbums(x,all=false){libArtistPick=x;const turn=++libTurn;libStatus(tr('正在读取专辑…','Loading albums…'));libShow('');
+  const back=libArtistList.length>1?'artists':null;
+  try{if(libAlbumQuery&&!all){const j=await mbGet(`release-group?query=${encodeURIComponent(`arid:${x.id} AND releasegroup:(${libAlbumQuery})`)}&limit=15`);if(turn!==libTurn)return;
+      const gs=sortGroups(j['release-groups']||[]);
+      if(gs.length){libGroups(gs,{back,all:true});return}}
+    const j=await mbGet(`release-group?artist=${x.id}&type=album|ep&inc=artist-credits&limit=100`);if(turn!==libTurn)return;
+    const gs=(j['release-groups']||[]).sort((a,b)=>String(b['first-release-date']||'').localeCompare(String(a['first-release-date']||'')));
+    libGroups(gs,{back,note:libAlbumQuery&&!all?tr(`没找到「${libAlbumQuery}」，这是 ${x.name} 的全部专辑，可能用了原文标题。`,`Nothing called “${libAlbumQuery}”; here are all of ${x.name}’s albums, which may use the original-language title.`):''})}
+  catch(err){if(turn===libTurn)libFail()}}
+
+// libView redraws the current step, so switching language relabels it.
+// libGroupReleases keeps every format of the album (CD, digital…) for when a vinyl pressing has no scans.
+let libGroupList=[],libReleaseList=[],libGroupReleases=[],libGroup=null,libView=null,libGroupOpts=null;
+// opts (alias path only): back = return to the artist list; all = offer the artist's full album list; note = why this list.
+function libGroups(groups,opts=null){libGroupList=groups;libGroupOpts=opts;libView=()=>libGroups(libGroupList,libGroupOpts);
+  const head=opts?`<div class="lib-head">${opts.back?`<button class="chip" type="button" data-back="artists">← ${tr('返回','Back')}</button>`:''}<span>${esc(libArtistPick?.name||'')}</span>${opts.all?`<button class="chip" type="button" data-all-albums>${tr('全部专辑','All albums')}</button>`:''}</div>${opts.note?`<p class="note">${esc(opts.note)}</p>`:''}`:'';
+  if(!groups.length){libStatus(opts?tr('这位艺人在曲库里还没有专辑。','This artist has no albums in the library yet.'):tr('没有找到这张专辑。可以换个写法，或直接上传图片。','No album found. Try different spelling, or upload images directly.'));libShow(head);return}
+  libStatus('');
+  libShow(`${head}<div class="lib-list" role="list">${groups.map((g,i)=>`<button class="lib-row" type="button" role="listitem" data-group="${i}">
+    <span class="lib-cover" style="background-image:url('${CAA}release-group/${g.id}/front-250')"></span>
+    <span><div class="lib-title">${esc(g.title)}</div><div class="lib-meta">${esc(artistName(g['artist-credit']))}${g['first-release-date']?' · '+esc(g['first-release-date'].slice(0,4)):''}${g['primary-type']?' · '+esc(g['primary-type']):''}</div></span></button>`).join('')}</div>`)}
+
+$('lib-view').addEventListener('click',e=>{
+  const g=e.target.closest('[data-group]'),r=e.target.closest('[data-release]'),b=e.target.closest('[data-back]'),a=e.target.closest('[data-apply]');
+  const cr=e.target.closest('[data-crop]'),un=e.target.closest('[data-unuse]'),ar=e.target.closest('[data-artist]'),all=e.target.closest('[data-all-albums]');
+  if(cr){openCrop(+cr.dataset.crop);return}
+  if(ar){libArtistAlbums(libArtistList[+ar.dataset.artist]);return}
+  if(all){libArtistAlbums(libArtistPick,true);return}
+  if(un){delete libPlan.assign[un.dataset.useSlot];syncCards();return}
+  if(g)libReleases(libGroupList[+g.dataset.group]);
+  else if(r)libConfirm(libReleaseList[+r.dataset.release]);
+  else if(b){if(b.dataset.back==='groups')libGroups(libGroupList,libGroupOpts);else if(b.dataset.back==='artists')libArtists();else libReleaseRows()}
+  else if(a)libApply()});
+
+async function libReleases(group){libGroup=group;const turn=++libTurn;libStatus(tr('正在读取版本…','Loading releases…'));libShow('');
+  try{let all=[],offset=0,total=1;
+    // Big albums have a few hundred releases; three pages cover almost all of them.
+    while(offset<total&&offset<300){const j=await mbGet(`release?release-group=${group.id}&inc=labels+media&limit=100&offset=${offset}`);if(turn!==libTurn)return;
+      all=all.concat(j.releases||[]);total=j['release-count']||0;offset+=100}
+    // Artwork belongs to the album, not the format: vinyl pressings come first (they also set the record
+    // settings), then any other release that has images, so an album with no vinyl yet still has art.
+    const art=r=>r['cover-art-archive']||{},byArt=(a,b)=>(art(b).count||0)-(art(a).count||0)||(+!!art(b).back)-(+!!art(a).back)||String(a.date||'9').localeCompare(String(b.date||'9'));
+    const lps=all.filter(isLpRelease).sort(byArt),rest=all.filter(r=>!isLpRelease(r)&&art(r).artwork).sort(byArt);
+    libGroupReleases=all;libReleaseList=[...lps,...rest];libLpCount=lps.length;
+    if(!libReleaseList.length){libStatus(tr('这张专辑在曲库里还没有图片，也没有黑胶版本。可以直接上传图片。','This album has no images or vinyl releases in the library yet. You can upload images directly.'));
+      libShow(`<div class="lib-head"><button class="chip" type="button" data-back="groups">← ${tr('返回','Back')}</button></div>`);return}
+    if(libReleaseList.length===1){libConfirm(libReleaseList[0]);return}
+    libStatus('');libReleaseRows()}
+  catch(err){if(turn===libTurn)libFail()}}
+
+const isLpRelease=r=>(r.media||[]).some(isLp);
+let libLpCount=0;
+// Vinyl shows its disc count; other releases show their formats (CD, Digital Media…).
+function releaseMeta(r){const lp=(r.media||[]).filter(isLp).length,cat=(r['label-info']||[]).map(l=>l['catalog-number']).filter(Boolean)[0];
+  const fmt=lp?(lp>1?`${lp}LP`:'1LP'):[...new Set((r.media||[]).map(m=>m.format).filter(Boolean))].join(' + ');
+  return[r.date&&r.date.slice(0,4),r.country,cat,fmt,r.packaging!=='None'&&r.packaging].filter(Boolean).map(esc).join(' · ')}
+function libReleaseRows(){const g=libGroup,art=r=>r['cover-art-archive']||{};libView=libReleaseRows;
+  libStatus('');
+  const nOther=libReleaseList.length-libLpCount;
+  const sec=i=>i===0&&libLpCount?`<p class="lib-sec">${tr(`黑胶版本 · ${libLpCount}`,`Vinyl · ${libLpCount}`)}</p>`:i===libLpCount?`<p class="lib-sec">${tr(`其他版本 · ${nOther} · 只用图片，不改唱片参数`,`Other formats · ${nOther} · images only, record settings unchanged`)}</p>`:'';
+  libShow(`<div class="lib-head"><button class="chip" type="button" data-back="groups">← ${tr('返回','Back')}</button><span>${esc(g.title)}</span></div>
+  ${libLpCount?'':`<p class="note">${tr('这张专辑在曲库里还没有 12″ 黑胶版本，可以先用其他版本的封面图。','This album has no 12″ vinyl release in the library yet; you can still use artwork from its other releases.')}</p>`}
+  <div class="lib-list" role="list">${libReleaseList.map((r,i)=>{const c=art(r);return`${sec(i)}<button class="lib-row${c.front?'':' noart'}" type="button" role="listitem" data-release="${i}">
+    ${c.front?`<span class="lib-cover" style="background-image:url('${CAA}release/${r.id}/front-250')"></span>`:''}
+    <span>${r.title!==g.title?`<div class="lib-title">${esc(r.title)}</div>`:''}<div class="lib-meta">${releaseMeta(r)}</div>
+    <div class="lib-has"><span class="${c.front?'on':''}">${tr('正面','Front')}</span><span class="${c.back?'on':''}">${tr('背面','Back')}</span><span class="${c.count?'on':''}">${tr(`共 ${c.count||0} 张图`,`${c.count||0} images`)}</span></div></span></button>`}).join('')}</div>`)}
+
+// Tracks per side from the A1 / B2 numbering; plain 1, 2, 3 numbering splits the disc in half.
+function sideCounts(medium){const by={};for(const t of medium.tracks||[]){const m=/^([A-Z])/i.exec(t.number||'');if(m){const k=m[1].toUpperCase();by[k]=(by[k]||0)+1}}
+  const v=Object.values(by);if(v.length)return v;const n=(medium.tracks||[]).length;return n?[Math.ceil(n/2),Math.floor(n/2)]:[]}
+
+// ---------- Disc photos to labels ----------
+// A CAA "Medium" image is a scan or photo of the record. The label texture maps its square onto the Ø100 mm
+// label, so the crop must sit on the spindle hole and reach the label's edge. detectLabel works on a small copy:
+// the hole is the dark blob near the middle; the edge is where rays from the hole first run into black vinyl,
+// capped at the nearest frame edge so no empty band shows. Scans that fill the frame end at the frame; photos
+// of the whole record find the label's own edge.
+const isLabelSlot=s=>/^label[A-D]$/.test(s);
+function detectLabel(img){
+  const k=Math.min(1,400/Math.max(img.width,img.height)),w=Math.max(1,Math.round(img.width*k)),h=Math.max(1,Math.round(img.height*k));
+  const c=canvas(w,h),g=c.getContext('2d',{willReadFrequently:true});g.drawImage(img,0,0,w,h);
+  const d=g.getImageData(0,0,w,h).data,L=(x,y)=>{const i=(y*w+x)*4;return .299*d[i]+.587*d[i+1]+.114*d[i+2]};
+  // The hole shows whatever was behind the scan, often grey rather than black, so its threshold is set
+  // between the darkest pixel and the label's median in the middle of the frame, then the centre is refined
+  // on the pixels near the first guess.
+  const sz=Math.min(w,h),box=[];
+  for(let y=Math.round(h/2-sz*.1);y<h/2+sz*.1;y++)for(let x=Math.round(w/2-sz*.1);x<w/2+sz*.1;x++)box.push([x,y,L(x,y)]);
+  const ls=box.map(b=>b[2]).sort((a,b)=>a-b),mn=ls[0],md=ls[ls.length>>1],dark=box.filter(b=>b[2]<mn+.4*(md-mn));
+  let cx=w/2,cy=h/2,near=dark;
+  if(dark.length){cx=dark.reduce((a,b)=>a+b[0],0)/dark.length;cy=dark.reduce((a,b)=>a+b[1],0)/dark.length;
+    for(let i=0;i<2;i++){near=dark.filter(([x,y])=>(x-cx)**2+(y-cy)**2<(sz*.06)**2);if(!near.length)break;
+      cx=near.reduce((a,b)=>a+b[0],0)/near.length;cy=near.reduce((a,b)=>a+b[1],0)/near.length}}
+  // The hole is about 7% of the label across and clearly darker than it; anything else isn't trusted.
+  const holeOk=mn<md*.6&&near.length>sz*sz*.0008&&near.length<sz*sz*.03;
+  if(!holeOk){cx=w/2;cy=h/2}
+  const edge=Math.min(cx,cy,w-1-cx,h-1-cy);
+  const rs=[],need=Math.max(3,Math.round(sz*.015));
+  for(let a=0;a<72;a++){const dx=Math.cos(a*Math.PI/36),dy=Math.sin(a*Math.PI/36);let run=0;
+    for(let r=Math.round(sz*.08);r<edge;r++){if(L(Math.round(cx+dx*r),Math.round(cy+dy*r))<38){if(++run>=need){rs.push(r-run);break}}else run=0}}
+  rs.sort((a,b)=>a-b);const med=rs[rs.length>>1],agree=rs.filter(r=>Math.abs(r-med)<med*.08).length;
+  // Trust a found edge only when many rays agree on it; dark artwork on the label scatters them.
+  const r=rs.length>=12&&agree>=18&&med>sz*.1?Math.min(edge,med):edge;
+  return{cx:cx/k,cy:cy/k,r:r/k,auto:holeOk}}
+// Draw the crop as a square label texture: the hole at the centre, the label edge touching the sides.
+function renderLabel(img,c,size){const out=canvas(size,size),g=out.getContext('2d'),k=size/(2*c.r*c.zoom);
+  g.fillStyle='#0b0b0c';g.fillRect(0,0,size,size);g.translate(size/2,size/2);g.rotate(c.rot*Math.PI/180);g.scale(k,k);g.drawImage(img,-c.cx,-c.cy);return out}
+function roundThumb(img,c,size=160){const t=renderLabel(img,c,size),out=canvas(size,size),g=out.getContext('2d');
+  g.beginPath();g.arc(size/2,size/2,size/2,0,Math.PI*2);g.clip();g.drawImage(t,0,0);return out.toDataURL('image/png')}
+
+// Every slot a library image can go to; C / D labels only exist on 2LP.
+const libTargets=lps=>[['front',tr('正面','Front')],['back',tr('背面','Back')],['spine',tr('书脊','Spine')],
+  ['innerLeft',tr('内页左','Inner left')],['innerRight',tr('内页右','Inner right')],['sleeve',tr('内袋','Inner sleeve')],
+  ['insertFront',tr('插页正面','Insert front')],['insertBack',tr('插页背面','Insert back')],['obi',tr('Obi 侧标','Obi strip')],['sticker',tr('贴纸','Sticker')],
+  ['labelA',tr('A 面标签','Side A label')],['labelB',tr('B 面标签','Side B label')],
+  ...(lps===2?[['labelC',tr('C 面标签','Side C label')],['labelD',tr('D 面标签','Side D label')]]:[])];
+const CAA_TYPE={Front:['正面','Front'],Back:['背面','Back'],Spine:['书脊','Spine'],Liner:['内袋','Liner'],Medium:['盘面','Disc'],Booklet:['小册子','Booklet'],
+  Obi:['Obi','Obi'],Tray:['托盘','Tray'],Sticker:['贴纸','Sticker'],Poster:['海报','Poster'],Panel:['折页','Panel'],Track:['单曲','Track'],Other:['其他','Other'],
+  'Raw/Unedited':['原始扫描','Raw scan'],'Matrix/Runout':['刻字区','Matrix/runout'],Top:['顶面','Top'],Bottom:['底面','Bottom'],Watermark:['水印','Watermark']};
+// libPlan.assign maps slot → index into libPlan.images; each image goes to at most one slot.
+let libPlan=null;
+async function libConfirm(r){const turn=++libTurn;libStatus(tr('正在读取图片和曲目…','Loading images and tracks…'));
+  try{const[rel,caa]=await Promise.all([mbGet(`release/${r.id}?inc=recordings+labels`),
+      r['cover-art-archive']?.artwork?fetch(`${CAA}release/${r.id}/`).then(x=>x.ok?x.json():{images:[]}).catch(()=>({images:[]})):{images:[]}]);
+    if(turn!==libTurn)return;
+    // CAA lists http:// links; an https page can't fetch those.
+    const https=list=>JSON.parse(JSON.stringify(list||[]).replace(/http:\/\//g,'https://'));
+    const toImg=(i,rid)=>({thumb:i.thumbnails?.['250']||i.thumbnails?.small||i.image,full:[i.thumbnails?.['1200'],i.thumbnails?.['500']||i.thumbnails?.large,i.image].filter(Boolean),
+      types:i.types||[],front:i.front,back:i.back,note:i.comment||'',ref:`${rid}/${i.id}`});
+    const own=https(caa.images).map(i=>toImg(i,rel.id));
+    // Other pressings of the same album often carry a different cover; offer their fronts as well.
+    const others=libReleaseList.slice(0,libLpCount).filter(o=>o.id!==r.id&&o['cover-art-archive']?.front).slice(0,12).map(o=>({thumb:`${CAA}release/${o.id}/front-250`,
+      full:[`${CAA}release/${o.id}/front-1200`,`${CAA}release/${o.id}/front-500`],types:['Front'],other:true,
+      note:[o.date?.slice(0,4),o.country,(o['label-info']||[]).map(l=>l['catalog-number']).filter(Boolean)[0]].filter(Boolean).join(' · '),ref:`${o.id}/front`}));
+    // A new pressing often has no scans yet, while the CD or digital release of the same album does.
+    // When this one lacks a front or a back, add every image from the two best-covered other formats.
+    let formats=[];
+    if(!own.some(i=>i.front||i.types.includes('Front'))||!own.some(i=>i.back||i.types.includes('Back'))){
+      const alt=libGroupReleases.filter(o=>o.id!==r.id&&!(o.media||[]).some(isLp)&&o['cover-art-archive']?.artwork)
+        .sort((a,b)=>(b['cover-art-archive'].count||0)-(a['cover-art-archive'].count||0)).slice(0,2);
+      const idx=await Promise.all(alt.map(o=>fetch(`${CAA}release/${o.id}/`).then(x=>x.ok?x.json():{images:[]}).catch(()=>({images:[]}))));
+      if(turn!==libTurn)return;
+      formats=alt.flatMap((o,n)=>{const from=[...new Set((o.media||[]).map(m=>m.format).filter(Boolean))].join(' + ')||tr('其他格式','Other format');
+        return https(idx[n].images).map(i=>({...toImg(i,o.id),from,note:[o.date?.slice(0,4),o.country].filter(Boolean).join(' · ')}))})}
+    // The cover comes first from a digital release: that is the label's own artwork file, not a scan or a
+    // photo of a sleeve. CAA's /front without a size is the original upload, so it goes first.
+    const isDigital=o=>(o.media||[]).some(m=>m.format==='Digital Media');
+    const dig=isDigital(rel)?null:libGroupReleases.filter(o=>o.id!==r.id&&isDigital(o)&&o['cover-art-archive']?.front)
+      .sort((a,b)=>(b['cover-art-archive'].count||0)-(a['cover-art-archive'].count||0))[0];
+    if(dig)formats=formats.filter(i=>!(i.ref.startsWith(dig.id+'/')&&i.types.includes('Front')));
+    const digital=dig?[{thumb:`${CAA}release/${dig.id}/front-250`,full:[`${CAA}release/${dig.id}/front`,`${CAA}release/${dig.id}/front-1200`],types:['Front'],digital:true,
+      from:tr('数字版','Digital'),note:[dig.date?.slice(0,4),dig.country].filter(Boolean).join(' · '),ref:`${dig.id}/front`}]:[];
+    const assign={},kept=[];
+    for(const[slot,f]of[['front',i=>i.front],['front',i=>i.types.includes('Front')],['back',i=>i.back],['back',i=>i.types.includes('Back')],
+        ['spine',i=>i.types.includes('Spine')],['sleeve',i=>i.types.includes('Liner')]]){
+      if(slot in assign||kept.includes(slot))continue;const k=own.findIndex((im,n)=>f(im)&&!Object.values(assign).includes(n));if(k<0)continue;
+      // The viewer's own upload stays unless they pick this image for it.
+      if(slotOrigin[slot]==='user')kept.push(slot);else assign[slot]=k}
+    // Only a vinyl pressing says anything about the records; a CD or digital release lends its images alone.
+    const lps=(rel.media||[]).filter(isLp),vinyl=lps.length>0,sides=lps.slice(0,2).map(sideCounts),nLp=Math.min(2,lps.length)||1;
+    // Disc images go to the sides: first where the uploader's comment names one ("Side B"), then in upload order.
+    const free=['labelA','labelB','labelC','labelD'].slice(0,vinyl?nLp*2:0).filter(sl=>{if(slotOrigin[sl]!=='user')return true;kept.push(sl);return false});
+    const discs=own.map((im,n)=>im.types.includes('Medium')?n:-1).filter(n=>n>=0);
+    for(const n of[...discs]){const m=/\bside\s*([A-D])\b/i.exec(own[n].note)||/^\s*([A-D])\s*$/.exec(own[n].note),sl=m&&'label'+m[1].toUpperCase();
+      if(sl&&free.includes(sl)){assign[sl]=n;free.splice(free.indexOf(sl),1);discs.splice(discs.indexOf(n),1)}}
+    for(const n of discs){const sl=free.shift();if(!sl)break;assign[sl]=n}
+    // Front: the digital cover when there is one; else this release's own; else another pressing's or format's.
+    if(digital.length){if(slotOrigin.front==='user'){if(!kept.includes('front'))kept.push('front')}else assign.front=own.length+others.length+formats.length}
+    else if(!('front' in assign)&&!kept.includes('front')){const k=[...others,...formats].findIndex(i=>i.types.includes('Front'));
+      if(k>=0){if(slotOrigin.front==='user')kept.push('front');else assign.front=own.length+k}}
+    const pack=rel.packaging,jacket=!vinyl?null:pack==='Gatefold Cover'?'gatefold':pack?'single':null;
+    libPlan={release:rel,vinyl,images:[...own,...others,...formats,...digital],ownCount:own.length,assign,kept,lps:nLp,extraLps:Math.max(0,lps.length-2),sides,jacket,bmp:{},crops:{},editing:null};
+    libStatus('');libConfirmView()}
+  catch(err){if(turn===libTurn)libFail()}}
+
+const typeLabel=im=>im.types.map(t=>tr(...(CAA_TYPE[t]||[t,t]))).join(' / ')||tr('未分类','Untyped');
+const imgLabel=im=>im.other?tr('其他版本封面','Other pressing'):im.from?`${im.from} · ${typeLabel(im)}`:typeLabel(im);
+function libConfirmView(){const p=libPlan,r=p.release,targets=libTargets(p.lps),names=Object.fromEntries(targets);libView=libConfirmView;
+  // The digital cover leads the gallery; every card keeps its index k for the menus and crops.
+  const order=p.images.map((_,k)=>k).sort((a,b)=>(+!!p.images[b].digital)-(+!!p.images[a].digital)||a-b);
+  const cards=order.map(k=>[p.images[k],k]).map(([im,k])=>`<div class="lib-card">
+    <a class="lib-cover" href="${im.full.at(-1)}" target="_blank" rel="noopener" style="background-image:url('${im.thumb}')" title="${esc(imgLabel(im)+(im.note?' · '+im.note:''))}"></a>
+    <div class="lib-meta">${esc(imgLabel(im))}${im.note?`<br>${esc(im.note)}`:''}</div>
+    <div><div class="lib-uses" data-uses="${k}"></div>
+    <button class="chip lib-adjust" type="button" data-crop="${k}" hidden>${tr('调整裁切','Adjust crop')}</button></div>
+    <select class="field select" data-img="${k}" aria-label="${esc(tr(`给第 ${k+1} 张图添加用途`,`Add a use for image ${k+1}`))}"><option value="">${tr('+ 用作…','+ Use as…')}</option>${targets.map(([s,n])=>`<option value="${s}">${n}</option>`).join('')}</select></div>`).join('');
+  const params=!p.vinyl?[]:[`<label class="lib-item param"><input type="checkbox" data-param="count" checked><span>${tr('唱片数量','Records')}${tr('：',': ')}${p.lps===2?'2LP':tr('单 LP','1LP')}${p.extraLps?`<div class="lib-meta">${tr(`这一版共 ${p.lps+p.extraLps} 张，只做前 2 张`,`This release has ${p.lps+p.extraLps} discs; only the first 2 are modelled`)}</div>`:''}</span></label>`];
+  if(p.jacket)params.push(`<label class="lib-item param"><input type="checkbox" data-param="jacket" checked><span>${tr('封套','Jacket')}${tr('：',': ')}${p.jacket==='gatefold'?tr('双开','Gatefold'):tr('单开','Single')}</span></label>`);
+  p.sides.forEach((s,i)=>{if(!s.length)return;const n=Math.min(20,Math.max(...s));
+    params.push(`<label class="lib-item param"><input type="checkbox" data-param="tracks${i+1}" checked><span>${tr(`第 ${i+1} 张每面音轨`,`Disc ${i+1} tracks per side`)}${tr('：',': ')}${n}${new Set(s).size>1?`<div class="lib-meta">${tr(`各面曲目数 ${s.join(' / ')}，按最多的一面`,`Sides have ${s.join(' / ')} tracks; using the largest`)}</div>`:''}</span></label>`)});
+  const notes=[];
+  if(p.kept.length)notes.push(tr(`${p.kept.map(s=>names[s]).join('、')}已有你上传的图，默认保留；要替换就在图下面选。`,`You uploaded your own ${p.kept.map(s=>names[s].toLowerCase()).join(' and ')}; it stays unless you pick an image for it below.`));
+  if(!p.images.length)notes.push(tr('这一版在曲库里没有图片，只能应用下面的唱片参数。','This release has no images in the library; only the record settings below apply.'));
+  const fmt=[...new Set((r.media||[]).map(m=>m.format).filter(Boolean))].join(' + ')||tr('其他','other');
+  if(!p.vinyl)notes.unshift(tr(`这是 ${fmt} 版本，只用它的图，唱片参数不会改。它的背面比例和黑胶不同，应用后看一下。`,`This is the ${fmt} release, so only its images are used and the record settings stay as they are. Its back has different proportions from an LP back, so check it after applying.`));
+  if(p.images.length&&!p.ownCount)notes.push(tr('这一版还没有图，下面是同一张专辑其他版本和格式的图。CD 的背面比例和黑胶不同，用作背面前先看看。','This pressing has no images yet; these come from other pressings and formats of the album. A CD back has different proportions from an LP back, so check it before using it.'));
+  libShow(`<div class="lib-head"><button class="chip" type="button" data-back="${libReleaseList.length>1?'releases':'groups'}">← ${tr('返回','Back')}</button><span>${esc(r.title)} · ${releaseMeta(r)}</span></div>
+    ${p.images.length?`<p class="note">${tr('每张图下面选它用在哪个位置，点图看大图。','Choose where each image goes; click an image to see it full size.')}</p><div id="lib-crop"></div><div class="lib-gallery">${cards}</div>`:''}
+    ${notes.map(n=>`<p class="note">${n}</p>`).join('')}
+    <div class="lib-pick">${params.join('')}</div>
+    <div class="row" style="justify-content:flex-start"><button class="primary" type="button" data-apply>${tr('应用','Apply')}</button>
+    <a class="note" href="https://musicbrainz.org/release/${r.id}" target="_blank" rel="noopener">${tr('在 MusicBrainz 查看','View on MusicBrainz')}</a></div>`);
+  syncCards();if(p.editing!==null)openCrop(p.editing)}
+
+// Disc images used as labels load once, get an automatic crop, and show it as a round thumbnail with an Adjust button.
+function bitmapOf(k){const p=libPlan,im=p.images[k];
+  return p.bmp[k]??=(async()=>{for(const url of im.full){try{const res=await fetch(url);if(res.ok)return await createImageBitmap(await res.blob())}catch(e){}}
+    throw new Error('image')})()}
+async function ensureCrop(k){const p=libPlan,img=await bitmapOf(k);if(p!==libPlan)return null;p.crops[k]??={...detectLabel(img),zoom:1,rot:0};return img}
+// An image can fill several slots (the same art on front and back, say); each shows as a removable chip.
+const slotsOf=k=>Object.keys(libPlan.assign).filter(s=>libPlan.assign[s]===k);
+function syncCards(){const p=libPlan,v=$('lib-view');if(!p)return;const names=Object.fromEntries(libTargets(2));
+  p.images.forEach((im,k)=>{const sls=slotsOf(k),btn=v.querySelector(`[data-crop="${k}"]`),uses=v.querySelector(`[data-uses="${k}"]`),card=btn?.closest('.lib-card');if(!card)return;
+    const cover=card.querySelector('.lib-cover'),sel=card.querySelector('[data-img]');
+    uses.innerHTML=sls.map(sl=>`<button class="lib-use" type="button" data-unuse="${k}" data-use-slot="${sl}" aria-label="${esc(tr(`不再用作${names[sl]}`,`Stop using as ${names[sl]}`))}">${names[sl]}<span aria-hidden="true">×</span></button>`).join('');
+    for(const o of sel.options)if(o.value)o.disabled=sls.includes(o.value);
+    const label=sls.some(isLabelSlot);btn.hidden=!label;
+    if(!label){cover.style.backgroundImage=`url('${im.thumb}')`;cover.classList.remove('round');return}
+    ensureCrop(k).then(img=>{if(img&&libPlan===p&&slotsOf(k).some(isLabelSlot)){cover.style.backgroundImage=`url('${roundThumb(img,p.crops[k])}')`;cover.classList.add('round')}})
+      .catch(()=>{btn.hidden=true})});
+  if(p.editing!==null&&!slotsOf(p.editing).some(isLabelSlot))closeCrop()}
+
+// The fine-tune box: drag the photo so the printed hole sits in the dashed ring, then size and rotate.
+const CROP_PX=480;
+async function openCrop(k){const p=libPlan,box=$('lib-crop');if(!box)return;p.editing=k;
+  let img;try{img=await ensureCrop(k)}catch(e){libStatus(tr('这张图下载失败。','Couldn’t download this image.'));return}
+  if(!img||libPlan!==p||p.editing!==k)return;
+  const c=p.crops[k],names=Object.fromEntries(libTargets(2)),name=slotsOf(k).filter(isLabelSlot).map(sl=>names[sl]).join(tr('、',', '));
+  box.innerHTML=`<div class="lib-crop"><div class="lib-head"><b>${esc(name)}</b><span>${c.auto?tr('已按中孔自动对位，可拖动微调','Lined up on the spindle hole; drag to fine-tune'):tr('没找到中孔，请拖动让印刷的中孔对准虚线圈','Couldn’t find the hole; drag the printed hole into the dashed ring')}</span></div>
+    <canvas class="lib-crop-canvas" width="${CROP_PX}" height="${CROP_PX}" tabindex="0" aria-label="${esc(tr('标签裁切预览，拖动或用方向键移动','Label crop preview; drag or use the arrow keys to move'))}"></canvas>
+    <div class="slider"><label for="lib-crop-zoom">${tr('大小','Size')}</label><input type="range" id="lib-crop-zoom" min="60" max="140" value="${Math.round(c.zoom*100)}"><output>${Math.round(c.zoom*100)}%</output></div>
+    <div class="slider"><label for="lib-crop-rot">${tr('旋转','Rotate')}</label><input type="range" id="lib-crop-rot" min="-180" max="180" value="${Math.round(c.rot)}"><output>${Math.round(c.rot)}°</output></div>
+    <div class="row" style="justify-content:flex-start"><button class="chip" type="button" data-crop-reset>${tr('重新识别','Detect again')}</button><button class="chip" type="button" data-crop-done>${tr('完成','Done')}</button></div></div>`;
+  const cv=box.querySelector('canvas'),draw=()=>{const g=cv.getContext('2d'),S=CROP_PX;g.clearRect(0,0,S,S);g.drawImage(renderLabel(img,c,S),0,0);
+    g.save();g.fillStyle='rgba(11,11,12,.55)';g.beginPath();g.rect(0,0,S,S);g.arc(S/2,S/2,S/2,0,Math.PI*2,true);g.fill('evenodd');g.restore();
+    g.save();g.lineWidth=2;g.strokeStyle='#ffffff';g.setLineDash([6,5]);g.beginPath();g.arc(S/2,S/2,S/2*LP.hole/LP.label,0,Math.PI*2);g.stroke();
+    g.setLineDash([]);g.globalAlpha=.6;g.beginPath();g.arc(S/2,S/2,S/2-1,0,Math.PI*2);g.stroke();g.restore()};
+  const refresh=()=>{draw();syncCards()};
+  // Move the photo with the pointer: a screen step becomes a source step, undoing the crop's rotation and scale.
+  const nudge=(dx,dy)=>{const u=2*c.r*c.zoom/cv.getBoundingClientRect().width,a=-c.rot*Math.PI/180;c.cx-=(dx*Math.cos(a)-dy*Math.sin(a))*u;c.cy-=(dx*Math.sin(a)+dy*Math.cos(a))*u;draw()};
+  let last=null;
+  cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);last=[e.clientX,e.clientY]});
+  cv.addEventListener('pointermove',e=>{if(!last)return;nudge(e.clientX-last[0],e.clientY-last[1]);last=[e.clientX,e.clientY]});
+  const up=()=>{if(last){last=null;syncCards()}};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+  cv.addEventListener('keydown',e=>{const m={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[e.key];if(!m)return;e.preventDefault();const f=e.shiftKey?10:1;nudge(m[0]*f,m[1]*f);syncCards()});
+  for(const[id,key,k2,fmt]of[['lib-crop-zoom','zoom',.01,v=>v+'%'],['lib-crop-rot','rot',1,v=>v+'°']]){const el=$(id);
+    el.addEventListener('input',()=>{c[key]=+el.value*k2;el.nextElementSibling.textContent=fmt(el.value);draw()});el.addEventListener('change',syncCards)}
+  box.querySelector('[data-crop-reset]').addEventListener('click',()=>{Object.assign(c,detectLabel(img),{zoom:1,rot:0});openCrop(k);syncCards()});
+  box.querySelector('[data-crop-done]').addEventListener('click',closeCrop);
+  draw();box.scrollIntoView({block:'nearest'})}
+function closeCrop(){if(libPlan)libPlan.editing=null;const box=$('lib-crop');if(box)box.innerHTML=''}
+
+// Each slot holds one image, an image can hold many slots: adding a slot here takes it from whichever image had it.
+$('lib-view').addEventListener('change',e=>{const sel=e.target.closest('[data-img]');if(!sel||!libPlan||!sel.value)return;
+  const k=+sel.dataset.img,sl=sel.value;sel.value='';
+  libPlan.assign[sl]=k;libPlan.kept=libPlan.kept.filter(s=>s!==sl);
+  syncCards();if(isLabelSlot(sl)&&libPlan.editing!==null&&libPlan.editing!==k)openCrop(k)});
+
+async function libApply(){const p=libPlan,v=$('lib-view'),btn=v.querySelector('[data-apply]'),turn=++libTurn,on=k=>!!v.querySelector(`[data-param="${k}"]:checked`);
+  btn.disabled=true;libStatus(tr('正在下载图片…','Downloading images…'));
+  const done=[],failed=[];
+  await Promise.all(Object.entries(p.assign).map(async([slot,k])=>{const im=p.images[k];
+    if(isLabelSlot(slot)){try{const img=await ensureCrop(k);if(turn!==libTurn||!img)return;const c=p.crops[k];
+        await setSlotImage(slot,renderLabel(img,c,1024),roundThumb(img,c),'fetched');
+        assetLog[slot]={source:'fetched',tool:'MusicBrainz + Cover Art Archive',note:`CAA ${im.ref} · ${im.types.join('/')||'image'} · ${im.full[0]} · label crop centre ${Math.round(c.cx)},${Math.round(c.cy)} radius ${Math.round(c.r*c.zoom)} px, rotated ${Math.round(c.rot)}°`};done.push(slot)}
+      catch(e){failed.push(slot)}return}
+    try{const img=await bitmapOf(k);if(turn!==libTurn)return;
+      await setSlotImage(slot,img,im.thumb,'fetched');
+      assetLog[slot]={source:'fetched',tool:'MusicBrainz + Cover Art Archive',note:`CAA ${im.ref} · ${im.types.join('/')||'image'} · ${im.full[0]}`};done.push(slot)}
+    catch(e){failed.push(slot)}}));
+  if(turn!==libTurn)return;
+  const spec={records:{}};
+  if(on('count'))spec.records.count=p.lps;
+  if(on('jacket'))spec.jacket={type:p.jacket};
+  p.sides.forEach((s,i)=>{if(s.length&&on('tracks'+(i+1)))spec.records['disc'+(i+1)]={tracks:Math.min(20,Math.max(...s))}});
+  // A part given new art is switched on, so the image is actually seen.
+  if(done.includes('sleeve'))spec.records.sleeve={on:true};
+  if(done.some(s=>s.startsWith('insert')))spec.insert={on:true};
+  if(done.includes('obi'))spec.obi={on:true};
+  if(done.includes('sticker'))spec.sticker={on:true};
+  await applySpec(spec);
+  const names=Object.fromEntries(libTargets(2)),msg=[failed.length?tr(`已应用。${failed.map(s=>names[s]).join('、')}下载失败，保留原来的图。`,`Applied. Couldn’t download the ${failed.map(s=>names[s].toLowerCase()).join(', ')} image; the previous one stays.`):tr('已应用。','Applied.')];
+  if(!isGate()&&done.some(s=>s.startsWith('inner')))msg.push(tr('内页只在双开封套里看得到。','Inner pages only show on a gatefold jacket.'));
+  if(state.lpCount!==2&&done.some(s=>s==='labelC'||s==='labelD'))msg.push(tr('C / D 面标签只在 2LP 时可见。','Side C / D labels only show on 2LP.'));
+  libStatus(msg.join(' '));
+  if(done.length&&phone.matches)setPicker(false);
+  if(done.length)showPage(pageOfSlot(done.includes('front')?'front':done[0]));
+  btn.disabled=false}
 
 // ---------- Controls wiring ----------
 // Every control is registered against its state key, so syncUI() can redraw the whole panel from state
-// after a spec is applied through window.grooveMock.
+// after a spec is applied through window.recordMockup.
 const CONTROLS=[];
-const UNITS={pct:{toState:v=>v/100,toUI:v=>Math.round(v*100),fmt:v=>v+'%'},mm:{toState:v=>v/10,toUI:v=>Math.round(v*10),fmt:v=>v+' mm'},deg:{toState:v=>v,toUI:v=>Math.round(v),fmt:v=>v+'°'}};
+const UNITS={pct:{toState:v=>v/100,toUI:v=>Math.round(v*100),fmt:v=>v+'%'},mm:{toState:v=>v/10,toUI:v=>Math.round(v*10),fmt:v=>v+' mm'},deg:{toState:v=>v,toUI:v=>Math.round(v),fmt:v=>v+'°'},count:{toState:v=>v,toUI:v=>Math.round(v),fmt:v=>String(v)},sec:{toState:v=>v,toUI:v=>Math.round(v),fmt:v=>v+' s'}};
 function seg(id,key,after){CONTROLS.push({kind:'seg',id,key});const root=$(id);root.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;state[key]=isNaN(+b.dataset.v)?b.dataset.v:+b.dataset.v;for(const x of root.children)x.setAttribute('aria-pressed',x===b);after?.()})}
 function slider(id,key,unit,after=pose){CONTROLS.push({kind:'slider',id,key,unit});const el=$(id),out=$(id+'-v'),u=UNITS[unit];const f=()=>{state[key]=u.toState(+el.value);out.textContent=u.fmt(+el.value);after()};el.addEventListener('input',f);f()}
 function toggle(id,key,sub,after=pose){CONTROLS.push({kind:'toggle',id,key,sub});$(id).addEventListener('change',e=>{state[key]=e.target.checked;if(sub)$(sub).hidden=!state[key];after()})}
@@ -1089,17 +1716,20 @@ function syncUI(){
     else if(c.kind==='slider'){const u=UNITS[c.unit],x=u.toUI(v);el.value=x;$(c.id+'-v').textContent=u.fmt(x)}
     else if(c.kind==='toggle'){el.checked=!!v;if(c.sub)$(c.sub).hidden=!v}
     else el.value=v}
-  $('lp2-sub').hidden=state.lpCount!==2;$('vinyl-same').checked=state.vinylSame;$('vinyl2-own').hidden=state.vinylSame;$('gate-sub').hidden=!isGate();$('jacket-spec').textContent=specText();
+  $('lp2-sub').hidden=state.lpCount!==2;$('vinyl-same').checked=state.vinylSame;$('vinyl2-own').hidden=state.vinylSame;$('gate-sub').hidden=!isGate();$('jacket-spec').textContent=specText();syncAnimPanel();
   for(const b of document.querySelectorAll('[data-view]'))b.setAttribute('aria-pressed',b.dataset.view===state.view);
   syncPatterns()}
 
 seg('finish','finish',applyFinish);
-seg('jacket-type','jacketType',applyJacketType);
-seg('lp-count','lpCount',applyLpCount);
+// Switching to a single jacket in the panel drops an opening clip back to turntable.
+seg('jacket-type','jacketType',()=>{applyJacketType();
+  if(!isGate()&&state.animPreset==='gatefold'){state.animPreset='turntable';for(const b of $('anim-preset').children)b.setAttribute('aria-pressed',b.dataset.v==='turntable');if(previewActive())fitPreview()}
+  syncAnimPanel()});
+seg('lp-count','lpCount',applyLpCount);seg('lp-layout','lpLayout',applyJacketType);
 seg('vinyl-style','vinyl',()=>{applyVinyl();syncPatterns()});
 seg('vinyl2-style','vinyl2',()=>{applyVinyl();syncPatterns()});
 seg('sticker-shape','stickerShape',()=>{buildSticker();stickerTexture();pose()});
-seg('bg-mode','bg',applyBg);
+seg('bg-mode','bg',()=>{applyBg();syncAnimPanel()});
 seg('export-scale','scale');
 // Picking a colour while on black switches that disc to coloured vinyl.
 for(const [cid,sid,key] of[['vinyl-color','vinyl-style','vinyl'],['vinyl2-color','vinyl2-style','vinyl2']])
@@ -1118,10 +1748,12 @@ function thumbUrl(m){if(m.thumb)return'vinyl-masks/'+m.thumb;
 function buildPicker(s){const root=$(`pattern${s}-pick`);root.textContent='';
   for(const m of MASKS){const b=document.createElement('button');b.type='button';b.setAttribute('role','radio');b.dataset.id=m.id;
     b.title=patternLabel(m);b.setAttribute('aria-label',b.title);b.style.backgroundImage=`url("${thumbUrl(m)}")`;root.append(b)}}
-// Same defaults as a spec that names only pattern.id: the pattern's own palette, contrast back to 100%.
+// A pattern sets the look, not the disc colour: the base stays, the pattern colours follow it
+// (patternColorsFor) and contrast goes back to 100%.
 function pickPattern(i,id){const s=i===1?'':'2',m=maskById(id);state['pattern'+s]=m?id:'none';
-  if(m){const mode=m.palette.mode;if(mode!=='tonal')state[`pattern${s}Color`]=m.colors[0];if(mode==='regions'&&m.accents===2)state[`pattern${s}Alt`]=m.colors[1];
-    state[`pattern${s}Contrast`]=1;if(m.base)state[`vinyl${s}Color`]=m.base}
+  if(m){const mode=m.palette.mode,[color,alt]=patternColorsFor(m,state[`vinyl${s}Color`]);
+    if(mode!=='tonal')state[`pattern${s}Color`]=color;if(mode==='regions'&&m.accents===2)state[`pattern${s}Alt`]=alt;
+    state[`pattern${s}Contrast`]=1}
   applyVinyl();syncUI()}
 function syncPatterns(){for(const i of[1,2]){const s=i===1?'':'2',black=state['vinyl'+s]==='black',m=maskById(state['pattern'+s]),mode=m?.palette.mode;
   $(`vinyl${s}-colored`).hidden=black;
@@ -1136,14 +1768,16 @@ function syncPatterns(){for(const i of[1,2]){const s=i===1?'':'2',black=state['v
   $(`pattern${s}-hint`).textContent=mode==='regions'?tr('第一块用上面的底色，下面选其余几块。','The first region uses the base colour; pick the others below.')
     :mode==='accent'?tr('选好底色和纹路色，其余色层自动搭配。','Pick the base and pattern colours; the other layers follow them.')
     :tr('纹路是底色的深浅变化，用反差调强弱。','The pattern is shades of the base colour; Contrast sets how strong it is.')}}
-// 纯色 / 纹路: switching to solid remembers the pattern (and its colours stay in state), so switching back
-// restores it; the first switch to pattern starts from a splatter in its own palette.
-const lastPattern=['',''];
+// 纯色 / 纹路: the colour carries over both ways. Switching to solid remembers the pattern, so switching back
+// restores it with its colours, unless the colour changed meanwhile: then its colours follow the new one.
+// The first switch to pattern starts from a splatter.
+const lastPattern=['',''],lastBase=['',''];
 function setLook(i,look){const s=i===1?'':'2';
-  if(look==='solid'){if(maskById(state['pattern'+s]))lastPattern[i-1]=state['pattern'+s];state['pattern'+s]='none';applyVinyl();syncUI();return}
+  if(look==='solid'){if(maskById(state['pattern'+s])){lastPattern[i-1]=state['pattern'+s];lastBase[i-1]=state[`vinyl${s}Color`]}state['pattern'+s]='none';applyVinyl();syncUI();return}
   if(maskById(state['pattern'+s]))return;
-  if(maskById(lastPattern[i-1])){state['pattern'+s]=lastPattern[i-1];applyVinyl();syncUI()}
-  else pickPattern(i,maskById('splatter-07')?'splatter-07':MASKS[0].id)}
+  const last=lastPattern[i-1];
+  if(maskById(last)&&lastBase[i-1]===state[`vinyl${s}Color`]){state['pattern'+s]=last;applyVinyl();syncUI()}
+  else pickPattern(i,maskById(last)?last:maskById('splatter-07')?'splatter-07':MASKS[0].id)}
 // Sliders and colour pickers fire on every move; recomposite at most once per frame.
 let vinylQueued=false;
 function queueVinyl(){if(vinylQueued)return;vinylQueued=true;requestAnimationFrame(()=>{vinylQueued=false;applyVinyl()})}
@@ -1171,6 +1805,8 @@ slider('record-rot','recordRot','deg');
 slider('insert-x','insertX','pct');
 slider('sleeve2-x','sleeve2X','pct');
 slider('record2-x','record2X','pct');
+slider('tracks','tracks','count',queueVinyl);
+slider('tracks2','tracks2','count',queueVinyl);
 slider('gate-open','gateOpen','deg',()=>{pose();if(!userMoved)setView(state.view)});
 let obiTimer;
 slider('obi-width','obiWidth','mm',()=>{clearTimeout(obiTimer);obiTimer=setTimeout(()=>{if(obi.children.length)buildObi()},60)});
@@ -1211,22 +1847,21 @@ let lastUrl;
 $('export-btn').addEventListener('click',async()=>{
   const btn=$('export-btn');btn.disabled=true;btn.textContent=tr('生成中…','Rendering…');
   try{const w=stage.clientWidth,h=stage.clientHeight,k=Math.min(state.scale,4096/Math.max(w,h)),tw=Math.round(w*k),th=Math.round(h*k);
-    renderer.setPixelRatio(1);renderer.setSize(tw,th,false);camera.aspect=tw/th;camera.updateProjectionMatrix();renderer.render(scene,camera);
+    renderer.setPixelRatio(1);renderer.setSize(tw,th,false);camera.aspect=tw/th;camera.updateProjectionMatrix();renderStage();
     const blob=await new Promise((res,rej)=>renderer.domElement.toBlob(b=>b?res(b):rej(new Error('toBlob')),'image/png'));
     if(lastUrl)URL.revokeObjectURL(lastUrl);lastUrl=URL.createObjectURL(blob);
-    $('modal-title').textContent=tr('PNG 已生成','PNG ready');$('modal-img').hidden=false;$('modal-dl').hidden=false;
-    $('modal-img').src=lastUrl;$('modal-dl').href=lastUrl;$('modal-size').textContent=`${tw} × ${th} px · ${(blob.size/1048576).toFixed(1)} MB`;$('modal').hidden=false;
+    showResult({title:tr('PNG 已生成','PNG ready'),url:lastUrl,file:'record-mockup.png',size:`${tw} × ${th} px · ${(blob.size/1048576).toFixed(1)} MB`});
   }catch(e){alertNote(tr('导出失败，请把分辨率调到 1× 再试。','Export failed. Set the resolution to 1× and try again.'))}
   finally{renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));resize();btn.disabled=false;btn.textContent=tr('导出 PNG','Export PNG')}
 });
-$('modal-close').addEventListener('click',()=>$('modal').hidden=true);
-$('modal').addEventListener('click',e=>{if(e.target===$('modal'))$('modal').hidden=true});
-addEventListener('keydown',e=>{if(e.key==='Escape')$('modal').hidden=true});
+$('modal-close').addEventListener('click',closeModal);
+$('modal').addEventListener('click',e=>{if(e.target===$('modal'))closeModal()});
+addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
 
 // ---------- Scene spec + agent API ----------
 // One JSON document describes everything the panel controls, in the panel's own units (mm, %, degrees).
-// window.grooveMock applies it, renders PNGs at any size and describes itself as a JSON Schema, so a
-// headless browser (the groove-mock CLI) can drive this page without clicking anything.
+// window.recordMockup applies it, renders PNGs at any size and describes itself as a JSON Schema, so a
+// headless browser (the record-mockup CLI) can drive this page without clicking anything.
 const DEFAULT_STATE=structuredClone(state);
 const enumF=(path,key,values,desc)=>({path,key,type:'enum',values,desc});
 const numF=(path,key,min,max,k,desc,integer=false)=>({path,key,type:'number',min,max,k,desc,integer});
@@ -1237,7 +1872,8 @@ const SPEC_FIELDS=[
   enumF('jacket.type','jacketType',['single','gatefold'],'封套类型：single 单开，gatefold 双开'),
   enumF('jacket.finish','finish',['matte','satin','gloss'],'纸张工艺：matte 哑光，satin 缎面，gloss 亮面'),
   numF('jacket.gateOpen','gateOpen',0,180,1,'双开封面打开角度（度）。大于 0 时塑封、贴纸、Obi 视为已拆除，不显示'),
-  numF('records.count','lpCount',1,2,1,'唱片数量：1 为单 LP，2 为 2LP（封套自动加厚）',true),
+  enumF('records.layout','lpLayout',['split','stacked'],'2LP 双开时两张怎么装：split 左右两扇各一张（默认），第 2 张在左扇（封面）里，打开后向左抽出；stacked 两张叠在右扇同一个口袋。单开或单 LP 时不使用'),
+  numF('records.count','lpCount',1,2,1,'唱片数量：1 为单 LP，2 为 2LP。单开时两张叠在同一个口袋里（封套自动加厚）；双开时按 records.layout 分装，默认两扇各一张',true),
   numF('records.labelRotation','recordRot',-180,180,1,'唱片标签旋转角度（度），两张共用'),
   boolF('records.sleeve.on','sleeveOn','是否显示内袋'),
   colorF('records.sleeve.color','sleeveColor','内袋纸色，未提供 images.sleeve 时生效'),
@@ -1245,9 +1881,10 @@ const SPEC_FIELDS=[
     enumF(`records.disc${i}.vinyl`,`vinyl${s}`,['black','color'],`第 ${i} 张胶色：black 纯黑胶（不叠纹路、不透明）；color 彩胶，用 color 和 transparency，可再加 pattern。旧值 clear 仍可用，等于 color + transparency 38${note}`),
     numF(`records.disc${i}.transparency`,`vinyl${s}Clear`,0,80,.01,`第 ${i} 张彩胶的透明度（%），0 为不透明。有纹路时只有底色变透明，纹路本身不透明；black 不使用${note}`),
     colorF(`records.disc${i}.color`,`vinyl${s}Color`,`第 ${i} 张彩胶颜色；有纹路时是底色（分色类的第一块）${note}`),
-    numF(`records.disc${i}.sleeveOut`,`sleeve${s}X`,0,100,.01,`第 ${i} 张内袋连同唱片从封套开口抽出的比例（%）${note}`),
+    numF(`records.disc${i}.sleeveOut`,`sleeve${s}X`,0,100,.01,`第 ${i} 张内袋连同唱片从封套开口抽出的比例（%）${note}${i===2?'。双开且 records.layout=split 时从左扇的开口抽出：合上时朝右，打开后朝左':''}`),
     numF(`records.disc${i}.recordOut`,`record${s}X`,0,100,.01,`第 ${i} 张唱片再从内袋里抽出的比例（%）${note}`),
-    enumF(`records.disc${i}.pattern.id`,`pattern${s}`,['none',...MASKS.map(m=>m.id)],`第 ${i} 张彩胶纹路，none 或不写为纯色，只在 vinyl=color 时生效。按配色方式分三类——分色（底色是第一块，pattern.color 第二块，split-tri 再用 pattern.color2 第三块；split-quad 对角同色）：${patternIds('regions')}；主次（底色 + pattern.color，其余色层自动推算）：${patternIds('accent')}；同色系（只用底色，纹路是它的深浅变化，pattern.contrast 调反差）：${patternIds('tonal')}。底色是 color；只给 id 时，color、pattern.color、pattern.color2 回到这款纹路的默认配色${note}`),
+    numF(`records.disc${i}.tracks`,`tracks${s}`,1,20,1,`第 ${i} 张每面的音轨数，盘面按等宽分成这么多圈，相邻音轨之间有一道亮环；两面相同${note}`,true),
+    enumF(`records.disc${i}.pattern.id`,`pattern${s}`,['none',...MASKS.map(m=>m.id)],`第 ${i} 张彩胶纹路，none 或不写为纯色，只在 vinyl=color 时生效。按配色方式分三类——分色（底色是第一块，pattern.color 第二块，split-tri 再用 pattern.color2 第三块；split-quad 对角同色）：${patternIds('regions')}；主次（底色 + pattern.color，其余色层自动推算）：${patternIds('accent')}；同色系（只用底色，纹路是它的深浅变化，pattern.contrast 调反差）：${patternIds('tonal')}。底色是 color；写了 color 而没写 pattern.color / pattern.color2 时，纹路色按底色推算；color 也没写时，用这款纹路的默认配色${note}`),
     colorF(`records.disc${i}.pattern.color`,`pattern${s}Color`,`第 ${i} 张纹路色：主次类为纹路颜色，分色类为第二块颜色；同色系不使用${note}`),
     colorF(`records.disc${i}.pattern.color2`,`pattern${s}Alt`,`第 ${i} 张分色第三块颜色，仅 split-tri 使用${note}`),
     numF(`records.disc${i}.pattern.contrast`,`pattern${s}Contrast`,0,200,.01,`第 ${i} 张同色系纹路的反差（%），100 为这款纹路的原始深浅差；仅同色系使用${note}`),
@@ -1291,7 +1928,7 @@ const CAMERA_VIEWS=['quarter','front','side'];
 // Per-slot production guide for agents preparing artwork: canvas size, physical size, what the viewer
 // actually sees, what covers it in the current scene, and whether the slot suits image generation,
 // typesetting or both. Computed from state, so Obi width, gatefold and 2LP are reflected.
-const ASSET_SOURCES=['user','generated','typeset','composite','sample'];
+const ASSET_SOURCES=['user','generated','typeset','composite','sample','fetched'];
 function slotGuide(){
   const mm=v=>Math.round(v*10*10)/10,obiMm=mm(state.obiWidth),depth=mm(jacketDepth()),{total}=obiLayout(),obiPx=Math.max(64,Math.round(2048*total/J.h));
   const obiFront=state.obiOn?[`Obi 盖住左侧 ${obiMm} mm`]:[],obiBack=state.obiOn?[`Obi 盖住右侧 ${obiMm} mm（从背后看）`]:[];
@@ -1326,9 +1963,14 @@ function specFromState(){
     else if(!maskById(state['pattern'+sx]))delete d.pattern}
   s.camera={view:state.view,zoom:state.camZoom,azimuth:state.camAz,elevation:state.camEl,panX:state.camPanX,panY:state.camPanY};
   s.output={background:state.bg==='transparent'?'transparent':state.bgColor,width:state.outW,height:state.outH};
+  s.animation={preset:state.animPreset,duration:state.animDuration,direction:state.animDir,aspect:state.animAspect};
+  if(state.animPreset==='swing')s.animation.angle=state.animAngle;
+  if(state.animFps)s.animation.fps=state.animFps;
+  if(state.animSize)s.animation.size=state.animSize;
+  if(Object.keys(assetLog).length)s.meta={assets:structuredClone(assetLog)};
   return s}
 function buildSchema(){
-  const root={$schema:'https://json-schema.org/draft/2020-12/schema',title:'Groove Mock scene spec',
+  const root={$schema:'https://json-schema.org/draft/2020-12/schema',title:'Record Mockup scene spec',
     description:'黑胶实物 3D 模型的场景描述。所有字段都可省略，省略即保持默认值。长度单位 mm，比例单位 %，角度单位度。',
     type:'object',additionalProperties:false,properties:{version:{const:1}}};
   const parent=p=>{let o=root;for(const k of p.split('.').slice(0,-1)){o.properties[k]??={type:'object',additionalProperties:false,properties:{}};o=o.properties[k]}return o};
@@ -1349,15 +1991,23 @@ function buildSchema(){
     title:{type:'string',description:'这套模型图的名称'},
     assets:{type:'object',additionalProperties:false,description:'每张贴图的来源登记，键与 images 相同',
       properties:Object.fromEntries(Object.keys(IMAGE_SLOTS).map(k=>[k,{type:'object',required:['source'],additionalProperties:false,properties:{
-        source:{enum:ASSET_SOURCES,description:'user 用户提供，generated 生图模型生成，typeset 代码排版，composite 生成底图加排版，sample 工具示例图'},
+        source:{enum:ASSET_SOURCES,description:'user 用户提供，generated 生图模型生成，typeset 代码排版，composite 生成底图加排版，sample 工具示例图，fetched 从曲库（MusicBrainz / Cover Art Archive）取得的真实发行素材'},
         tool:{type:'string',description:'使用的模型或脚本'},prompt:{type:'string',description:'生图提示词'},note:{type:'string'}}}]))}}};
   root.properties.output={type:'object',additionalProperties:false,properties:{
     background:{type:'string',default:'transparent',description:'"transparent" 为透明背景，或 #rrggbb 纯色'},
     width:{type:'integer',minimum:256,maximum:4096,default:DEFAULT_STATE.outW,description:'输出宽度（px）'},
     height:{type:'integer',minimum:256,maximum:4096,default:DEFAULT_STATE.outH,description:'输出高度（px）'}}};
+  root.properties.animation={type:'object',additionalProperties:false,description:'旋转视频 / 动图（record-mockup video 读取，render 不读）。相机按 camera.view 等设置取景，并自动拉远到整段动画都不出画',properties:{
+    preset:{enum:ANIM_PRESETS,default:'turntable',description:'turntable 转台：匀速转一整圈；swing 摆动：左右来回摆 angle 度，不露背面；spin 唱片自转（33⅓ 转/分，需唱片已抽出）；gatefold 双开封面打开再合上，开到 jacket.gateOpen（为 0 时 160°），全程不显示塑封、贴纸和 Obi；pull 内袋和唱片抽出再推回，抽到 records.discN 的 sleeveOut / recordOut（都为 0 时用常见值）。都是首尾相接的循环'},
+    duration:{type:'number',minimum:1,maximum:30,default:6,description:'一个循环的时长（秒）'},
+    fps:{type:'integer',minimum:10,maximum:60,description:'帧率。不写时 MP4 为 30，GIF 为 20'},
+    direction:{enum:['left','right'],default:'left',description:'正面朝哪边转（从镜头看），只用于 turntable 和 swing'},
+    angle:{type:'number',minimum:5,maximum:90,default:25,description:'swing 的摆幅（度，单侧）'},
+    aspect:{enum:Object.keys(ANIM_ASPECTS),default:'16:9',description:'画幅：16:9 横屏，1:1 方形，9:16 竖屏'},
+    size:{type:'integer',minimum:240,maximum:2160,description:'短边像素。不写时 MP4 为 1080（16:9 即 1920 × 1080），GIF 为 600'}}};
   return root}
 
-const SPEC_EXTRA=['version','meta','number.fontFile','output.background','output.width','output.height','camera.view','camera.zoom','camera.azimuth','camera.elevation','camera.panX','camera.panY',...Object.keys(IMAGE_SLOTS).map(k=>'images.'+k)];
+const SPEC_EXTRA=['version','meta','number.fontFile','output.background','output.width','output.height','camera.view','camera.zoom','camera.azimuth','camera.elevation','camera.panX','camera.panY',...['preset','duration','fps','direction','angle','aspect','size'].map(k=>'animation.'+k),...Object.keys(IMAGE_SLOTS).map(k=>'images.'+k)];
 async function applySpec(spec){
   if(!spec||typeof spec!=='object'||Array.isArray(spec))throw new Error('spec 必须是 JSON 对象');
   // Legacy "clear" was colour vinyl at a fixed 62% opacity; keep old specs rendering the same.
@@ -1384,8 +2034,10 @@ async function applySpec(spec){
     else if(state.vinylSame)warnings.push(`records.disc2.sameAsDisc1=true，第 2 张沿用第 1 张的样式，已忽略 ${disc2Style.map(k=>'records.disc2.'+k).join('、')}`)}
   for(const i of[1,2]){const s=i===1?'':'2',m=maskById(state['pattern'+s]),pre=`records.disc${i}`;if(!m||(i===2&&state.vinylSame))continue;
     const mode=m.palette.mode,tri=mode==='regions'&&m.accents===2;
-    if(has(`${pre}.pattern.id`)){if(!has(`${pre}.pattern.color`)&&mode!=='tonal')state[`pattern${s}Color`]=m.colors[0];
-      if(!has(`${pre}.pattern.color2`)&&tri)state[`pattern${s}Alt`]=m.colors[1];
+    // With a colour written, the pattern colours follow it; with none, the pattern's own palette.
+    if(has(`${pre}.pattern.id`)){const[color,alt]=has(`${pre}.color`)?patternColorsFor(m,state[`vinyl${s}Color`]):m.colors;
+      if(!has(`${pre}.pattern.color`)&&mode!=='tonal')state[`pattern${s}Color`]=color;
+      if(!has(`${pre}.pattern.color2`)&&tri)state[`pattern${s}Alt`]=alt;
       if(!has(`${pre}.pattern.contrast`))state[`pattern${s}Contrast`]=1;
       if(!has(`${pre}.color`)&&m.base)state[`vinyl${s}Color`]=m.base}
     if(has(`${pre}.pattern.color`)&&mode==='tonal')warnings.push(`${pre}.pattern.color 无效：${m.id} 是同色系纹路，只用底色 ${pre}.color`);
@@ -1396,6 +2048,11 @@ async function applySpec(spec){
   if(bg!==undefined){if(bg==='transparent')state.bg='transparent';else if(typeof bg==='string'&&/^#[0-9a-f]{6}$/i.test(bg)){state.bg='color';state.bgColor=bg.toLowerCase()}else warnings.push('output.background 需要 "transparent" 或 #rrggbb，已忽略')}
   for(const [p,key,min,max,int] of[['output.width','outW',256,4096,true],['output.height','outH',256,4096,true],['camera.zoom','camZoom',.3,4],['camera.azimuth','camAz',-180,180],['camera.elevation','camEl',-60,60],['camera.panX','camPanX',-600,600],['camera.panY','camPanY',-400,400]]){
     const v=getPath(spec,p);if(v===undefined)continue;const c=clampNum(p,v,min,max,int);if(c!==null)state[key]=c}
+  for(const [p,key,min,max,int] of[['animation.duration','animDuration',1,30],['animation.fps','animFps',10,60,true],['animation.angle','animAngle',5,90],['animation.size','animSize',240,2160,true]]){
+    const v=getPath(spec,p);if(v===undefined)continue;const c=clampNum(p,v,min,max,int);if(c!==null)state[key]=c}
+  for(const [p,key,values] of[['animation.preset','animPreset',ANIM_PRESETS],['animation.direction','animDir',['left','right']],['animation.aspect','animAspect',Object.keys(ANIM_ASPECTS)]]){
+    const v=getPath(spec,p);if(v===undefined)continue;if(values.includes(v))state[key]=v;else warnings.push(`${p}=${JSON.stringify(v)} 无效，可选值：${values.join(' / ')}`)}
+  if(has('animation.angle')&&state.animPreset!=='swing')warnings.push('animation.angle 只在 preset=swing 时生效');
   const view=getPath(spec,'camera.view');
   if(view!==undefined){if(CAMERA_VIEWS.includes(view))state.view=view;else warnings.push(`camera.view=${JSON.stringify(view)} 无效，可选值：${CAMERA_VIEWS.join(' / ')}`)}
   for(const [slot,src] of Object.entries(spec.images||{})){
@@ -1422,7 +2079,6 @@ async function applySpec(spec){
 
 // Rebuild every derived object from state; used after a spec lands.
 function refreshAll(){
-  J.d=POCKET_D[state.lpCount];buildJacket();
   applyFinish();applyVinyl();sleeveMat.color.set(tex.sleeve?'#ffffff':state.sleeveColor);
   buildSticker();stickerTexture();numTexture();
   applyJacketType();applyBg();syncUI();
@@ -1442,6 +2098,218 @@ async function renderToBlob(w,h){
     return await new Promise((res,rej)=>renderer.domElement.toBlob(b=>b?res(b):rej(new Error('PNG 编码失败')),'image/png'))}
   finally{renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));resize()}}
 
+// ---------- Animation ----------
+// Frames are stepped, not recorded: frame i shows time i/N of one loop, so the last frame flows into the
+// first and the same spec always gives the same file. The product turns under fixed lights (a real
+// turntable), so highlights sweep across the cover and the film instead of riding along with it.
+const MEDIABUNNY_URL='https://cdn.jsdelivr.net/npm/mediabunny@1.61.3/dist/bundles/mediabunny.min.mjs';
+const GIFENC_URL='https://cdn.jsdelivr.net/npm/gifenc@1.0.3/dist/gifenc.esm.js';
+const ANIM_PRESETS=['turntable','swing','spin','gatefold','pull'],ANIM_ASPECTS={'16:9':[16,9],'1:1':[1,1],'9:16':[9,16]},VIDEO_FORMATS=['mp4','gif'];
+const ANIM_DEFAULTS={mp4:{fps:30,size:1080},gif:{fps:20,size:600}},SPIN_RPM=100/3,GATE_OPEN_DEFAULT=160;
+function animSettings(format){
+  const d=ANIM_DEFAULTS[format],fps=state.animFps||d.fps,size=state.animSize||d.size,[aw,ah]=ANIM_ASPECTS[state.animAspect];
+  const even=v=>2*Math.round(v/2),k=size/Math.min(aw,ah);
+  return{fps,width:even(aw*k),height:even(ah*k),frames:Math.max(2,Math.round(state.animDuration*fps))}}
+// Out-and-back moves (open, pull): hold shut, ease out, hold open, ease back; 0 → 1 → 0 over one loop.
+function outAndBack(u){const ease=(a,b)=>THREE.MathUtils.smoothstep(u,a,b);return u<.5?ease(.08,.42):1-ease(.58,.92)}
+// Where a pull ends: the scene's own sleeve / record / insert positions, or a typical pull when all are in.
+function pullTargets(){
+  const two=state.lpCount===2,t={sleeveX:state.sleeveX,recordX:state.recordX,...(state.insertOn&&{insertX:state.insertX}),...(two&&{sleeve2X:state.sleeve2X,record2X:state.record2X})};
+  // Stacked discs stagger so both show; split ones leave by their own pockets and can pull alike.
+  const split=isSplit();
+  if(Object.values(t).every(v=>v<.05))Object.assign(t,state.sleeveOn?{sleeveX:.5,recordX:.45,...(two&&(split?{sleeve2X:.5,record2X:.45}:{sleeve2X:.75,record2X:.3}))}:{recordX:.6,...(two&&{record2X:split?.6:.9})});
+  return t}
+// One frame of the clip at loop phase u in [0, 1): turn is the product's turn (radians about the vertical
+// axis); set holds state keys posed for this frame only. Stage preview and video export both draw from it.
+function animFrame(u){
+  const p=state.animPreset,dir=state.animDir==='left'?-1:1;
+  if(p==='turntable')return{turn:dir*2*Math.PI*u};
+  if(p==='swing')return{turn:dir*THREE.MathUtils.degToRad(state.animAngle)*Math.sin(2*Math.PI*u)};
+  // Records turn clockwise seen from the label side, a whole number of turns per loop at 33⅓ rpm.
+  if(p==='spin')return{set:{recordRot:state.recordRot-360*Math.max(1,Math.round(state.animDuration*SPIN_RPM/60))*u}};
+  const k=outAndBack(u);
+  // An opening gatefold has lost its film, sticker and obi, at every frame rather than popping off at 0.5°.
+  if(p==='gatefold'){const end=state.gateOpen>.5?state.gateOpen:GATE_OPEN_DEFAULT;return{set:{gateOpen:end*k,disc2Flip:end>90,wrapOn:false,obiOn:false,stickerOn:false}}}
+  return{set:Object.fromEntries(Object.entries(pullTargets()).map(([key,v])=>[key,v*k]))}}
+// Whether disc i's label shows from the front (as pose() places it): clear of the jacket, and of the sleeve
+// unless the record still sits centred in it, where the sleeve's hole shows the label.
+function labelShows(i){const s=i===1?'':'2',x=state[`sleeve${s}X`]*24,rx=x+state[`record${s}X`]*27,clear=edge=>rx-LP.label>edge;
+  if(!state.sleeveOn)return clear(J.w/2);
+  return clear(Math.max(J.w/2,x+SLV.s/2))||(state[`record${s}X`]<.01&&x-SLV.hole>J.w/2)}
+// Things in the scene that leave a preset with nothing to show. Codes, so the API and the panel can word them.
+function animIssues(){const p=state.animPreset,out=[];
+  if(p==='gatefold'&&!isGate())out.push('gate-single');
+  if(p==='spin'&&!labelShows(1)&&!(state.lpCount===2&&labelShows(2)))out.push('spin-hidden');
+  return out}
+// Each issue: [API / CLI warning, panel text in Chinese, panel text in English].
+const ANIM_ISSUES={'gate-single':['jacket.type 不是 gatefold，没有可打开的封面','单开封套没有可打开的封面，先在「封套」里选双开。','A single jacket has no cover to open; choose Gatefold under Jacket first.'],
+  'spin-hidden':['唱片标签被封套或内袋挡住，看不出自转；把 records.disc1.recordOut 调大，露出标签','唱片标签还被挡着，看不出自转；在「唱片」里把唱片抽出更多。','The label is still covered, so the spin won’t show; pull the record further out under Records.']};
+// Poses the scene with set applied, runs fn, then puts every key back.
+function withPose(set,fn){
+  if(!set)return fn();
+  const saved={};for(const k in set){saved[k]=state[k];state[k]=set[k]}pose();
+  try{return fn()}finally{Object.assign(state,saved);pose()}}
+function productParts(){return scene.children.filter(o=>o.visible&&!o.isLight&&o!==ground)}
+function productBox(parts){
+  scene.updateMatrixWorld();const box=new THREE.Box3(),b=new THREE.Box3();
+  for(const p of parts)p.traverseVisible(m=>{if(!m.geometry)return;m.geometry.boundingBox||m.geometry.computeBoundingBox();box.union(b.copy(m.geometry.boundingBox).applyMatrix4(m.matrixWorld))});
+  return box}
+const restPivot=()=>productBox(productParts()).getCenter(new THREE.Vector3());
+// One camera for the whole clip, far enough that every sampled frame — posed, then turned about the rest
+// pose's centre — fits the frame. Returns that centre and the shadow reach the clip needs.
+function fitClipCamera(){
+  const n=ANIM_PRESETS.indexOf(state.animPreset)<2?72:24,frames=Array.from({length:n},(_,i)=>animFrame(i/n));
+  const rest=productBox(productParts()),pivot=rest.getCenter(new THREE.Vector3()),boxes=frames.map(f=>f.set?withPose(f.set,()=>productBox(productParts())):rest),all=new THREE.Box3();
+  for(const b of boxes)all.union(b);
+  const c=all.getCenter(new THREE.Vector3()),v=VIEWS[state.view],half=Math.tan(THREE.MathUtils.degToRad(camera.fov/2)),margin=1.08;
+  const sph=new THREE.Spherical().setFromVector3(new THREE.Vector3(...v.dir));
+  sph.theta+=THREE.MathUtils.degToRad(state.camAz);sph.phi=THREE.MathUtils.clamp(sph.phi-THREE.MathUtils.degToRad(state.camEl),.05,Math.PI-.05);sph.radius=1;
+  const d=new THREE.Vector3().setFromSpherical(sph),r=new THREE.Vector3().crossVectors(d.clone().negate(),camera.up).normalize(),u=new THREE.Vector3().crossVectors(r,d.clone().negate());
+  const axis=new THREE.Vector3(0,1,0),q=new THREE.Vector3();let dist=0,reach=0;
+  frames.forEach((f,i)=>{const b=boxes[i];
+    for(const x of[b.min.x,b.max.x])for(const y of[b.min.y,b.max.y])for(const z of[b.min.z,b.max.z]){
+      q.set(x,y,z).sub(pivot).applyAxisAngle(axis,f.turn||0).add(pivot);reach=Math.max(reach,q.length());q.sub(c);const zc=q.dot(d);
+      dist=Math.max(dist,zc+margin*Math.abs(q.dot(r))/(half*camera.aspect),zc+margin*Math.abs(q.dot(u))/half)}});
+  const target=c.clone().add(new THREE.Vector3(state.camPanX/10,state.camPanY/10,0));
+  controls.target.copy(target);camera.position.copy(target).addScaledVector(d,dist/state.camZoom);camera.lookAt(target);
+  return{pivot,reach:reach+5}}
+// GIF workers. gifenc's source is fetched by the page (so the CLI can serve it locally) and handed to each
+// worker as a blob module; a worker quantizes the palette or encodes one frame as a standalone chunk
+// (gifenc's manual mode), which the page then joins in order between the GIF header and trailer.
+const GIF_WORKER=lib=>`import {GIFEncoder,quantize,applyPalette} from '${lib}';
+onmessage=({data:m})=>{try{
+  if(m.type==='palette'){postMessage({id:m.id,result:quantize(m.rgba,256)});return}
+  const enc=GIFEncoder({auto:false});
+  enc.writeFrame(applyPalette(m.rgba,m.palette),m.w,m.h,{first:m.first,palette:m.first?m.palette:null,delay:m.delay,repeat:0});
+  const bytes=enc.bytes();postMessage({id:m.id,result:bytes},[bytes.buffer])}
+  catch(e){postMessage({id:m.id,error:String(e&&e.message||e)})}}`;
+async function gifPool(){
+  const lib=URL.createObjectURL(new Blob([await (await fetch(GIFENC_URL)).text()],{type:'text/javascript'}));
+  const code=URL.createObjectURL(new Blob([GIF_WORKER(lib)],{type:'text/javascript'}));
+  const size=Math.max(1,Math.min(4,(navigator.hardwareConcurrency||2)-1)),idle=[],queue=[],waiting=new Map();let next=0,failure=null;
+  const fail=e=>{failure=e;for(const{reject}of waiting.values())reject(e);waiting.clear()};
+  const pump=()=>{while(idle.length&&queue.length){const wk=idle.pop(),{msg,transfer,resolve,reject}=queue.shift(),id=next++;
+    waiting.set(id,{resolve,reject,wk});wk.postMessage({...msg,id},transfer)}};
+  const workers=Array.from({length:size},()=>{const wk=new Worker(code,{type:'module'});
+    wk.onmessage=({data})=>{const job=waiting.get(data.id);waiting.delete(data.id);idle.push(wk);
+      if(data.error)job.reject(new Error(`GIF 编码失败：${data.error}`));else job.resolve(data.result);pump()};
+    wk.onerror=e=>{e.preventDefault();fail(new Error(`GIF 编码线程出错：${e.message||'无法启动'}`))};
+    idle.push(wk);return wk});
+  return{size,
+    run:(msg,transfer=[])=>failure?Promise.reject(failure):new Promise((resolve,reject)=>{queue.push({msg,transfer,resolve,reject});pump()}),
+    close(){for(const wk of workers)wk.terminate();URL.revokeObjectURL(lib);URL.revokeObjectURL(code)}}}
+// Yields to the event loop without timer throttling, so a background tab keeps exporting.
+const yieldTask=()=>new Promise(r=>{const c=new MessageChannel();c.port1.onmessage=()=>r();c.port2.postMessage(0)});
+// encoder: 'software' starts at once; 'hardware' is faster per frame but its first use in a browser can stall
+// for many seconds (macOS headless: ~18 s); 'auto' leaves the choice to the browser.
+const ENCODERS={auto:'no-preference',software:'prefer-software',hardware:'prefer-hardware'};
+// Draws the scene with the product turned by angle about the vertical axis through c, then puts it back,
+// so pose() and the panel never see a turned product.
+function renderTurned(angle,c){
+  if(!angle){renderer.render(scene,camera);return}
+  const parts=productParts(),saved=parts.map(o=>[o.position.clone(),o.quaternion.clone()]),turn=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),angle);
+  for(const o of parts){o.position.sub(c).applyQuaternion(turn).add(c);o.quaternion.premultiply(turn)}
+  try{renderer.render(scene,camera)}finally{parts.forEach((o,i)=>{o.position.copy(saved[i][0]);o.quaternion.copy(saved[i][1])})}}
+// Draws one clip frame: poses it, turns it about the rest pose's centre, then restores both.
+function renderAnimFrame(f,pivot){withPose(f.set,()=>renderTurned(f.turn||0,pivot))}
+function renderStage(){if(previewActive())renderAnimFrame(animFrame(preview.phase),restPivot());else renderer.render(scene,camera)}
+// The key light's shadow box must cover the product in every frame, not only at rest; 0 restores it.
+function shadowReach(r){const sh=key.shadow.camera;Object.assign(sh,r?{left:-r,right:r,top:r,bottom:-r}:SHADOW_BOX);sh.updateProjectionMatrix()}
+function fitPreview(){shadowReach(fitClipCamera().reach)}
+function setPlaying(on){
+  preview.playing=on;if(on){preview.last=performance.now();fitPreview()}syncAnimPanel();
+  const b=$('play-btn'),label=on?tr('暂停','Pause'):tr('播放动画','Play animation');b.setAttribute('aria-pressed',on);b.setAttribute('aria-label',label);b.title=label;
+  $('play-reset').hidden=on||preview.phase===0}
+function resetPreview(){preview.playing=false;preview.phase=0;shadowReach(0);setPlaying(false);setView(state.view)}
+$('play-btn').addEventListener('click',()=>setPlaying(!preview.playing));
+$('play-reset').addEventListener('click',resetPreview);
+setPlaying(false);
+function syncAnimPanel(){
+  // Opening needs a gatefold, so a single jacket hides the choice. A spec that still asks for it keeps it
+  // (shown pressed, with the issue note), so the API and CLI can warn instead of quietly rendering a turntable.
+  const gate=$('anim-preset').querySelector('[data-v=gatefold]');gate.hidden=!isGate()&&state.animPreset!=='gatefold';
+  const p=state.animPreset,issues=animIssues();
+  $('anim-dir-row').hidden=p!=='turntable'&&p!=='swing';$('anim-angle-row').hidden=p!=='swing';
+  const notes=issues.map(k=>tr(ANIM_ISSUES[k][1],ANIM_ISSUES[k][2]));
+  if(state.bg==='transparent')notes.push(tr('视频不支持透明背景，会用上面的背景颜色。','Video has no transparency; it uses the background colour above.'));
+  $('anim-issue').hidden=!notes.length;$('anim-issue').textContent=notes.join(' ')}
+const refitPreview=()=>{syncAnimPanel();if(previewActive())fitPreview()};
+seg('anim-preset','animPreset',refitPreview);seg('anim-dir','animDir',refitPreview);
+seg('anim-aspect','animAspect');seg('video-format','videoFormat');seg('anim-size','animSize');
+// Export video from the panel. Pressing the button again while it runs cancels.
+let videoUrl,videoAbort;
+$('video-btn').addEventListener('click',async()=>{
+  if(videoAbort){videoAbort.abort();return}
+  const btn=$('video-btn'),format=state.videoFormat,status=$('export-status'),bar=$('export-progress');
+  videoAbort=new AbortController();btn.textContent=tr('取消导出','Cancel');status.textContent=tr('正在准备…','Preparing…');bar.value=0;$('export-overlay').hidden=false;
+  try{
+    const r=await renderAnimation(format,{encoder:'software',signal:videoAbort.signal,onProgress:(d,n)=>{status.textContent=tr(`正在生成 ${d} / ${n} 帧`,`Rendering frame ${d} / ${n}`);bar.value=d/n}});
+    const blob=new Blob([r.bytes],{type:format==='gif'?'image/gif':'video/mp4'});
+    if(videoUrl)URL.revokeObjectURL(videoUrl);videoUrl=URL.createObjectURL(blob);
+    showResult({title:format==='gif'?tr('GIF 已生成','GIF ready'):tr('视频已生成','Video ready'),url:videoUrl,file:`record-mockup.${format}`,video:format==='mp4',
+      size:`${r.width} × ${r.height} px · ${r.duration} s · ${(blob.size/1048576).toFixed(1)} MB`});
+  }catch(e){if(e.name!=='AbortError')alertNote(tr(`视频导出失败：${e.message}`,`Video export failed: ${e.message}`))}
+  finally{videoAbort=null;$('export-overlay').hidden=true;btn.textContent=tr('导出视频','Export video')}});
+slider('anim-duration','animDuration','sec',()=>{});slider('anim-angle','animAngle','deg',refitPreview);
+syncAnimPanel();
+
+async function renderAnimation(format,{onProgress=()=>{},encoder='auto',signal}={}){
+  if(!(encoder in ENCODERS))throw new Error(`不支持的编码方式 ${encoder}，可选：${Object.keys(ENCODERS).join(' / ')}`);
+  if(!VIDEO_FORMATS.includes(format))throw new Error(`不支持的格式 ${format}，可选：${VIDEO_FORMATS.join(' / ')}`);
+  const warnings=[],{fps,width:w,height:h,frames}=animSettings(format),clip=Array.from({length:frames},(_,i)=>animFrame(i/frames));
+  warnings.push(...animIssues().map(k=>ANIM_ISSUES[k][0]));
+  if(state.bg==='transparent')warnings.push(`视频不支持透明背景，已改用纯色 ${state.bgColor}（output.background 可指定颜色）`);
+  if(format==='gif'&&fps>50)warnings.push('GIF 帧率超过 50 时，多数播放器会放慢播放');
+  const cam={pos:camera.position.clone(),target:controls.target.clone()};
+  renderer.setAnimationLoop(null);
+  try{
+    renderer.setPixelRatio(1);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();
+    scene.background=new THREE.Color(state.bgColor);
+    const {pivot,reach}=fitClipCamera();shadowReach(reach);
+    const draw=i=>renderAnimFrame(clip[i],pivot);
+    let bytes;
+    if(format==='mp4'){
+      const mb=await import(MEDIABUNNY_URL);
+      const config={codec:'avc',quality:mb.QUALITY_VERY_HIGH,keyFrameInterval:2,hardwareAcceleration:ENCODERS[encoder]};
+      if(!await mb.canEncodeVideo('avc',{width:w,height:h,...config})){
+        if(encoder==='auto'||!await mb.canEncodeVideo('avc',{width:w,height:h,...config,hardwareAcceleration:'no-preference'}))throw new Error('这个浏览器不能编码 H.264（MP4）视频。请用 Chrome，或改为输出 GIF');
+        warnings.push(`${encoder} 编码不支持 ${w} × ${h}，已改由浏览器自选编码器`);config.hardwareAcceleration='no-preference'}
+      const output=new mb.Output({format:new mb.Mp4OutputFormat({fastStart:'in-memory'}),target:new mb.BufferTarget()});
+      // Wrap the canvas in a VideoFrame ourselves: it stays on the GPU, where CanvasSource's capture is ~10x slower.
+      const src=new mb.VideoSampleSource(config);
+      output.addVideoTrack(src,{frameRate:fps});await output.start();
+      try{for(let i=0;i<frames;i++){signal?.throwIfAborted();draw(i);
+        const sample=new mb.VideoSample(new VideoFrame(renderer.domElement,{timestamp:Math.round(i*1e6/fps),duration:Math.round(1e6/fps)}));
+        await src.add(sample);sample.close();onProgress(i+1,frames)}}
+      catch(e){await output.cancel();throw e}
+      await output.finalize();bytes=new Uint8Array(output.target.buffer);
+    }else{
+      const cv=canvas(w,h),g=cv.getContext('2d',{willReadFrequently:true}),grab=()=>{g.drawImage(renderer.domElement,0,0);return g.getImageData(0,0,w,h).data};
+      const pool=await gifPool();
+      try{
+        // One palette for the whole clip, sampled from frames spread across the loop, so colours don't flicker.
+        const picks=8,stride=4,sample=new Uint8Array(Math.ceil(w*h/stride)*4*picks);let n=0;
+        for(let k=0;k<picks;k++){draw(Math.floor(k*frames/picks));const px=grab();for(let j=0;j<px.length;j+=4*stride){sample.set(px.subarray(j,j+4),n);n+=4}}
+        const palette=await pool.run({type:'palette',rgba:sample.subarray(0,n)}),delay=Math.round(100/fps)*10;
+        // The main thread only draws and reads pixels; workers map them to the palette and LZW-encode each frame
+        // on its own. A few frames stay in flight, so memory stays flat however long the clip is.
+        const chunks=new Array(frames),inFlight=new Set();let done=0;
+        for(let i=0;i<frames;i++){signal?.throwIfAborted();draw(i);const rgba=grab();
+          const job=pool.run({type:'frame',rgba,palette,w,h,delay,first:i===0},[rgba.buffer]).then(b=>{chunks[i]=b;onProgress(++done,frames)});
+          inFlight.add(job);job.then(()=>inFlight.delete(job),()=>{});   // failures surface through race / all
+          if(inFlight.size>=2*pool.size)await Promise.race(inFlight);else await yieldTask()}
+        await Promise.all(inFlight);
+        const header=new TextEncoder().encode('GIF89a'),total=chunks.reduce((t,c)=>t+c.length,header.length+1);
+        bytes=new Uint8Array(total);bytes.set(header);let at=header.length;for(const c of chunks){bytes.set(c,at);at+=c.length}bytes[at]=0x3b;   // trailer
+      }finally{pool.close()}
+    }
+    const real=format==='gif'?100/Math.round(100/fps):fps;   // GIF delays count in 1/100 s
+    return{format,width:w,height:h,fps:Math.round(real*100)/100,frames,duration:Math.round(frames/real*100)/100,bytes,warnings}
+  }finally{
+    if(previewActive())fitPreview();else shadowReach(0);
+    camera.position.copy(cam.pos);controls.target.copy(cam.target);applyBg();
+    renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));resize();renderer.setAnimationLoop(loop)}}
+
 // ---------- Boot ----------
 $('jacket-spec').textContent=specText();applyFinish();applyVinyl();syncPatterns();buildWrap(state.wrinkle);numTexture();buildObi();buildSticker();pose();applyBg();resize();setView('quarter');
 new ResizeObserver(resize).observe(stage);
@@ -1455,13 +2323,16 @@ function redrawSamples(){
 }
 const fontsSettled=(document.fonts?.ready??Promise.resolve()).then(redrawSamples);
 $('lang-btn').addEventListener('click',()=>{lang=lang==='en'?'zh':'en';try{localStorage.setItem('gm-lang',lang)}catch(e){}
-  translateStatic();$('jacket-spec').textContent=specText();if(!userFontFace)$('num-font-custom').textContent=tr('自定义（未上传）','Custom (none uploaded)');
+  translateStatic();$('jacket-spec').textContent=specText();lp2Where();if(!userFontFace)$('num-font-custom').textContent=tr('自定义（未上传）','Custom (none uploaded)');
   else $('num-font-custom').textContent=$('num-font-custom').textContent.replace(/^(自定义|Custom) · /,tr('自定义 · ','Custom · '));redrawSamples();
-  for(const s of['','2'])buildPicker(s);syncPatterns()});
+  for(const s of['','2'])buildPicker(s);syncPatterns();
+  for(const t of document.querySelectorAll('.tag.lib'))t.textContent=tr('曲库','Library');if($('lib-view').innerHTML)libView?.()});
+// The play button's label follows its state, so it is relabelled after translateStatic, not by it.
+$('lang-btn').addEventListener('click',()=>setPlaying(preview.playing));
 const nextFrame=()=>new Promise(r=>requestAnimationFrame(()=>r()));
 const ready=fontsSettled.then(nextFrame).then(nextFrame);
 const toDataUrl=blob=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>rej(r.error);r.readAsDataURL(blob)});
-window.grooveMock={
+window.recordMockup={
   version:1,ready,
   schema:buildSchema,
   slots:slotGuide,
@@ -1470,7 +2341,12 @@ window.grooveMock={
   async render(opts={}){await ready;
     const size=(v,d)=>Math.min(4096,Math.max(64,Math.round(v||d)));
     const w=size(opts.width,state.outW),h=size(opts.height,state.outH),blob=await renderToBlob(w,h);
-    return{width:w,height:h,bytes:blob.size,dataUrl:await toDataUrl(blob)}}
+    return{width:w,height:h,bytes:blob.size,dataUrl:await toDataUrl(blob)}},
+  // Renders spec.animation as an MP4 or GIF. onProgress(done, total) is called after each frame;
+  // encoder (MP4 only) is auto | software | hardware.
+  async renderVideo(opts={}){await ready;
+    const r=await renderAnimation(opts.format||'mp4',{onProgress:opts.onProgress,encoder:opts.encoder}),type=r.format==='gif'?'image/gif':'video/mp4';
+    const{bytes,...rest}=r;return{...rest,bytes:bytes.length,dataUrl:await toDataUrl(new Blob([bytes],{type}))}}
 };
 window.__gm={state,scene,camera,renderer,pose,controls,setView};
 </script>

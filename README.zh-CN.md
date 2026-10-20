@@ -1,14 +1,14 @@
-# Groove Mock：黑胶唱片 3D 模型图生成工具
+# Record Mockup：黑胶唱片 3D 模型图生成工具
 
 [English](README.md) · **简体中文**
 
-Groove Mock 用来渲染接近实拍效果的**黑胶唱片 3D 模型图**，支持单开封套、双开封套、2LP、塑封膜、hype sticker、Obi 侧标和限量编号。你可以在浏览器里手动调整出图，也可以写一份 JSON 场景描述（spec），交给命令行工具出图。这条命令行链路也适合 Codex、Claude Code 等 AI agent 操作。
+Record Mockup 用来渲染接近实拍效果的**黑胶唱片 3D 模型图**，支持单开封套、双开封套、2LP、塑封膜、hype sticker、Obi 侧标和限量编号。你可以在浏览器里手动调整出图，也可以写一份 JSON 场景描述（spec），交给命令行工具出图。这条命令行链路也适合 Codex、Claude Code 等 AI agent 操作。
 
-**[在浏览器里直接试用 →](https://oceanjustinlin.github.io/groove-mock/)** 无需安装或注册，素材不会离开你的电脑。
+**[在浏览器里直接试用 →](https://recordmockup.com/)** 无需安装或注册，素材不会离开你的电脑。
 
 ![2LP 黑胶模型图：套着塑封膜，有首版贴纸、Obi 侧标和烫金编号，一张黑胶、一张红胶从内袋抽出](docs/images/hero.jpg)
 
-<sub>本页所有配图都由 Groove Mock 用内置示例图渲染，对应的 spec 在 [`docs/specs/`](docs/specs/)。</sub>
+<sub>本页所有配图都由 Record Mockup 用内置示例图渲染，对应的 spec 在 [`docs/specs/`](docs/specs/)。</sub>
 
 ## 能做什么
 
@@ -31,13 +31,13 @@ Groove Mock 用来渲染接近实拍效果的**黑胶唱片 3D 模型图**，支
 
 ## 两种用法
 
-**浏览器编辑器**：`index.html` 是单页编辑器，可以上传素材、切换封套形式、抽出唱片、转动视角，然后导出 PNG。图片只在浏览器本地处理，不会上传。
+**浏览器编辑器**：`index.html` 是单页编辑器，可以上传素材、切换封套形式、抽出唱片、转动视角，然后导出 PNG；也可以在工作台播放动画（转台、摆动、唱片自转、双开展开、抽出），导出 16:9、1:1 或 9:16 的 MP4 或 GIF。图片只在浏览器本地处理，不会上传。
 
-**命令行和 agent**：`cli/groove-mock.mjs` 在后台用 Chrome 打开同一个页面，通过 `window.grooveMock` 接口驱动它，所以命令行出的图和编辑器完全一致。所有参数都是 JSON spec 里的字段，并有对应的 JSON Schema。agent 的操作方式就是：写 spec，出图，看图，调参数，再出图。
+**命令行和 agent**：`cli/record-mockup.mjs` 在后台用 Chrome 打开同一个页面，通过 `window.recordMockup` 接口驱动它，所以命令行出的图和编辑器完全一致。所有参数都是 JSON spec 里的字段，并有对应的 JSON Schema。agent 的操作方式就是：写 spec，出图，看图，调参数，再出图。
 
 ```mermaid
 flowchart LR
-  A[素材 + JSON spec] --> B[groove-mock render]
+  A[素材 + JSON spec] --> B[record-mockup render]
   B --> C[无头 Chrome<br>与编辑器同一个渲染器]
   C --> D[PNG 模型图]
   D -->|agent 看图后调整| A
@@ -69,9 +69,9 @@ cd ..
 
 ```bash
 mkdir -p output
-node cli/groove-mock.mjs schema -o output/schema.json
-node cli/groove-mock.mjs slots examples/2lp-gatefold.json
-node cli/groove-mock.mjs render examples/2lp-gatefold.json -o output/example.png --json --strict
+node cli/record-mockup.mjs schema -o output/schema.json
+node cli/record-mockup.mjs slots examples/2lp-gatefold.json
+node cli/record-mockup.mjs render examples/2lp-gatefold.json -o output/example.png --json --strict
 ```
 
 这个例子用的是渲染器内置的示例图，不需要任何真实专辑封面。
@@ -79,7 +79,7 @@ node cli/groove-mock.mjs render examples/2lp-gatefold.json -o output/example.png
 自己新建一个场景：
 
 ```bash
-node cli/groove-mock.mjs init -o output/spec.json
+node cli/record-mockup.mjs init -o output/spec.json
 ```
 
 图片和 spec 放在同一个目录，路径写相对 spec 的路径。每张自定义贴图都要在 `meta.assets.<贴图位>.source` 登记来源，可选值为 `user`、`generated`、`typeset`、`composite`、`sample`。生图素材还要记录提示词。
@@ -111,7 +111,7 @@ node cli/groove-mock.mjs init -o output/spec.json
 
 ## 命令
 
-完整参数见 `node cli/groove-mock.mjs --help` 和 [`cli/README.md`](cli/README.md)。
+完整参数见 `node cli/record-mockup.mjs --help` 和 [`cli/README.md`](cli/README.md)。
 
 | 命令 | 作用 |
 |---|---|
@@ -120,6 +120,7 @@ node cli/groove-mock.mjs init -o output/spec.json
 | `slots [spec.json]` | 按场景列出各贴图位的像素尺寸、可见区域、遮挡，以及建议用户提供、生图还是排版 |
 | `render spec.json` | 渲染一张 PNG |
 | `numbers spec.json --from 1 --to 50` | 按号段批量渲染编号图 |
+| `video spec.json -o turn.mp4` | 按 spec 的 `animation` 渲染循环视频，输出 MP4 或 GIF：转台、摆动、唱片自转、双开展开、抽出（16:9、1:1 或 9:16）。网页里视角旁的 ▶ 在工作台预览同一段动画 |
 
 常用选项：`--set path=value` 临时覆盖字段，不用改文件；`--json` 输出一行结果；`--strict` 遇到场景警告或素材来源警告时拒绝出图。
 
@@ -139,7 +140,7 @@ node cli/groove-mock.mjs init -o output/spec.json
 
 ## 浏览器页面与网络依赖
 
-在线版本：<https://oceanjustinlin.github.io/groove-mock/>。每次推送到 `main` 且改动了页面时，`.github/workflows/pages.yml` 会运行 `node site/build.mjs` 自动发布。构建脚本会补上完整的网页头部、搜索与分享元信息、网站图标、robots.txt 和 sitemap。
+在线版本：<https://recordmockup.com/>。每次推送到 `main` 且改动了页面时，`.github/workflows/pages.yml` 会运行 `node site/build.mjs` 自动发布。构建脚本会补上完整的网页头部、搜索与分享元信息、网站图标、robots.txt 和 sitemap。
 
 本地运行时，可以用静态服务器打开页面，例如在项目根目录执行：
 
@@ -149,7 +150,7 @@ python3 -m http.server 8000 --bind 127.0.0.1
 
 然后访问 `http://127.0.0.1:8000`。
 
-浏览器页面从固定版本的 CDN 加载 three.js，需要联网。命令行工具改用本地安装的 three.js。Google Fonts 仍会尝试联网加载，失败时退回系统字体，文字外观可能不同。命令行工具会临时监听回环地址，运行环境需要允许启动本地服务和浏览器。
+浏览器页面从固定版本的 CDN 加载 three.js（出视频时还有 Mediabunny 和 gifenc），需要联网。命令行工具改用本地安装的包。Google Fonts 仍会尝试联网加载，失败时退回系统字体，文字外观可能不同。命令行工具会临时监听回环地址，运行环境需要允许启动本地服务和浏览器。
 
 ## 重新生成 README 配图
 
@@ -162,7 +163,7 @@ node docs/build-images.mjs
 ## 验证
 
 ```bash
-node --check cli/groove-mock.mjs
+node --check cli/record-mockup.mjs
 npm test --prefix cli
 npm audit --prefix cli --omit=dev
 ```

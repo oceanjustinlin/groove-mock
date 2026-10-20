@@ -5,6 +5,7 @@
     "finish": "matte"
   },
   "records": {
+    "sleeve": {"on": true},
     "count": 1,
     "disc1": {
       "sleeveOut": 0,
