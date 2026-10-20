@@ -22,8 +22,9 @@ Record Mockup renders photorealistic **3D vinyl record mockups**: LP jackets, ga
 <sub>Pattern vinyl: a translucent splatter disc and a pinwheel disc, from [`docs/specs/patterns.json`](docs/specs/patterns.json).</sub>
 
 - **Jackets:** single sleeve or gatefold at real 12″ dimensions (314 × 314 mm), matte, satin or gloss paper, printed front, back, spine and inner spread.
-- **Records:** 1LP or 2LP, grooves with track gaps, A/B/C/D labels, black, coloured or translucent vinyl per disc, inner sleeves and a double-sided insert that slide out of the jacket.
+- **Records:** 1LP or 2LP, grooves with track gaps, A/B/C/D labels, 1–20 tracks per side, black, coloured or translucent vinyl per disc, inner sleeves and a double-sided insert that slide out of the jacket. A gatefold 2LP puts one record in each panel, or stacks both in the right panel.
 - **Vinyl colours and patterns:** plain black, or a coloured disc with 0–80% transparency. Coloured discs can carry a pattern: splatter, blob, swirl, pinwheel, ripple or starburst, or split colours in halves, thirds or quarters. Pick the colours yourself or take them from the cover. On a 2LP, disc 2 matches disc 1 unless you style it separately.
+- **Album lookup:** search MusicBrainz and the Cover Art Archive by artist and album (artist aliases included, so English names find CJK credits), pick a 12″ vinyl release, and send any of its images to any artwork slot. Record count, gatefold and tracks per side are filled in, disc photos are cropped into side labels, and the cover defaults to the album's digital release artwork. Your own uploads stay unless you replace them.
 - **Retail details:** crinkled shrink wrap with studio reflections, a round or rectangular hype sticker on the wrap, a Japanese-style obi strip, and limited-edition numbers (print, rubber stamp, hot foil or handwriting, any font).
 - **Output:** PNG up to 4096 px with a transparent or solid background, preset camera angles plus orbit, zoom and pan.
 
@@ -31,7 +32,7 @@ Typical uses: pre-order announcements, store and Bandcamp listings, label catalo
 
 ## Two ways to use it
 
-**Browser editor.** `index.html` is a single-page editor: upload artwork, switch formats, pull records out, orbit the camera and export a PNG, or play an animation on the stage (turntable, swing, record spin, gatefold opening, pull-out) and export it as an MP4 or GIF in 16:9, 1:1 or 9:16. Images are processed locally in the browser and are not uploaded anywhere.
+**Browser editor.** `index.html` is a single-page editor: upload artwork, switch formats, pull records out, orbit the camera and export a PNG, or play an animation on the stage (turntable, swing, record spin, gatefold opening, pull-out) and export it as an MP4 or GIF in 16:9, 1:1 or 9:16. Images are processed locally in the browser and are not uploaded anywhere. Below 860 px wide the editor fits one phone screen, with the settings pages on bottom tabs.
 
 **CLI and agents.** `cli/record-mockup.mjs` opens the same page in headless Chrome and drives it through `window.recordMockup`, so the CLI output matches the editor exactly. Every option is a field in a JSON scene spec with a published JSON Schema, which makes the tool easy for AI agents such as Codex or Claude Code to operate: write a spec, render, look at the PNG, adjust, render again.
 
@@ -82,7 +83,7 @@ To start your own scene:
 node cli/record-mockup.mjs init -o output/spec.json
 ```
 
-Keep the images next to the spec and reference them by relative path. Register the source of every custom image under `meta.assets.<slot>.source`: `user`, `generated`, `typeset`, `composite` or `sample`. For generated images, also record the prompt.
+Keep the images next to the spec and reference them by relative path. Register the source of every custom image under `meta.assets.<slot>.source`: `user`, `generated`, `typeset`, `composite` or `sample`; images taken from the editor's album lookup are recorded as `fetched`. For generated images, also record the prompt.
 
 ```json
 {
@@ -107,7 +108,7 @@ Keep the images next to the spec and reference them by relative path. Register t
 
 Units follow the editor: millimetres for lengths, percent for how far things are pulled out, degrees for angles.
 
-Vinyl is set per disc under `records.disc1` and `records.disc2`. `vinyl` is `black` (plain, opaque, no pattern) or `color`, which uses `color` and `transparency` (0–80%). `pattern.id` adds a pattern on top of a coloured disc, with `color` as the base. Split patterns (`split-half`, `split-tri`, `split-quad`) use `pattern.color` for the second section and `pattern.color2` for the third in `split-tri`. Most other patterns use `pattern.color` as the pattern colour and derive the remaining tones; the tonal ones (`ripple-01`, `starburst-04`) only shade the base colour, with `pattern.contrast` setting how strong. `pattern.rotation` turns the pattern, and `pattern.fromCover: true` takes the colours from `images.front`, with any colours you write winning. With transparency, only the base colour turns see-through; the pattern stays opaque. Disc 2 copies disc 1 by default (`records.disc2.sameAsDisc1: true`); writing any of its vinyl, colour or pattern fields styles it separately. Run `schema` for the full list of pattern ids. The older value `"clear"` still works and means `color` with 38% transparency.
+Vinyl is set per disc under `records.disc1` and `records.disc2`. `vinyl` is `black` (plain, opaque, no pattern) or `color`, which uses `color` and `transparency` (0–80%). `pattern.id` adds a pattern on top of a coloured disc, with `color` as the base. Split patterns (`split-half`, `split-tri`, `split-quad`) use `pattern.color` for the second section and `pattern.color2` for the third in `split-tri`. Most other patterns use `pattern.color` as the pattern colour and derive the remaining tones; the tonal ones (`ripple-01`, `starburst-04`) only shade the base colour, with `pattern.contrast` setting how strong. `pattern.rotation` turns the pattern, and `pattern.fromCover: true` takes the colours from `images.front`, with any colours you write winning. With transparency, only the base colour turns see-through; the pattern stays opaque. Disc 2 copies disc 1 by default (`records.disc2.sameAsDisc1: true`); writing any of its vinyl, colour or pattern fields styles it separately. Run `schema` for the full list of pattern ids. `records.discN.tracks` sets the tracks per side (1–20, default 6). On a gatefold 2LP, `records.layout` is `split` (default: disc 2 sits in the left panel and slides out to the left) or `stacked` (both discs in the right panel). The older value `"clear"` still works and means `color` with 38% transparency.
 
 ## Commands
 
@@ -134,7 +135,7 @@ Record Mockup never generates a real release's front cover, and generated compan
 
 ## Browser editor and network use
 
-The editor is published at <https://recordmockup.com/> on every push to `main` that touches the page (`.github/workflows/pages.yml` runs `node site/build.mjs`, which adds the document head, search and sharing metadata, favicon, robots.txt and sitemap).
+The editor is published at <https://recordmockup.com/> on every push to `main` that touches the page (`.github/workflows/pages.yml` runs `node site/build.mjs`, which adds the document head, search and sharing metadata, favicon, robots.txt and sitemap). Every pull request also gets a noindex preview on Cloudflare Pages (`.github/workflows/preview.yml`), with the link posted on the PR.
 
 To run it locally, serve the page, for example from the project root:
 
@@ -144,7 +145,7 @@ python3 -m http.server 8000 --bind 127.0.0.1
 
 Then open `http://127.0.0.1:8000`.
 
-In the browser, three.js (and, for video export, Mediabunny and gifenc) load from pinned CDN versions, so the page needs network access. The CLI serves them from the locally installed packages instead. Google Fonts are still requested; if that fails, system fonts are used and type may look different. The CLI briefly listens on the loopback address, so the environment must allow a local server and a browser to start.
+In the browser, three.js (and, for video export, Mediabunny and gifenc) load from pinned CDN versions, so the page needs network access. The CLI serves them from the locally installed packages instead. The album lookup calls musicbrainz.org and coverartarchive.org directly, only when you search; fetched images keep their owners' copyright and are for previews only. Google Fonts are still requested; if that fails, system fonts are used and type may look different. The CLI briefly listens on the loopback address, so the environment must allow a local server and a browser to start.
 
 ## Rebuilding the README images
 
