@@ -13,7 +13,8 @@ import {createRequire} from 'node:module';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const DEFAULT_PAGE = path.resolve(HERE, '..', 'index.html');
-const THREE_CDN = 'https://cdn.jsdelivr.net/npm/three@0.169.0/';
+// CDN packages the page imports, served from node_modules when installed so renders do not depend on the network.
+const CDN_PACKAGES = {three: '0.169.0', mediabunny: '1.61.3', gifenc: '1.0.3'};
 const MIME = {
   '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.gif': 'image/gif',
   '.avif': 'image/avif', '.bmp': 'image/bmp', '.ttf': 'font/ttf', '.otf': 'font/otf', '.woff': 'font/woff',
@@ -30,12 +31,14 @@ const HELP = `record-mockup — 用 JSON 场景描述渲染黑胶 3D 模型图
   record-mockup render <spec.json> [-o out.png]   按 spec 渲染一张 PNG
   record-mockup numbers <spec.json> --from 1 --to 50 [--dir out/]
                                                 按号段批量渲染限量编号图
+  record-mockup video  <spec.json> [-o out.mp4]   按 spec.animation 渲染旋转视频（.mp4）或动图（.gif）
 
 选项
-  -o, --out <path>       输出文件（render 默认写到 spec 同目录、同名 .png）
-  --width, --height <px> 覆盖 spec 里的 output.width / output.height
+  -o, --out <path>       输出文件（render 默认写到 spec 同目录、同名 .png；video 默认同名 .mp4，扩展名决定格式）
+  --width, --height <px> 覆盖 spec 里的 output.width / output.height（video 不用，改 animation.aspect / size）
   --set <path=value>     临时覆盖 spec 字段，可重复，如 --set number.current=88 --set jacket.type=gatefold
   --dir <dir>            numbers 的输出目录（默认 spec 同目录下的 <spec 名>-numbers/）
+  --encoder <name>       video 的 MP4 编码器：software（默认，立即开始）| hardware（每帧更快，但首次启动可能卡十几秒）| auto
   --json                 以一行 JSON 输出结果，便于程序读取
   --strict               spec 有任何警告（未知字段、越界值）就不渲染，退出码 2
   --browser <name>       chrome（默认，使用本机 Google Chrome）| msedge | chromium
@@ -55,7 +58,7 @@ function parse() {
     options: {
       out: {type: 'string', short: 'o'}, width: {type: 'string'}, height: {type: 'string'},
       set: {type: 'string', multiple: true}, dir: {type: 'string'}, from: {type: 'string'}, to: {type: 'string'},
-      json: {type: 'boolean'}, strict: {type: 'boolean'}, browser: {type: 'string', default: 'chrome'},
+      encoder: {type: 'string', default: 'software'}, json: {type: 'boolean'}, strict: {type: 'boolean'}, browser: {type: 'string', default: 'chrome'},
       page: {type: 'string'}, verbose: {type: 'boolean'}, software: {type: 'boolean'}, help: {type: 'boolean', short: 'h'},
     },
   });
@@ -158,15 +161,18 @@ async function openPageWith(opts, args) {
   const pageErrors = [];
   page.on('pageerror', e => pageErrors.push(e.message));
   page.on('console', m => { if (m.type() === 'error') pageErrors.push(m.text()); });
-  // Serve three.js from node_modules when installed, so renders do not depend on the CDN.
-  try {
-    const threeRoot = path.dirname(createRequire(import.meta.url).resolve('three/package.json'));
-    await page.route(THREE_CDN + '**', async route => {
-      const local = path.join(threeRoot, route.request().url().slice(THREE_CDN.length));
+  const require = createRequire(import.meta.url);
+  for (const [name, version] of Object.entries(CDN_PACKAGES)) {
+    let root;
+    try { root = path.dirname(require.resolve(`${name}/package.json`)); }
+    catch { continue; } // not installed locally: fall back to the CDN
+    const prefix = `https://cdn.jsdelivr.net/npm/${name}@${version}/`;
+    await page.route(prefix + '**', async route => {
+      const local = path.join(root, route.request().url().slice(prefix.length));
       if (existsSync(local)) await route.fulfill({path: local, contentType: 'text/javascript'});
       else await route.continue();
     });
-  } catch { /* three not installed locally: fall back to the CDN */ }
+  }
   const {port} = server.address();
   await page.goto(`http://127.0.0.1:${port}/${path.basename(pageFile)}`, {waitUntil: 'load'});
   try {
@@ -294,6 +300,34 @@ async function cmdNumbers(args, opts) {
   } finally { await s.close(); }
 }
 
+async function cmdVideo(args, opts) {
+  if (!args[0]) throw new CliError('video 需要一个 spec 文件：record-mockup video spec.json -o out.mp4');
+  if (opts.width || opts.height) throw new CliError('video 不用 --width / --height，请用 --set animation.aspect=1:1 和 --set animation.size=1080');
+  const t0 = Date.now();
+  const {spec, file} = await loadSpec(args[0], opts);
+  const out = path.resolve(opts.out || file.replace(/\.json$/i, '') + '.mp4');
+  const format = path.extname(out).slice(1).toLowerCase();
+  if (!['mp4', 'gif'].includes(format)) throw new CliError(`输出文件需要 .mp4 或 .gif 扩展名：${out}`);
+  const s = await openPage(opts);
+  try {
+    const {warnings} = await applySpec(s, spec);
+    const {assets, warnings: sourceWarnings} = provenance(spec);
+    warnings.push(...sourceWarnings);
+    if (opts.strict && warnings.length) return strictFail(opts, warnings);
+    if (!opts.json) await s.page.exposeFunction('__videoProgress', (done, total) => process.stderr.write(`\r${done}/${total} 帧`));
+    let r;
+    try { r = await s.page.evaluate(([format, encoder]) => window.recordMockup.renderVideo({format, encoder, onProgress: window.__videoProgress}), [format, opts.encoder]); }
+    catch (e) { throw new CliError(e.message.replace(/^page\.evaluate: (Error: )?/, '').split('\n')[0]); }
+    if (!opts.json) process.stderr.write('\n');
+    await fs.mkdir(path.dirname(out), {recursive: true});
+    await fs.writeFile(out, Buffer.from(r.dataUrl.split(',')[1], 'base64'));
+    warnings.push(...r.warnings);
+    const {dataUrl, warnings: _, ...meta} = r;
+    finish(opts, s, {out, ...meta, assets, warnings, ms: Date.now() - t0},
+      `已渲染 ${out}（${r.width} × ${r.height} px，${r.frames} 帧 / ${r.duration} s，${(r.bytes / 1048576).toFixed(1)} MB，用时 ${((Date.now() - t0) / 1000).toFixed(1)} s）`);
+  } finally { await s.close(); }
+}
+
 // ---------- output ----------
 function log(opts, obj, text) { process.stdout.write(opts.json ? JSON.stringify(obj) + '\n' : text + '\n'); }
 function finish(opts, session, result, text) {
@@ -319,6 +353,7 @@ async function main() {
     else if (cmd === 'slots') await cmdSlots(args, opts);
     else if (cmd === 'render') await cmdRender(args, opts);
     else if (cmd === 'numbers') await cmdNumbers(args, opts);
+    else if (cmd === 'video') await cmdVideo(args, opts);
     else throw new CliError(`未知命令：${cmd}\n\n${HELP}`);
   } catch (e) {
     const msg = e instanceof CliError ? e.message : (e.stack || String(e));

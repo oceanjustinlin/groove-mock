@@ -554,7 +554,8 @@ const state = {
   numX:10.5, numY:-13.6, numSize:.5, numRot:0,
   jacketType:'single', gateOpen:0, lpCount:1, sleeve2X:.6, record2X:.3, obiOn:true, obiWidth:3.2, insertOn:true, insertX:0,
   bg:'transparent', bgColor:'#e6e3dc', scale:2, view:'quarter',
-  camZoom:1, camAz:0, camEl:0, camPanX:0, camPanY:0, outW:2400, outH:1600   // used by the agent API / CLI
+  camZoom:1, camAz:0, camEl:0, camPanX:0, camPanY:0, outW:2400, outH:1600,   // used by the agent API / CLI
+  animPreset:'turntable', animDuration:6, animFps:0, animDir:'left', animAngle:25, animAspect:'16:9', animSize:0   // 0 = per-format default
 };
 const isGate=()=>state.jacketType==='gatefold';
 const frontZ=()=>isGate()?J.d/2+J.board:J.d/2;          // outer face of the front cover
@@ -1182,7 +1183,8 @@ let userMoved=false;controls.addEventListener('start',()=>{userMoved=true});
 function resize(){const w=stage.clientWidth,h=stage.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();if(!userMoved)setView(state.view)}
 function applyBg(){stage.classList.toggle('transparent',state.bg==='transparent');scene.background=state.bg==='color'?new THREE.Color(state.bgColor):null;stage.style.backgroundColor=state.bg==='color'?state.bgColor:''}
 let first=true;
-renderer.setAnimationLoop(()=>{controls.update();renderer.render(scene,camera);if(first){first=false;$('loading').hidden=true}});
+const loop=()=>{controls.update();renderer.render(scene,camera);if(first){first=false;$('loading').hidden=true}};
+renderer.setAnimationLoop(loop);
 
 // ---------- Texture swapping ----------
 function setTex(slot,t,...mats){const old=tex[slot];tex[slot]=t;for(const m of mats){const had=!!m.map;m.map=t;if(!had||!t)m.needsUpdate=true}if(old&&old!==t)old.dispose()}
@@ -1861,6 +1863,10 @@ function specFromState(){
     else if(!maskById(state['pattern'+sx]))delete d.pattern}
   s.camera={view:state.view,zoom:state.camZoom,azimuth:state.camAz,elevation:state.camEl,panX:state.camPanX,panY:state.camPanY};
   s.output={background:state.bg==='transparent'?'transparent':state.bgColor,width:state.outW,height:state.outH};
+  s.animation={preset:state.animPreset,duration:state.animDuration,direction:state.animDir,aspect:state.animAspect};
+  if(state.animPreset==='swing')s.animation.angle=state.animAngle;
+  if(state.animFps)s.animation.fps=state.animFps;
+  if(state.animSize)s.animation.size=state.animSize;
   if(Object.keys(assetLog).length)s.meta={assets:structuredClone(assetLog)};
   return s}
 function buildSchema(){
@@ -1891,9 +1897,17 @@ function buildSchema(){
     background:{type:'string',default:'transparent',description:'"transparent" 为透明背景，或 #rrggbb 纯色'},
     width:{type:'integer',minimum:256,maximum:4096,default:DEFAULT_STATE.outW,description:'输出宽度（px）'},
     height:{type:'integer',minimum:256,maximum:4096,default:DEFAULT_STATE.outH,description:'输出高度（px）'}}};
+  root.properties.animation={type:'object',additionalProperties:false,description:'旋转视频 / 动图（record-mockup video 读取，render 不读）。相机按 camera.view 等设置取景，并自动拉远到整段动画都不出画',properties:{
+    preset:{enum:ANIM_PRESETS,default:'turntable',description:'turntable 转台：匀速转一整圈，首尾相接；swing 摆动：在当前角度左右来回摆 angle 度，不会露出背面'},
+    duration:{type:'number',minimum:1,maximum:30,default:6,description:'一个循环的时长（秒）'},
+    fps:{type:'integer',minimum:10,maximum:60,description:'帧率。不写时 MP4 为 30，GIF 为 20'},
+    direction:{enum:['left','right'],default:'left',description:'正面朝哪边转（从镜头看）'},
+    angle:{type:'number',minimum:5,maximum:90,default:25,description:'swing 的摆幅（度，单侧）'},
+    aspect:{enum:Object.keys(ANIM_ASPECTS),default:'16:9',description:'画幅：16:9 横屏，1:1 方形，9:16 竖屏'},
+    size:{type:'integer',minimum:240,maximum:2160,description:'短边像素。不写时 MP4 为 1080（16:9 即 1920 × 1080），GIF 为 600'}}};
   return root}
 
-const SPEC_EXTRA=['version','meta','number.fontFile','output.background','output.width','output.height','camera.view','camera.zoom','camera.azimuth','camera.elevation','camera.panX','camera.panY',...Object.keys(IMAGE_SLOTS).map(k=>'images.'+k)];
+const SPEC_EXTRA=['version','meta','number.fontFile','output.background','output.width','output.height','camera.view','camera.zoom','camera.azimuth','camera.elevation','camera.panX','camera.panY',...['preset','duration','fps','direction','angle','aspect','size'].map(k=>'animation.'+k),...Object.keys(IMAGE_SLOTS).map(k=>'images.'+k)];
 async function applySpec(spec){
   if(!spec||typeof spec!=='object'||Array.isArray(spec))throw new Error('spec 必须是 JSON 对象');
   // Legacy "clear" was colour vinyl at a fixed 62% opacity; keep old specs rendering the same.
@@ -1934,6 +1948,11 @@ async function applySpec(spec){
   if(bg!==undefined){if(bg==='transparent')state.bg='transparent';else if(typeof bg==='string'&&/^#[0-9a-f]{6}$/i.test(bg)){state.bg='color';state.bgColor=bg.toLowerCase()}else warnings.push('output.background 需要 "transparent" 或 #rrggbb，已忽略')}
   for(const [p,key,min,max,int] of[['output.width','outW',256,4096,true],['output.height','outH',256,4096,true],['camera.zoom','camZoom',.3,4],['camera.azimuth','camAz',-180,180],['camera.elevation','camEl',-60,60],['camera.panX','camPanX',-600,600],['camera.panY','camPanY',-400,400]]){
     const v=getPath(spec,p);if(v===undefined)continue;const c=clampNum(p,v,min,max,int);if(c!==null)state[key]=c}
+  for(const [p,key,min,max,int] of[['animation.duration','animDuration',1,30],['animation.fps','animFps',10,60,true],['animation.angle','animAngle',5,90],['animation.size','animSize',240,2160,true]]){
+    const v=getPath(spec,p);if(v===undefined)continue;const c=clampNum(p,v,min,max,int);if(c!==null)state[key]=c}
+  for(const [p,key,values] of[['animation.preset','animPreset',ANIM_PRESETS],['animation.direction','animDir',['left','right']],['animation.aspect','animAspect',Object.keys(ANIM_ASPECTS)]]){
+    const v=getPath(spec,p);if(v===undefined)continue;if(values.includes(v))state[key]=v;else warnings.push(`${p}=${JSON.stringify(v)} 无效，可选值：${values.join(' / ')}`)}
+  if(has('animation.angle')&&state.animPreset!=='swing')warnings.push('animation.angle 只在 preset=swing 时生效');
   const view=getPath(spec,'camera.view');
   if(view!==undefined){if(CAMERA_VIEWS.includes(view))state.view=view;else warnings.push(`camera.view=${JSON.stringify(view)} 无效，可选值：${CAMERA_VIEWS.join(' / ')}`)}
   for(const [slot,src] of Object.entries(spec.images||{})){
@@ -1980,6 +1999,94 @@ async function renderToBlob(w,h){
     return await new Promise((res,rej)=>renderer.domElement.toBlob(b=>b?res(b):rej(new Error('PNG 编码失败')),'image/png'))}
   finally{renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));resize()}}
 
+// ---------- Animation ----------
+// Frames are stepped, not recorded: frame i shows time i/N of one loop, so the last frame flows into the
+// first and the same spec always gives the same file. The product turns under fixed lights (a real
+// turntable), so highlights sweep across the cover and the film instead of riding along with it.
+const MEDIABUNNY_URL='https://cdn.jsdelivr.net/npm/mediabunny@1.61.3/dist/bundles/mediabunny.min.mjs';
+const GIFENC_URL='https://cdn.jsdelivr.net/npm/gifenc@1.0.3/dist/gifenc.esm.js';
+const ANIM_PRESETS=['turntable','swing'],ANIM_ASPECTS={'16:9':[16,9],'1:1':[1,1],'9:16':[9,16]},VIDEO_FORMATS=['mp4','gif'];
+const ANIM_DEFAULTS={mp4:{fps:30,size:1080},gif:{fps:20,size:600}};
+function animSettings(format){
+  const d=ANIM_DEFAULTS[format],fps=state.animFps||d.fps,size=state.animSize||d.size,[aw,ah]=ANIM_ASPECTS[state.animAspect];
+  const even=v=>2*Math.round(v/2),k=size/Math.min(aw,ah);
+  return{fps,width:even(aw*k),height:even(ah*k),frames:Math.max(2,Math.round(state.animDuration*fps))}}
+// Turn of the product (radians about the vertical axis) at loop phase u in [0, 1).
+function animAngle(u){const s=state.animDir==='left'?-1:1;
+  return state.animPreset==='swing'?s*THREE.MathUtils.degToRad(state.animAngle)*Math.sin(2*Math.PI*u):s*2*Math.PI*u}
+const productParts=()=>scene.children.filter(o=>o.visible&&!o.isLight&&o!==ground);
+function productBox(parts){
+  scene.updateMatrixWorld();const box=new THREE.Box3(),b=new THREE.Box3();
+  for(const p of parts)p.traverseVisible(m=>{if(!m.geometry)return;m.geometry.boundingBox||m.geometry.computeBoundingBox();box.union(b.copy(m.geometry.boundingBox).applyMatrix4(m.matrixWorld))});
+  return box}
+// One camera for the whole clip, far enough that every frame's turned bounding box fits the frame.
+function fitTurningCamera(box,angles){
+  const c=box.getCenter(new THREE.Vector3()),v=VIEWS[state.view],half=Math.tan(THREE.MathUtils.degToRad(camera.fov/2)),margin=1.08;
+  const sph=new THREE.Spherical().setFromVector3(new THREE.Vector3(...v.dir));
+  sph.theta+=THREE.MathUtils.degToRad(state.camAz);sph.phi=THREE.MathUtils.clamp(sph.phi-THREE.MathUtils.degToRad(state.camEl),.05,Math.PI-.05);sph.radius=1;
+  const d=new THREE.Vector3().setFromSpherical(sph),r=new THREE.Vector3().crossVectors(d.clone().negate(),camera.up).normalize(),u=new THREE.Vector3().crossVectors(r,d.clone().negate());
+  const corners=[];for(const x of[box.min.x,box.max.x])for(const y of[box.min.y,box.max.y])for(const z of[box.min.z,box.max.z])corners.push(new THREE.Vector3(x,y,z).sub(c));
+  const axis=new THREE.Vector3(0,1,0),q=new THREE.Vector3();let dist=0;
+  for(const a of angles)for(const p of corners){q.copy(p).applyAxisAngle(axis,a);const z=q.dot(d);
+    dist=Math.max(dist,z+margin*Math.abs(q.dot(r))/(half*camera.aspect),z+margin*Math.abs(q.dot(u))/half)}
+  const target=c.clone().add(new THREE.Vector3(state.camPanX/10,state.camPanY/10,0));
+  controls.target.copy(target);camera.position.copy(target).addScaledVector(d,dist/state.camZoom);camera.lookAt(target);
+  return c}
+// encoder: 'software' starts at once; 'hardware' is faster per frame but its first use in a browser can stall
+// for many seconds (macOS headless: ~18 s); 'auto' leaves the choice to the browser.
+const ENCODERS={auto:'no-preference',software:'prefer-software',hardware:'prefer-hardware'};
+async function renderAnimation(format,{onProgress=()=>{},encoder='auto'}={}){
+  if(!(encoder in ENCODERS))throw new Error(`不支持的编码方式 ${encoder}，可选：${Object.keys(ENCODERS).join(' / ')}`);
+  if(!VIDEO_FORMATS.includes(format))throw new Error(`不支持的格式 ${format}，可选：${VIDEO_FORMATS.join(' / ')}`);
+  const warnings=[],{fps,width:w,height:h,frames}=animSettings(format),phases=Array.from({length:frames},(_,i)=>i/frames),angles=phases.map(animAngle);
+  if(state.bg==='transparent')warnings.push(`视频不支持透明背景，已改用纯色 ${state.bgColor}（output.background 可指定颜色）`);
+  if(format==='gif'&&fps>50)warnings.push('GIF 帧率超过 50 时，多数播放器会放慢播放');
+  const parts=productParts(),saved=parts.map(o=>[o,o.position.clone(),o.quaternion.clone()]);
+  const cam={pos:camera.position.clone(),target:controls.target.clone()},sh=key.shadow.camera,shadow={l:sh.left,r:sh.right,t:sh.top,b:sh.bottom};
+  renderer.setAnimationLoop(null);
+  try{
+    renderer.setPixelRatio(1);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();
+    scene.background=new THREE.Color(state.bgColor);
+    const box=productBox(parts),c=fitTurningCamera(box,angles);
+    // The key light's shadow box must cover the product at every turn, not only facing front.
+    const reach=box.getBoundingSphere(new THREE.Sphere()).radius+c.length()+5;
+    Object.assign(sh,{left:-reach,right:reach,top:reach,bottom:-reach});sh.updateProjectionMatrix();
+    const turn=new THREE.Quaternion(),axis=new THREE.Vector3(0,1,0);
+    const turnTo=a=>{turn.setFromAxisAngle(axis,a);for(const[o,p,q]of saved){o.position.copy(p).sub(c).applyQuaternion(turn).add(c);o.quaternion.copy(turn).multiply(q)}renderer.render(scene,camera)};
+    let bytes;
+    if(format==='mp4'){
+      const mb=await import(MEDIABUNNY_URL);
+      const config={codec:'avc',quality:mb.QUALITY_VERY_HIGH,keyFrameInterval:2,hardwareAcceleration:ENCODERS[encoder]};
+      if(!await mb.canEncodeVideo('avc',{width:w,height:h,...config})){
+        if(encoder==='auto'||!await mb.canEncodeVideo('avc',{width:w,height:h,...config,hardwareAcceleration:'no-preference'}))throw new Error('这个浏览器不能编码 H.264（MP4）视频。请用 Chrome，或改为输出 GIF');
+        warnings.push(`${encoder} 编码不支持 ${w} × ${h}，已改由浏览器自选编码器`);config.hardwareAcceleration='no-preference'}
+      const output=new mb.Output({format:new mb.Mp4OutputFormat({fastStart:'in-memory'}),target:new mb.BufferTarget()});
+      // Wrap the canvas in a VideoFrame ourselves: it stays on the GPU, where CanvasSource's capture is ~10x slower.
+      const src=new mb.VideoSampleSource(config);
+      output.addVideoTrack(src,{frameRate:fps});await output.start();
+      for(let i=0;i<frames;i++){turnTo(angles[i]);
+        const sample=new mb.VideoSample(new VideoFrame(renderer.domElement,{timestamp:Math.round(i*1e6/fps),duration:Math.round(1e6/fps)}));
+        await src.add(sample);sample.close();onProgress(i+1,frames)}
+      await output.finalize();bytes=new Uint8Array(output.target.buffer);
+    }else{
+      const {GIFEncoder,quantize,applyPalette}=await import(GIFENC_URL);
+      const cv=canvas(w,h),g=cv.getContext('2d',{willReadFrequently:true}),grab=()=>{g.drawImage(renderer.domElement,0,0);return g.getImageData(0,0,w,h).data};
+      // One palette for the whole clip, sampled from frames spread across the loop, so colours don't flicker.
+      const picks=8,stride=4,sample=new Uint8Array(Math.ceil(w*h/stride)*4*picks);let n=0;
+      for(let k=0;k<picks;k++){turnTo(angles[Math.floor(k*frames/picks)]);const px=grab();for(let j=0;j<px.length;j+=4*stride){sample.set(px.subarray(j,j+4),n);n+=4}}
+      const palette=quantize(sample.subarray(0,n),256),gif=GIFEncoder(),delay=Math.round(100/fps)*10;
+      for(let i=0;i<frames;i++){turnTo(angles[i]);gif.writeFrame(applyPalette(grab(),palette),w,h,i===0?{palette,delay,repeat:0}:{delay});
+        onProgress(i+1,frames);if(i%8===7)await nextFrame()}
+      gif.finish();bytes=gif.bytes();
+    }
+    const real=format==='gif'?100/Math.round(100/fps):fps;   // GIF delays count in 1/100 s
+    return{format,width:w,height:h,fps:Math.round(real*100)/100,frames,duration:Math.round(frames/real*100)/100,bytes,warnings}
+  }finally{
+    for(const[o,p,q]of saved){o.position.copy(p);o.quaternion.copy(q)}
+    Object.assign(sh,{left:shadow.l,right:shadow.r,top:shadow.t,bottom:shadow.b});sh.updateProjectionMatrix();
+    camera.position.copy(cam.pos);controls.target.copy(cam.target);applyBg();
+    renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));resize();renderer.setAnimationLoop(loop)}}
+
 // ---------- Boot ----------
 $('jacket-spec').textContent=specText();applyFinish();applyVinyl();syncPatterns();buildWrap(state.wrinkle);numTexture();buildObi();buildSticker();pose();applyBg();resize();setView('quarter');
 new ResizeObserver(resize).observe(stage);
@@ -2009,7 +2116,12 @@ window.recordMockup={
   async render(opts={}){await ready;
     const size=(v,d)=>Math.min(4096,Math.max(64,Math.round(v||d)));
     const w=size(opts.width,state.outW),h=size(opts.height,state.outH),blob=await renderToBlob(w,h);
-    return{width:w,height:h,bytes:blob.size,dataUrl:await toDataUrl(blob)}}
+    return{width:w,height:h,bytes:blob.size,dataUrl:await toDataUrl(blob)}},
+  // Renders spec.animation as an MP4 or GIF. onProgress(done, total) is called after each frame;
+  // encoder (MP4 only) is auto | software | hardware.
+  async renderVideo(opts={}){await ready;
+    const r=await renderAnimation(opts.format||'mp4',{onProgress:opts.onProgress,encoder:opts.encoder}),type=r.format==='gif'?'image/gif':'video/mp4';
+    const{bytes,...rest}=r;return{...rest,bytes:bytes.length,dataUrl:await toDataUrl(new Blob([bytes],{type}))}}
 };
 window.__gm={state,scene,camera,renderer,pose,controls,setView};
 </script>

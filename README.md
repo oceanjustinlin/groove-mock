@@ -120,6 +120,7 @@ Run `node cli/record-mockup.mjs --help` for every option. See also [`cli/README.
 | `slots [spec.json]` | Lists artwork slots for that scene: pixel size, visible area, what covers it, and whether to supply, generate or typeset it |
 | `render spec.json` | Renders one PNG |
 | `numbers spec.json --from 1 --to 50` | Renders one image per edition number |
+| `video spec.json -o turn.mp4` | Renders a looping turntable or swing clip as MP4 or GIF, set by `animation` in the spec (16:9, 1:1 or 9:16) |
 
 Useful options: `--set path=value` overrides a field without editing the file, `--json` prints a one-line result, and `--strict` refuses to render when the spec or the source register produces warnings.
 
@@ -143,7 +144,7 @@ python3 -m http.server 8000 --bind 127.0.0.1
 
 Then open `http://127.0.0.1:8000`.
 
-In the browser, three.js loads from a pinned CDN version, so the page needs network access. The CLI serves three.js from the locally installed package instead. Google Fonts are still requested; if that fails, system fonts are used and type may look different. The CLI briefly listens on the loopback address, so the environment must allow a local server and a browser to start.
+In the browser, three.js (and, for video export, Mediabunny and gifenc) load from pinned CDN versions, so the page needs network access. The CLI serves them from the locally installed packages instead. Google Fonts are still requested; if that fails, system fonts are used and type may look different. The CLI briefly listens on the loopback address, so the environment must allow a local server and a browser to start.
 
 ## Rebuilding the README images
 

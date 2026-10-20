@@ -20,19 +20,23 @@ node record-mockup.mjs slots spec.json                    # 贴图位、尺寸�
 node record-mockup.mjs render spec.json -o out.png        # 渲染一张
 node record-mockup.mjs render spec.json --set number.current=88 --set camera.view=front
 node record-mockup.mjs numbers spec.json --from 1 --to 50 # 批量渲染编号图
+node record-mockup.mjs video spec.json -o turn.mp4          # 旋转视频，按 spec.animation
+node record-mockup.mjs video spec.json -o turn.gif --set animation.aspect=1:1
 ```
 
 通用选项：`--json` 输出一行 JSON；`--strict` 遇到场景或素材来源警告时不渲染并返回退出码 2；`--width` / `--height` 覆盖输出尺寸；`--software` 强制软件渲染；`--verbose` 显示页面错误。
 
-`render` 与 `numbers` 均要求为自定义贴图填写 `meta.assets.<贴图位>.source`。不使用 `--strict` 时，来源缺失会保留警告并继续出图。JSON 结果的 `assets` 字段汇总每个贴图位的来源。内置程序化示例不需要登记外部贴图。
+`video` 的格式由扩展名决定（`.mp4` / `.gif`），画幅和尺寸用 `animation.aspect`、`animation.size`，不用 `--width` / `--height`。视频不支持透明背景，`output.background` 为 transparent 时改用纯色并给出警告。`--encoder` 选择 MP4 编码器，默认 `software`；`hardware` 每帧更快，但在 macOS headless 下首次启动会卡十几秒，只在长视频或 4K 时划算。
+
+`render`、`numbers` 与 `video` 均要求为自定义贴图填写 `meta.assets.<贴图位>.source`。不使用 `--strict` 时，来源缺失会保留警告并继续出图。JSON 结果的 `assets` 字段汇总每个贴图位的来源。内置程序化示例不需要登记外部贴图。
 
 ## 速度
 
-在 Apple Silicon 的 Mac 上，1600 × 1000 px 的图，第一张约 5–9 秒（含启动浏览器），批量出图约每张 1–2 秒。没有 GPU 的机器会自动改用软件渲染，大约慢 4 倍。
+在 Apple Silicon 的 Mac 上，1600 × 1000 px 的图，第一张约 5–9 秒（含启动浏览器），批量出图约每张 1–2 秒。6 秒 30 fps 的旋转视频：1080p 约 18 秒，4K 约 32 秒，均含启动浏览器。没有 GPU 的机器会自动改用软件渲染，大约慢 4 倍。
 
 ## 依赖
 
-- `three` 从本地 `node_modules` 加载，不依赖 CDN。
+- `three`、`mediabunny`（MP4 封装）、`gifenc`（GIF 编码）从本地 `node_modules` 加载，不依赖 CDN。
 - 网页字体（Archivo、Noto Sans SC 等）仍然从 Google Fonts 加载。离线时会退回系统字体，只影响示例图和编号的字形。
 
 字段说明和 agent 的使用流程，见上一级目录的 `AGENTS.md`。

@@ -120,6 +120,7 @@ node cli/record-mockup.mjs init -o output/spec.json
 | `slots [spec.json]` | 按场景列出各贴图位的像素尺寸、可见区域、遮挡，以及建议用户提供、生图还是排版 |
 | `render spec.json` | 渲染一张 PNG |
 | `numbers spec.json --from 1 --to 50` | 按号段批量渲染编号图 |
+| `video spec.json -o turn.mp4` | 按 spec 的 `animation` 渲染循环的转台或摆动视频，输出 MP4 或 GIF（16:9、1:1 或 9:16） |
 
 常用选项：`--set path=value` 临时覆盖字段，不用改文件；`--json` 输出一行结果；`--strict` 遇到场景警告或素材来源警告时拒绝出图。
 
@@ -149,7 +150,7 @@ python3 -m http.server 8000 --bind 127.0.0.1
 
 然后访问 `http://127.0.0.1:8000`。
 
-浏览器页面从固定版本的 CDN 加载 three.js，需要联网。命令行工具改用本地安装的 three.js。Google Fonts 仍会尝试联网加载，失败时退回系统字体，文字外观可能不同。命令行工具会临时监听回环地址，运行环境需要允许启动本地服务和浏览器。
+浏览器页面从固定版本的 CDN 加载 three.js（出视频时还有 Mediabunny 和 gifenc），需要联网。命令行工具改用本地安装的包。Google Fonts 仍会尝试联网加载，失败时退回系统字体，文字外观可能不同。命令行工具会临时监听回环地址，运行环境需要允许启动本地服务和浏览器。
 
 ## 重新生成 README 配图
 
