@@ -23,7 +23,7 @@ Record Mockup 用来渲染接近实拍效果的**黑胶唱片 3D 模型图**，�
 
 - **封套**：单开或双开，按 12 寸实物尺寸（314 × 314 mm）建模；纸张有哑光、缎面、亮面三种；可贴正面、背面、书脊和双开内页。
 - **唱片**：单 LP 或 2LP，音槽带曲目间隙；A/B/C/D 面标签；每面 1–20 条音轨；每张唱片可选黑胶、彩胶或半透明；内袋和双面插页都能从封套开口抽出。双开 2LP 可以左右两扇各装一张，也可以两张叠在右扇。
-- **胶色和纹路**：纯黑胶，或者彩胶（透明度 0–80%）。彩胶可以加纹路：飞溅、色块、漩涡、风车、波纹、星芒，或者二分、三分、四分的分色。颜色可以自己选，也可以从封面取色。2LP 的第 2 张默认和第 1 张一样，也可以单独设置。
+- **胶色和纹路**：纯黑胶，或者彩胶（透明度 0–80%）。彩胶可以加纹路：飞溅、色块、漩涡、风车、波纹、星芒、烟雾、大理石，或者二分、三分、四分的分色。颜色可以自己选，也可以从封面取色。2LP 的第 2 张默认和第 1 张一样，也可以单独设置。
 - **曲库检索**：按艺人和专辑名查 MusicBrainz 和 Cover Art Archive（支持艺人别名，英文名也能找到中日文艺人），选一个 12 寸黑胶版本，把其中任意图片用到任意贴图位。碟数、双开和每面音轨数自动填好，盘面照片自动裁成面标签，封面默认取专辑数字版的官方图。你自己上传的图默认保留。
 - **零售细节**：带褶皱和影棚反光的塑封膜；贴在膜上的圆形或长方形 hype sticker；日式 Obi 侧标；限量编号（印刷、印章、烫金、手写四种工艺，字体可选，也可上传）。
 - **输出**：PNG 最大 4096 px，背景可选透明或纯色；有预设视角，并支持环绕、缩放和平移。
@@ -108,7 +108,7 @@ node cli/record-mockup.mjs init -o output/spec.json
 
 单位和编辑器一致：长度用 mm，抽出程度用 %，角度用度。
 
-胶色按张设置，写在 `records.disc1` 和 `records.disc2` 里。`vinyl` 为 `black`（纯黑胶，不透明，不叠纹路）或 `color`（彩胶，用 `color` 和 `transparency`，透明度 0–80%）。`pattern.id` 在彩胶上加纹路，底色是 `color`。分色类（`split-half`、`split-tri`、`split-quad`）用 `pattern.color` 作第二块，`split-tri` 再用 `pattern.color2` 作第三块。其他大多数纹路用 `pattern.color` 作纹路色，其余色层自动推算；同色系纹路（`ripple-01`、`starburst-04`）只用底色的深浅变化，`pattern.contrast` 调反差。`pattern.rotation` 旋转纹路；`pattern.fromCover: true` 从 `images.front` 取色，写明的颜色优先。有透明度时只有底色透明，纹路不透明。第 2 张默认沿用第 1 张（`records.disc2.sameAsDisc1: true`）；写了它的胶色、颜色或纹路字段，就视为单独设置。完整的纹路列表用 `schema` 查看。`records.discN.tracks` 设每面音轨数（1–20，默认 6）。双开 2LP 用 `records.layout` 选分装方式：`split`（默认，第 2 张在左扇，向左抽出）或 `stacked`（两张叠在右扇）。旧值 `"clear"` 仍然可用，等于 `color` 加 38% 透明度。
+胶色按张设置，写在 `records.disc1` 和 `records.disc2` 里。`vinyl` 为 `black`（纯黑胶，不透明，不叠纹路）或 `color`（彩胶，用 `color` 和 `transparency`，透明度 0–80%）。`pattern.id` 在彩胶上加纹路，底色是 `color`。分色类（`split-half`、`split-tri`、`split-quad`）用 `pattern.color` 作第二块，`split-tri` 再用 `pattern.color2` 作第三块。其他大多数纹路用 `pattern.color` 作纹路色，其余色层自动推算；同色系纹路（`ripple-01`、`starburst-04`，以及 `smoke-*`、`marble-*`）只用底色的深浅变化，`pattern.contrast` 调反差。`pattern.rotation` 旋转纹路；`pattern.fromCover: true` 从 `images.front` 取色，写明的颜色优先。有透明度时只有底色透明，纹路不透明。第 2 张默认沿用第 1 张（`records.disc2.sameAsDisc1: true`）；写了它的胶色、颜色或纹路字段，就视为单独设置。完整的纹路列表用 `schema` 查看。`records.discN.tracks` 设每面音轨数（1–20，默认 6）。双开 2LP 用 `records.layout` 选分装方式：`split`（默认，第 2 张在左扇，向左抽出）或 `stacked`（两张叠在右扇）。旧值 `"clear"` 仍然可用，等于 `color` 加 38% 透明度。
 
 ## 命令
 
@@ -141,7 +141,7 @@ node cli/record-mockup.mjs init -o output/spec.json
 
 ## 浏览器页面与网络依赖
 
-在线版本：<https://recordmockup.com/>。每次推送到 `main` 且改动了页面时，`.github/workflows/pages.yml` 会运行 `node site/build.mjs` 自动发布。构建脚本会补上完整的网页头部、搜索与分享元信息、网站图标、robots.txt 和 sitemap。每个 PR 还会自动部署一份 Cloudflare Pages 预览（不被搜索引擎收录，`.github/workflows/preview.yml`），链接贴在 PR 评论里。
+在线版本：<https://recordmockup.com/>。每次推送到 `main` 且改动了页面时，`.github/workflows/pages.yml` 会运行 `node site/build.mjs` 自动发布。构建脚本会补上完整的网页头部、搜索与分享元信息、网站图标、robots.txt 和 sitemap。改动了页面或其素材的 PR 还会自动部署一份 Cloudflare Pages 预览（不被搜索引擎收录，`.github/workflows/preview.yml`），链接贴在 PR 评论里。
 
 本地运行时，可以用静态服务器打开页面，例如在项目根目录执行：
 
@@ -179,7 +179,7 @@ npm audit --prefix cli --omit=dev
 
 **能导出透明背景吗？** 能。把 `output.background` 设为 `"transparent"`，阴影会保留。
 
-**支持哪些规格？** 12 寸 LP 的单开和双开封套，一张或两张唱片。彩胶支持飞溅、色块、漩涡、风车、波纹、星芒纹路，以及二分、三分、四分的分色。大理石纹、烟雾纹、液态效果和图案盘还在规划中。
+**支持哪些规格？** 12 寸 LP 的单开和双开封套，一张或两张唱片。彩胶支持飞溅、色块、漩涡、风车、波纹、星芒、烟雾、大理石纹路，以及二分、三分、四分的分色。液态效果和图案盘还在规划中。
 
 ## 仓库范围
 
