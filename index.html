@@ -1272,7 +1272,8 @@ function mbGet(path){
   const run=async()=>{const wait=mbLast+1100-Date.now();if(wait>0)await new Promise(r=>setTimeout(r,wait));
     for(let tryNo=0;;tryNo++){mbLast=Date.now();const res=await fetch(MB+path+(path.includes('?')?'&':'?')+'fmt=json');
       if(res.ok)return res.json();
-      if(res.status===503&&tryNo<2){await new Promise(r=>setTimeout(r,2000));continue}
+      // 503 is MusicBrainz shedding load; back off and retry a few times before giving up.
+      if(res.status===503&&tryNo<3){await new Promise(r=>setTimeout(r,2000*(tryNo+1)));continue}
       throw new Error('HTTP '+res.status)}};
   const p=mbChain.then(run,run);mbChain=p.catch(()=>{});return p}
 const luceneTerm=s=>s.trim().replace(/[+\-&|!(){}[\]^"~*?:\\/]/g,' ').replace(/\s+/g,' ').trim();
@@ -1288,30 +1289,61 @@ $('lib-form').addEventListener('submit',async e=>{e.preventDefault();
   const artist=luceneTerm($('lib-artist').value),album=luceneTerm($('lib-album').value);
   if(!album&&!artist){libStatus(tr('请输入艺人或专辑名。','Enter an artist or an album.'));return}
   const turn=++libTurn;libStatus(tr('正在搜索…','Searching…'));libShow('');
-  const q=[album&&`releasegroup:(${album})`,artist&&`artist:(${artist})`].filter(Boolean).join(' AND ');
+  // Every artist word must match ("Jay Chou" shouldn't find any Jay); album words stay loose.
+  const q=[album&&`releasegroup:(${album})`,artist&&`artist:(${artist.split(' ').join(' AND ')})`].filter(Boolean).join(' AND ');
   try{const j=await mbGet(`release-group?query=${encodeURIComponent(q)}&limit=15`);if(turn!==libTurn)return;
-    // Equal matches: albums before EPs, singles and the rest, since a mockup is usually for an album.
-    const rank=g=>({Album:0,EP:1,Single:2}[g['primary-type']]??3);
-    libGroups((j['release-groups']||[]).map((g,i)=>({g,i})).sort((a,b)=>(b.g.score??0)-(a.g.score??0)||rank(a.g)-rank(b.g)||a.i-b.i).map(x=>x.g))}
+    const groups=sortGroups(j['release-groups']||[]);
+    if(groups.length||!artist){libGroups(groups);return}
+    // Release-group search only sees the credited name, so "Jay Chou" misses 周杰倫. Artist search also reads
+    // aliases: look the artist up that way and let the viewer pick, since the top hit isn't always the one meant.
+    libStatus(tr('没有直接匹配，正在按艺人别名查找…','No direct match; looking the artist up by alias…'));
+    const a=await mbGet(`artist?query=${encodeURIComponent(artist)}&limit=6`);if(turn!==libTurn)return;
+    const found=(a.artists||[]).filter(x=>(x.score??0)>=60);
+    if(!found.length){libGroups([]);return}
+    libArtistList=found;libAlbumQuery=album;
+    if(found.length===1)libArtistAlbums(found[0]);else libArtists()}
   catch(err){if(turn===libTurn)libFail()}});
+// Equal matches: albums before EPs, singles and the rest, since a mockup is usually for an album.
+const sortGroups=gs=>{const rank=g=>({Album:0,EP:1,Single:2}[g['primary-type']]??3);
+  return gs.map((g,i)=>({g,i})).sort((a,b)=>(b.g.score??0)-(a.g.score??0)||rank(a.g)-rank(b.g)||a.i-b.i).map(x=>x.g)};
+
+// Alias path: pick the artist, then their albums whose title matches, or all their albums when none does.
+let libArtistList=[],libAlbumQuery='',libArtistPick=null;
+function libArtists(){libView=libArtists;libGroupOpts=null;libStatus('');
+  libShow(`<p class="note">${tr('没有直接匹配的专辑。你找的是哪位艺人？','No album matched directly. Which artist do you mean?')}</p>
+  <div class="lib-list" role="list">${libArtistList.map((x,i)=>`<button class="lib-row noart" type="button" role="listitem" data-artist="${i}">
+    <span><div class="lib-title">${esc(x.name)}</div><div class="lib-meta">${[x.disambiguation,x.type,x.country,x['life-span']?.begin?.slice(0,4)].filter(Boolean).map(esc).join(' · ')||esc(x['sort-name']||'')}</div></span></button>`).join('')}</div>`)}
+async function libArtistAlbums(x,all=false){libArtistPick=x;const turn=++libTurn;libStatus(tr('正在读取专辑…','Loading albums…'));libShow('');
+  const back=libArtistList.length>1?'artists':null;
+  try{if(libAlbumQuery&&!all){const j=await mbGet(`release-group?query=${encodeURIComponent(`arid:${x.id} AND releasegroup:(${libAlbumQuery})`)}&limit=15`);if(turn!==libTurn)return;
+      const gs=sortGroups(j['release-groups']||[]);
+      if(gs.length){libGroups(gs,{back,all:true});return}}
+    const j=await mbGet(`release-group?artist=${x.id}&type=album|ep&inc=artist-credits&limit=100`);if(turn!==libTurn)return;
+    const gs=(j['release-groups']||[]).sort((a,b)=>String(b['first-release-date']||'').localeCompare(String(a['first-release-date']||'')));
+    libGroups(gs,{back,note:libAlbumQuery&&!all?tr(`没找到「${libAlbumQuery}」，这是 ${x.name} 的全部专辑，可能用了原文标题。`,`Nothing called “${libAlbumQuery}”; here are all of ${x.name}’s albums, which may use the original-language title.`):''})}
+  catch(err){if(turn===libTurn)libFail()}}
 
 // libView redraws the current step, so switching language relabels it.
-let libGroupList=[],libReleaseList=[],libGroup=null,libView=null;
-function libGroups(groups){libGroupList=groups;libView=()=>libGroups(libGroupList);
-  if(!groups.length){libStatus(tr('没有找到这张专辑。可以换个写法，或直接上传图片。','No album found. Try different spelling, or upload images directly.'));libShow('');return}
+let libGroupList=[],libReleaseList=[],libGroup=null,libView=null,libGroupOpts=null;
+// opts (alias path only): back = return to the artist list; all = offer the artist's full album list; note = why this list.
+function libGroups(groups,opts=null){libGroupList=groups;libGroupOpts=opts;libView=()=>libGroups(libGroupList,libGroupOpts);
+  const head=opts?`<div class="lib-head">${opts.back?`<button class="chip" type="button" data-back="artists">← ${tr('返回','Back')}</button>`:''}<span>${esc(libArtistPick?.name||'')}</span>${opts.all?`<button class="chip" type="button" data-all-albums>${tr('全部专辑','All albums')}</button>`:''}</div>${opts.note?`<p class="note">${esc(opts.note)}</p>`:''}`:'';
+  if(!groups.length){libStatus(opts?tr('这位艺人在曲库里还没有专辑。','This artist has no albums in the library yet.'):tr('没有找到这张专辑。可以换个写法，或直接上传图片。','No album found. Try different spelling, or upload images directly.'));libShow(head);return}
   libStatus('');
-  libShow(`<div class="lib-list" role="list">${groups.map((g,i)=>`<button class="lib-row" type="button" role="listitem" data-group="${i}">
+  libShow(`${head}<div class="lib-list" role="list">${groups.map((g,i)=>`<button class="lib-row" type="button" role="listitem" data-group="${i}">
     <span class="lib-cover" style="background-image:url('${CAA}release-group/${g.id}/front-250')"></span>
     <span><div class="lib-title">${esc(g.title)}</div><div class="lib-meta">${esc(artistName(g['artist-credit']))}${g['first-release-date']?' · '+esc(g['first-release-date'].slice(0,4)):''}${g['primary-type']?' · '+esc(g['primary-type']):''}</div></span></button>`).join('')}</div>`)}
 
 $('lib-view').addEventListener('click',e=>{
   const g=e.target.closest('[data-group]'),r=e.target.closest('[data-release]'),b=e.target.closest('[data-back]'),a=e.target.closest('[data-apply]');
-  const cr=e.target.closest('[data-crop]'),un=e.target.closest('[data-unuse]');
+  const cr=e.target.closest('[data-crop]'),un=e.target.closest('[data-unuse]'),ar=e.target.closest('[data-artist]'),all=e.target.closest('[data-all-albums]');
   if(cr){openCrop(+cr.dataset.crop);return}
+  if(ar){libArtistAlbums(libArtistList[+ar.dataset.artist]);return}
+  if(all){libArtistAlbums(libArtistPick,true);return}
   if(un){delete libPlan.assign[un.dataset.useSlot];syncCards();return}
   if(g)libReleases(libGroupList[+g.dataset.group]);
   else if(r)libConfirm(libReleaseList[+r.dataset.release]);
-  else if(b){if(b.dataset.back==='groups')libGroups(libGroupList);else libReleaseRows()}
+  else if(b){if(b.dataset.back==='groups')libGroups(libGroupList,libGroupOpts);else if(b.dataset.back==='artists')libArtists();else libReleaseRows()}
   else if(a)libApply()});
 
 async function libReleases(group){libGroup=group;const turn=++libTurn;libStatus(tr('正在读取版本…','Loading releases…'));libShow('');
