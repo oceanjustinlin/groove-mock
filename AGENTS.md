@@ -47,6 +47,7 @@ cd cli && npm install
 | 胶色 | `records.discN.vinyl`：`black` 纯黑胶（不叠纹路、不透明），`color` 彩胶：`color` 为颜色，`transparency` 为透明度（0–80%）。旧值 `clear` 等于 `color` + `transparency: 38` |
 | 彩胶纹路 | `records.discN.pattern.id`（可选值和分类见 `schema`）。底色是 `records.discN.color`。分色类（`split-*`）：`pattern.color` 为第二块，`split-tri` 用 `pattern.color2` 为第三块；主次类：`pattern.color` 为纹路色，其余色层自动推算；同色系：只用底色，`pattern.contrast` 调反差。只在 `vinyl: color` 时生效。`rotation` 旋转纹路；有 `transparency` 时只有底色透明，纹路不透明。`pattern.fromCover: true` 从 `images.front` 自动取底色和纹路色，写明的颜色优先 |
 | 音轨数 | `records.discN.tracks`：每面音轨数（1–20，默认 6），盘面按等宽分圈，两面相同 |
+| 内袋 | `records.sleeve.on` 默认 `false`，不显示内袋，唱片直接从封套抽出；要显示就设为 `true` |
 | 抽出程度 | `records.discN.sleeveOut`（内袋出封套），`records.discN.recordOut`（唱片出内袋），`insert.out` |
 | 塑封、贴纸、Obi | `wrap.*`、`sticker.*`、`obi.*`，图片为 `images.sticker` / `images.obi` |
 | 限量编号 | `number.current` / `total` / `format` / `place` / `finish` / `font`，自定义字体用 `number.fontFile` |
@@ -61,6 +62,6 @@ cd cli && npm install
 - 抽得很多时，唱片可能跑出画面。可以减小 `recordOut`，或者把 `camera.zoom` 调到 1 以下。
 - 只改 `number.place` 时，编号的位置、字高、角度会回到该位置的默认值；只改 `number.finish` 时，颜色会回到该工艺的默认色。要固定这些值，就同时写上对应字段。
 - 背面编号的 `number.x` 以从背后看为准，向右为正。
-- 只改 `pattern.id` 时，底色和纹路色会回到这款纹路的默认配色；要保留自己的颜色，就同时写上 `records.discN.color` 和 `pattern.color`。
+- 换 `pattern.id` 不会改底色：写了 `records.discN.color` 而没写 `pattern.color` 时，纹路色按底色推算；`color` 也没写时，用这款纹路的默认配色。要固定纹路色，就写上 `pattern.color`。
 - Obi 图是一张展开图，从左到右依次为背面、书脊、正面。
 - 批量出编号图：`node cli/groove-mock.mjs numbers spec.json --from 1 --to 50 --dir out/`。

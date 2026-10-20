@@ -202,7 +202,7 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
           <div class="slider"><label for="num-x">水平</label><input type="range" id="num-x" min="-150" max="150" value="105"><output id="num-x-v">105 mm</output></div>
           <div class="slider"><label for="num-y">垂直</label><input type="range" id="num-y" min="-150" max="150" value="-136"><output id="num-y-v">-136 mm</output></div>
           <div class="slider"><label for="num-size">字高</label><input type="range" id="num-size" min="3" max="20" value="5"><output id="num-size-v">5 mm</output></div>
-          <div class="slider"><label for="num-rot">角度</label><input type="range" id="num-rot" min="-90" max="90" value="-3"><output id="num-rot-v">-3°</output></div>
+          <div class="slider"><label for="num-rot">角度</label><input type="range" id="num-rot" min="-90" max="90" value="0"><output id="num-rot-v">0°</output></div>
           <p class="note">切换位置时，坐标会回到该位置的默认值。烫金在转动视角时会反光。只含英文的字体遇到中文时，会用黑体补齐。上传的字体只在本地使用。</p>
         </div>
       </section>
@@ -214,7 +214,7 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
         </div>
         <div class="slider"><label for="record-rot">标签角度</label><input type="range" id="record-rot" min="-180" max="180" value="0"><output id="record-rot-v">0°</output></div>
         <div class="row">
-          <label class="switch"><input type="checkbox" id="sleeve-on" checked>显示内袋</label>
+          <label class="switch"><input type="checkbox" id="sleeve-on">显示内袋</label>
           <div class="row" style="justify-content:flex-end">
             <label class="tile mini" data-slot="sleeve"><span class="thumb"></span><input id="up-sleeve" type="file" accept="image/*" aria-label="上传内袋印刷图">印刷图</label>
             <input type="color" id="sleeve-color" value="#f3f1ea" aria-label="内袋颜色">
@@ -433,14 +433,14 @@ function translateStatic(){
   b.setAttribute('aria-label',lang==='en'?'切换到中文':'Switch to English')}
 translateStatic();
 const state = {
-  finish:'satin', sleeveOn:true, sleeveColor:'#f3f1ea', sleeveX:.35, recordX:.40, recordRot:0,
+  finish:'satin', sleeveOn:false, sleeveColor:'#f3f1ea', sleeveX:.35, recordX:.40, recordRot:0,
   vinyl:'black', vinylColor:'#c8392b', vinyl2:'black', vinyl2Color:'#d9a441', wrapOn:true, wrinkle:1, gloss:1,
   pattern:'none', patternColor:'#1b1b1b', patternAlt:'#2a6f4e', patternContrast:1, patternRot:0, patternFromCover:false,
   pattern2:'none', pattern2Color:'#1b1b1b', pattern2Alt:'#2a6f4e', pattern2Contrast:1, pattern2Rot:0, pattern2FromCover:false, vinylSame:true,
   vinylClear:0, vinyl2Clear:0, tracks:6, tracks2:6,
   stickerOn:true, stickerShape:'circle', stickerSize:7.6, stickerX:8.8, stickerY:9.2, stickerRot:0,
   numOn:true, numCur:123, numTotal:1000, numPrefix:'No.', numFormat:'slash', numFont:'auto', numPlace:'back', numFinish:'stamp', numColor:'#25336f',
-  numX:10.5, numY:-13.6, numSize:.5, numRot:-3,
+  numX:10.5, numY:-13.6, numSize:.5, numRot:0,
   jacketType:'single', gateOpen:0, lpCount:1, sleeve2X:.6, record2X:.3, obiOn:true, obiWidth:3.2, insertOn:true, insertX:0,
   bg:'transparent', bgColor:'#e6e3dc', scale:2, view:'quarter',
   camZoom:1, camAz:0, camEl:0, camPanX:0, camPanY:0, outW:2400, outH:1600   // used by the agent API / CLI
@@ -721,6 +721,26 @@ function derivePattern(m,base,color,alt,contrast){
   const[Lb]=B,Cb=Math.hypot(B[1],B[2]),hb=Math.atan2(B[2],B[1]);
   return derive.map(p=>{const dL=p.dL*contrast;let L=Lb+dL>=.1?Lb+dL:Lb-dL;L=Math.min(.98,Math.max(.05,L));
     const C=Cb<.02?Cb:Math.max(0,Cb+p.dC*contrast);return oklabToHex([L,C*Math.cos(hb),C*Math.sin(hb)])})}
+// Pattern colours for a base the user already has: the pattern's default palette relation (lightness gap,
+// chroma shift, hue turn) moved onto that base, so picking a pattern changes the look, not the disc colour.
+// The lightness gap is kept within limits (a near-white default base would otherwise push a mid colour to black),
+// goes the other way when the base has no room, and chroma is cut back to stay inside sRGB.
+// Returns [pattern colour, third region]; tonal patterns use neither.
+function patternColorsFor(m,base){
+  const lch=h=>{const[L,a,b]=hexToOklab(h);return[L,Math.hypot(a,b),Math.atan2(b,a)]},regions=m.palette.mode==='regions';
+  const inGamut=lab=>{const[L,a,b]=lab,l=(L+.3963377774*a+.2158037573*b)**3,mm=(L-.1055613458*a-.0638541728*b)**3,s=(L-.0894841775*a-1.2914855480*b)**3;
+    return[4.0767416621*l-3.3077115913*mm+.2309699292*s,-1.2684380046*l+2.6097574011*mm-.3413193965*s,-.0041960863*l-.7034186147*mm+1.7076147010*s].every(c=>c>=-1e-4&&c<=1.0001)};
+  const[Lb,Cb,hb]=lch(base),[L0,C0,h0]=lch(m.base),[lo,hi]=regions?[.05,.15]:[.22,.35];
+  return m.colors.map(c=>{const[L1,C1,h1]=lch(c);
+    const gap=Math.min(hi,Math.max(lo,Math.abs(L1-L0))),dir=L1<L0?-1:1,fits=L=>L>=.28&&L<=.94;
+    let L=fits(Lb+dir*gap)?Lb+dir*gap:fits(Lb-dir*gap)?Lb-dir*gap:Lb>.58?Lb-gap:Lb+gap;L=Math.min(.94,Math.max(.28,L));
+    // A neutral base (black, white, grey) has no hue to carry: the pattern colour keeps the default's hue and
+    // chroma. A neutral default base has no hue to turn from: splits take the opposite hue, accents the base's.
+    const h=Cb<.03?h1:hb+(C0>.04&&C1>.04?h1-h0:regions?Math.PI:0);
+    let C=Cb<.03?C1:Math.min(.3,Math.max(.03,Cb+C1-C0));
+    const at=C=>[L,C*Math.cos(h),C*Math.sin(h)];
+    if(!inGamut(at(C))){let a=0,b=C;for(let k=0;k<20;k++){const mid=(a+b)/2;if(inGamut(at(mid)))a=mid;else b=mid}C=a}
+    return oklabToHex(at(C))})}
 // Colours from the front cover: k-means in OKLab on a 64 px copy, then (base, pattern, third) candidates
 // ranked so the base is a large, colourful area and the pattern colour contrasts with it. Each call moves
 // to the next candidate; disc 2 starts one further on, so a 2LP does not get two identical discs.
@@ -948,7 +968,7 @@ function stickerTexture(){
 // ---------- Limited-edition number ----------
 // A decal: a transparent plane laid on the chosen face with its own material, so foil can be metallic
 // and the uploaded artwork underneath is never altered.
-const NUM_DEFAULTS={back:{x:10.5,y:-13.6,size:.5,rot:-3},front:{x:10.5,y:-13.6,size:.5,rot:-3},obi:{x:0,y:-12.6,size:.4,rot:90},sticker:{x:0,y:-2.9,size:.35,rot:0}};
+const NUM_DEFAULTS={back:{x:10.5,y:-13.6,size:.5,rot:0},front:{x:10.5,y:-13.6,size:.5,rot:0},obi:{x:0,y:-12.6,size:.4,rot:90},sticker:{x:0,y:-2.9,size:.35,rot:0}};
 const NUM_INK={print:'#1a1e1b',stamp:'#25336f',foil:'#e0b85c',hand:'#1a1e1b'};
 function numberText(){
   const total=Math.max(1,Math.round(state.numTotal)||1),cur=Math.min(total,Math.max(1,Math.round(state.numCur)||1)),c=String(cur).padStart(String(total).length,'0'),pre=state.numPrefix.trim();
@@ -1125,10 +1145,12 @@ function thumbUrl(m){if(m.thumb)return'vinyl-masks/'+m.thumb;
 function buildPicker(s){const root=$(`pattern${s}-pick`);root.textContent='';
   for(const m of MASKS){const b=document.createElement('button');b.type='button';b.setAttribute('role','radio');b.dataset.id=m.id;
     b.title=patternLabel(m);b.setAttribute('aria-label',b.title);b.style.backgroundImage=`url("${thumbUrl(m)}")`;root.append(b)}}
-// Same defaults as a spec that names only pattern.id: the pattern's own palette, contrast back to 100%.
+// A pattern sets the look, not the disc colour: the base stays, the pattern colours follow it
+// (patternColorsFor) and contrast goes back to 100%.
 function pickPattern(i,id){const s=i===1?'':'2',m=maskById(id);state['pattern'+s]=m?id:'none';
-  if(m){const mode=m.palette.mode;if(mode!=='tonal')state[`pattern${s}Color`]=m.colors[0];if(mode==='regions'&&m.accents===2)state[`pattern${s}Alt`]=m.colors[1];
-    state[`pattern${s}Contrast`]=1;if(m.base)state[`vinyl${s}Color`]=m.base}
+  if(m){const mode=m.palette.mode,[color,alt]=patternColorsFor(m,state[`vinyl${s}Color`]);
+    if(mode!=='tonal')state[`pattern${s}Color`]=color;if(mode==='regions'&&m.accents===2)state[`pattern${s}Alt`]=alt;
+    state[`pattern${s}Contrast`]=1}
   applyVinyl();syncUI()}
 function syncPatterns(){for(const i of[1,2]){const s=i===1?'':'2',black=state['vinyl'+s]==='black',m=maskById(state['pattern'+s]),mode=m?.palette.mode;
   $(`vinyl${s}-colored`).hidden=black;
@@ -1143,14 +1165,16 @@ function syncPatterns(){for(const i of[1,2]){const s=i===1?'':'2',black=state['v
   $(`pattern${s}-hint`).textContent=mode==='regions'?tr('第一块用上面的底色，下面选其余几块。','The first region uses the base colour; pick the others below.')
     :mode==='accent'?tr('选好底色和纹路色，其余色层自动搭配。','Pick the base and pattern colours; the other layers follow them.')
     :tr('纹路是底色的深浅变化，用反差调强弱。','The pattern is shades of the base colour; Contrast sets how strong it is.')}}
-// 纯色 / 纹路: switching to solid remembers the pattern (and its colours stay in state), so switching back
-// restores it; the first switch to pattern starts from a splatter in its own palette.
-const lastPattern=['',''];
+// 纯色 / 纹路: the colour carries over both ways. Switching to solid remembers the pattern, so switching back
+// restores it with its colours, unless the colour changed meanwhile: then its colours follow the new one.
+// The first switch to pattern starts from a splatter.
+const lastPattern=['',''],lastBase=['',''];
 function setLook(i,look){const s=i===1?'':'2';
-  if(look==='solid'){if(maskById(state['pattern'+s]))lastPattern[i-1]=state['pattern'+s];state['pattern'+s]='none';applyVinyl();syncUI();return}
+  if(look==='solid'){if(maskById(state['pattern'+s])){lastPattern[i-1]=state['pattern'+s];lastBase[i-1]=state[`vinyl${s}Color`]}state['pattern'+s]='none';applyVinyl();syncUI();return}
   if(maskById(state['pattern'+s]))return;
-  if(maskById(lastPattern[i-1])){state['pattern'+s]=lastPattern[i-1];applyVinyl();syncUI()}
-  else pickPattern(i,maskById('splatter-07')?'splatter-07':MASKS[0].id)}
+  const last=lastPattern[i-1];
+  if(maskById(last)&&lastBase[i-1]===state[`vinyl${s}Color`]){state['pattern'+s]=last;applyVinyl();syncUI()}
+  else pickPattern(i,maskById(last)?last:maskById('splatter-07')?'splatter-07':MASKS[0].id)}
 // Sliders and colour pickers fire on every move; recomposite at most once per frame.
 let vinylQueued=false;
 function queueVinyl(){if(vinylQueued)return;vinylQueued=true;requestAnimationFrame(()=>{vinylQueued=false;applyVinyl()})}
@@ -1257,7 +1281,7 @@ const SPEC_FIELDS=[
     numF(`records.disc${i}.sleeveOut`,`sleeve${s}X`,0,100,.01,`第 ${i} 张内袋连同唱片从封套开口抽出的比例（%）${note}`),
     numF(`records.disc${i}.recordOut`,`record${s}X`,0,100,.01,`第 ${i} 张唱片再从内袋里抽出的比例（%）${note}`),
     numF(`records.disc${i}.tracks`,`tracks${s}`,1,20,1,`第 ${i} 张每面的音轨数，盘面按等宽分成这么多圈，相邻音轨之间有一道亮环；两面相同${note}`,true),
-    enumF(`records.disc${i}.pattern.id`,`pattern${s}`,['none',...MASKS.map(m=>m.id)],`第 ${i} 张彩胶纹路，none 或不写为纯色，只在 vinyl=color 时生效。按配色方式分三类——分色（底色是第一块，pattern.color 第二块，split-tri 再用 pattern.color2 第三块；split-quad 对角同色）：${patternIds('regions')}；主次（底色 + pattern.color，其余色层自动推算）：${patternIds('accent')}；同色系（只用底色，纹路是它的深浅变化，pattern.contrast 调反差）：${patternIds('tonal')}。底色是 color；只给 id 时，color、pattern.color、pattern.color2 回到这款纹路的默认配色${note}`),
+    enumF(`records.disc${i}.pattern.id`,`pattern${s}`,['none',...MASKS.map(m=>m.id)],`第 ${i} 张彩胶纹路，none 或不写为纯色，只在 vinyl=color 时生效。按配色方式分三类——分色（底色是第一块，pattern.color 第二块，split-tri 再用 pattern.color2 第三块；split-quad 对角同色）：${patternIds('regions')}；主次（底色 + pattern.color，其余色层自动推算）：${patternIds('accent')}；同色系（只用底色，纹路是它的深浅变化，pattern.contrast 调反差）：${patternIds('tonal')}。底色是 color；写了 color 而没写 pattern.color / pattern.color2 时，纹路色按底色推算；color 也没写时，用这款纹路的默认配色${note}`),
     colorF(`records.disc${i}.pattern.color`,`pattern${s}Color`,`第 ${i} 张纹路色：主次类为纹路颜色，分色类为第二块颜色；同色系不使用${note}`),
     colorF(`records.disc${i}.pattern.color2`,`pattern${s}Alt`,`第 ${i} 张分色第三块颜色，仅 split-tri 使用${note}`),
     numF(`records.disc${i}.pattern.contrast`,`pattern${s}Contrast`,0,200,.01,`第 ${i} 张同色系纹路的反差（%），100 为这款纹路的原始深浅差；仅同色系使用${note}`),
@@ -1394,8 +1418,10 @@ async function applySpec(spec){
     else if(state.vinylSame)warnings.push(`records.disc2.sameAsDisc1=true，第 2 张沿用第 1 张的样式，已忽略 ${disc2Style.map(k=>'records.disc2.'+k).join('、')}`)}
   for(const i of[1,2]){const s=i===1?'':'2',m=maskById(state['pattern'+s]),pre=`records.disc${i}`;if(!m||(i===2&&state.vinylSame))continue;
     const mode=m.palette.mode,tri=mode==='regions'&&m.accents===2;
-    if(has(`${pre}.pattern.id`)){if(!has(`${pre}.pattern.color`)&&mode!=='tonal')state[`pattern${s}Color`]=m.colors[0];
-      if(!has(`${pre}.pattern.color2`)&&tri)state[`pattern${s}Alt`]=m.colors[1];
+    // With a colour written, the pattern colours follow it; with none, the pattern's own palette.
+    if(has(`${pre}.pattern.id`)){const[color,alt]=has(`${pre}.color`)?patternColorsFor(m,state[`vinyl${s}Color`]):m.colors;
+      if(!has(`${pre}.pattern.color`)&&mode!=='tonal')state[`pattern${s}Color`]=color;
+      if(!has(`${pre}.pattern.color2`)&&tri)state[`pattern${s}Alt`]=alt;
       if(!has(`${pre}.pattern.contrast`))state[`pattern${s}Contrast`]=1;
       if(!has(`${pre}.color`)&&m.base)state[`vinyl${s}Color`]=m.base}
     if(has(`${pre}.pattern.color`)&&mode==='tonal')warnings.push(`${pre}.pattern.color 无效：${m.id} 是同色系纹路，只用底色 ${pre}.color`);

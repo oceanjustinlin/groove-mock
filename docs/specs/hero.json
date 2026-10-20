@@ -5,6 +5,7 @@
     "finish": "satin"
   },
   "records": {
+    "sleeve": {"on": true},
     "count": 2,
     "disc1": {
       "vinyl": "black",

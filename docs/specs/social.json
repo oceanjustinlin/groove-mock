@@ -2,6 +2,7 @@
   "version": 1,
   "jacket": {"type": "single"},
   "records": {
+    "sleeve": {"on": true},
     "count": 2,
     "disc1": {"vinyl": "black", "sleeveOut": 32, "recordOut": 38},
     "disc2": {"vinyl": "color", "color": "#d64b3a", "sleeveOut": 56, "recordOut": 40}
