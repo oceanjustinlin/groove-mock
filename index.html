@@ -130,6 +130,7 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
 .lib-has{display:flex;flex-wrap:wrap;gap:4px;margin-top:2px}
 .lib-has span{font-size:10px;border:1px solid var(--line);border-radius:4px;padding:0 4px;color:var(--muted)}
 .lib-has span.on{color:var(--ink);border-color:var(--ink)}
+.lib-sec{margin:6px 4px 2px;font-size:11px;color:var(--muted);font-family:var(--font-mono)}
 .lib-pick{display:grid;gap:6px}
 .lib-item{display:grid;grid-template-columns:auto 36px minmax(0,1fr);gap:8px;align-items:center;font-size:13px;cursor:pointer}
 .lib-item.param{grid-template-columns:auto minmax(0,1fr)}
@@ -214,7 +215,7 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
           </form>
           <p class="note" id="lib-status" role="status" aria-live="polite" hidden></p>
           <div class="lib-view" id="lib-view" hidden></div>
-          <p class="note">搜到专辑后选一个黑胶版本，再给每张图选用途。图片版权归原权利方，仅供预览。</p>
+          <p class="note">搜到专辑后选一个版本（黑胶优先，其他版本只取图片），再给每张图选用途。图片版权归原权利方，仅供预览。</p>
         </section>
       </div>
     </main>
@@ -490,7 +491,7 @@ const EN={
   '拖动旋转 · 滚轮缩放 · 右键拖动平移':'Drag to rotate · Scroll to zoom · Right-drag to pan',
   '调整设置面板宽度':'Resize settings panel','素材':'Assets','设置分页':'Settings sections','唱片':'Records','插页':'Insert','包装':'Packaging',
   '曲库':'Record library','曲库搜索':'Record library search','艺人':'Artist','专辑名':'Album','搜索':'Search',
-  '搜到专辑后选一个黑胶版本，再给每张图选用途。图片版权归原权利方，仅供预览。':'Find an album, pick a vinyl release, then choose where each image goes. Images belong to their rights holders and are for preview only.',
+  '搜到专辑后选一个版本（黑胶优先，其他版本只取图片），再给每张图选用途。图片版权归原权利方，仅供预览。':'Find an album, pick a release (vinyl first; other formats lend images only), then choose where each image goes. Images belong to their rights holders and are for preview only.',
   '设置':'Settings','封套':'Jacket','类型':'Type','单开':'Single','双开':'Gatefold','示例':'Sample',
   '上传封套正面':'Upload jacket front','上传封套背面':'Upload jacket back','上传书脊':'Upload spine',
   '背面':'Back','书脊':'Spine','上传内页左':'Upload inner left','上传内页右':'Upload inner right','内页左':'Inner left','内页右':'Inner right',
@@ -1352,22 +1353,30 @@ async function libReleases(group){libGroup=group;const turn=++libTurn;libStatus(
     // Big albums have a few hundred releases; three pages cover almost all of them.
     while(offset<total&&offset<300){const j=await mbGet(`release?release-group=${group.id}&inc=labels+media&limit=100&offset=${offset}`);if(turn!==libTurn)return;
       all=all.concat(j.releases||[]);total=j['release-count']||0;offset+=100}
-    const lps=all.filter(r=>(r.media||[]).some(isLp));libGroupReleases=all;
-    const art=r=>r['cover-art-archive']||{};
-    lps.sort((a,b)=>(art(b).count||0)-(art(a).count||0)||(+!!art(b).back)-(+!!art(a).back)||String(a.date||'9').localeCompare(String(b.date||'9')));
-    libReleaseList=lps;
-    if(!lps.length){libStatus(tr('这张专辑在曲库里没有 12″ 黑胶版本。','This album has no 12″ vinyl release in the library.'));
+    // Artwork belongs to the album, not the format: vinyl pressings come first (they also set the record
+    // settings), then any other release that has images, so an album with no vinyl yet still has art.
+    const art=r=>r['cover-art-archive']||{},byArt=(a,b)=>(art(b).count||0)-(art(a).count||0)||(+!!art(b).back)-(+!!art(a).back)||String(a.date||'9').localeCompare(String(b.date||'9'));
+    const lps=all.filter(isLpRelease).sort(byArt),rest=all.filter(r=>!isLpRelease(r)&&art(r).artwork).sort(byArt);
+    libGroupReleases=all;libReleaseList=[...lps,...rest];libLpCount=lps.length;
+    if(!libReleaseList.length){libStatus(tr('这张专辑在曲库里还没有图片，也没有黑胶版本。可以直接上传图片。','This album has no images or vinyl releases in the library yet. You can upload images directly.'));
       libShow(`<div class="lib-head"><button class="chip" type="button" data-back="groups">← ${tr('返回','Back')}</button></div>`);return}
-    if(lps.length===1){libConfirm(lps[0]);return}
+    if(libReleaseList.length===1){libConfirm(libReleaseList[0]);return}
     libStatus('');libReleaseRows()}
   catch(err){if(turn===libTurn)libFail()}}
 
-function releaseMeta(r){const lp=r.media.filter(isLp).length,cat=(r['label-info']||[]).map(l=>l['catalog-number']).filter(Boolean)[0];
-  return[r.date&&r.date.slice(0,4),r.country,cat,lp>1?`${lp}LP`:'1LP',r.packaging].filter(Boolean).map(esc).join(' · ')}
+const isLpRelease=r=>(r.media||[]).some(isLp);
+let libLpCount=0;
+// Vinyl shows its disc count; other releases show their formats (CD, Digital Media…).
+function releaseMeta(r){const lp=(r.media||[]).filter(isLp).length,cat=(r['label-info']||[]).map(l=>l['catalog-number']).filter(Boolean)[0];
+  const fmt=lp?(lp>1?`${lp}LP`:'1LP'):[...new Set((r.media||[]).map(m=>m.format).filter(Boolean))].join(' + ');
+  return[r.date&&r.date.slice(0,4),r.country,cat,fmt,r.packaging!=='None'&&r.packaging].filter(Boolean).map(esc).join(' · ')}
 function libReleaseRows(){const g=libGroup,art=r=>r['cover-art-archive']||{};libView=libReleaseRows;
   libStatus('');
-  libShow(`<div class="lib-head"><button class="chip" type="button" data-back="groups">← ${tr('返回','Back')}</button><span>${esc(g.title)} · ${tr(`${libReleaseList.length} 个黑胶版本`,`${libReleaseList.length} vinyl releases`)}</span></div>
-  <div class="lib-list" role="list">${libReleaseList.map((r,i)=>{const c=art(r);return`<button class="lib-row${c.front?'':' noart'}" type="button" role="listitem" data-release="${i}">
+  const nOther=libReleaseList.length-libLpCount;
+  const sec=i=>i===0&&libLpCount?`<p class="lib-sec">${tr(`黑胶版本 · ${libLpCount}`,`Vinyl · ${libLpCount}`)}</p>`:i===libLpCount?`<p class="lib-sec">${tr(`其他版本 · ${nOther} · 只用图片，不改唱片参数`,`Other formats · ${nOther} · images only, record settings unchanged`)}</p>`:'';
+  libShow(`<div class="lib-head"><button class="chip" type="button" data-back="groups">← ${tr('返回','Back')}</button><span>${esc(g.title)}</span></div>
+  ${libLpCount?'':`<p class="note">${tr('这张专辑在曲库里还没有 12″ 黑胶版本，可以先用其他版本的封面图。','This album has no 12″ vinyl release in the library yet; you can still use artwork from its other releases.')}</p>`}
+  <div class="lib-list" role="list">${libReleaseList.map((r,i)=>{const c=art(r);return`${sec(i)}<button class="lib-row${c.front?'':' noart'}" type="button" role="listitem" data-release="${i}">
     ${c.front?`<span class="lib-cover" style="background-image:url('${CAA}release/${r.id}/front-250')"></span>`:''}
     <span>${r.title!==g.title?`<div class="lib-title">${esc(r.title)}</div>`:''}<div class="lib-meta">${releaseMeta(r)}</div>
     <div class="lib-has"><span class="${c.front?'on':''}">${tr('正面','Front')}</span><span class="${c.back?'on':''}">${tr('背面','Back')}</span><span class="${c.count?'on':''}">${tr(`共 ${c.count||0} 张图`,`${c.count||0} images`)}</span></div></span></button>`}).join('')}</div>`)}
@@ -1435,7 +1444,7 @@ async function libConfirm(r){const turn=++libTurn;libStatus(tr('正在读取图�
       types:i.types||[],front:i.front,back:i.back,note:i.comment||'',ref:`${rid}/${i.id}`});
     const own=https(caa.images).map(i=>toImg(i,rel.id));
     // Other pressings of the same album often carry a different cover; offer their fronts as well.
-    const others=libReleaseList.filter(o=>o.id!==r.id&&o['cover-art-archive']?.front).slice(0,12).map(o=>({thumb:`${CAA}release/${o.id}/front-250`,
+    const others=libReleaseList.slice(0,libLpCount).filter(o=>o.id!==r.id&&o['cover-art-archive']?.front).slice(0,12).map(o=>({thumb:`${CAA}release/${o.id}/front-250`,
       full:[`${CAA}release/${o.id}/front-1200`,`${CAA}release/${o.id}/front-500`],types:['Front'],other:true,
       note:[o.date?.slice(0,4),o.country,(o['label-info']||[]).map(l=>l['catalog-number']).filter(Boolean)[0]].filter(Boolean).join(' · '),ref:`${o.id}/front`}));
     // A new pressing often has no scans yet, while the CD or digital release of the same album does.
@@ -1454,9 +1463,10 @@ async function libConfirm(r){const turn=++libTurn;libStatus(tr('正在读取图�
       if(slot in assign||kept.includes(slot))continue;const k=own.findIndex((im,n)=>f(im)&&!Object.values(assign).includes(n));if(k<0)continue;
       // The viewer's own upload stays unless they pick this image for it.
       if(slotOrigin[slot]==='user')kept.push(slot);else assign[slot]=k}
-    const lps=(rel.media||[]).filter(isLp),sides=lps.slice(0,2).map(sideCounts),nLp=Math.min(2,lps.length)||1;
+    // Only a vinyl pressing says anything about the records; a CD or digital release lends its images alone.
+    const lps=(rel.media||[]).filter(isLp),vinyl=lps.length>0,sides=lps.slice(0,2).map(sideCounts),nLp=Math.min(2,lps.length)||1;
     // Disc images go to the sides: first where the uploader's comment names one ("Side B"), then in upload order.
-    const free=['labelA','labelB','labelC','labelD'].slice(0,nLp*2).filter(sl=>{if(slotOrigin[sl]!=='user')return true;kept.push(sl);return false});
+    const free=['labelA','labelB','labelC','labelD'].slice(0,vinyl?nLp*2:0).filter(sl=>{if(slotOrigin[sl]!=='user')return true;kept.push(sl);return false});
     const discs=own.map((im,n)=>im.types.includes('Medium')?n:-1).filter(n=>n>=0);
     for(const n of[...discs]){const m=/\bside\s*([A-D])\b/i.exec(own[n].note)||/^\s*([A-D])\s*$/.exec(own[n].note),sl=m&&'label'+m[1].toUpperCase();
       if(sl&&free.includes(sl)){assign[sl]=n;free.splice(free.indexOf(sl),1);discs.splice(discs.indexOf(n),1)}}
@@ -1464,8 +1474,8 @@ async function libConfirm(r){const turn=++libTurn;libStatus(tr('正在读取图�
     // No front of its own: borrow the album's cover from another pressing, else from another format.
     if(!('front' in assign)&&!kept.includes('front')){const k=[...others,...formats].findIndex(i=>i.types.includes('Front'));
       if(k>=0){if(slotOrigin.front==='user')kept.push('front');else assign.front=own.length+k}}
-    const pack=rel.packaging,jacket=pack==='Gatefold Cover'?'gatefold':pack?'single':null;
-    libPlan={release:rel,images:[...own,...others,...formats],ownCount:own.length,assign,kept,lps:nLp,extraLps:Math.max(0,lps.length-2),sides,jacket,bmp:{},crops:{},editing:null};
+    const pack=rel.packaging,jacket=!vinyl?null:pack==='Gatefold Cover'?'gatefold':pack?'single':null;
+    libPlan={release:rel,vinyl,images:[...own,...others,...formats],ownCount:own.length,assign,kept,lps:nLp,extraLps:Math.max(0,lps.length-2),sides,jacket,bmp:{},crops:{},editing:null};
     libStatus('');libConfirmView()}
   catch(err){if(turn===libTurn)libFail()}}
 
@@ -1478,14 +1488,16 @@ function libConfirmView(){const p=libPlan,r=p.release,targets=libTargets(p.lps),
     <div><div class="lib-uses" data-uses="${k}"></div>
     <button class="chip lib-adjust" type="button" data-crop="${k}" hidden>${tr('调整裁切','Adjust crop')}</button></div>
     <select class="field select" data-img="${k}" aria-label="${esc(tr(`给第 ${k+1} 张图添加用途`,`Add a use for image ${k+1}`))}"><option value="">${tr('+ 用作…','+ Use as…')}</option>${targets.map(([s,n])=>`<option value="${s}">${n}</option>`).join('')}</select></div>`).join('');
-  const params=[`<label class="lib-item param"><input type="checkbox" data-param="count" checked><span>${tr('唱片数量','Records')}${tr('：',': ')}${p.lps===2?'2LP':tr('单 LP','1LP')}${p.extraLps?`<div class="lib-meta">${tr(`这一版共 ${p.lps+p.extraLps} 张，只做前 2 张`,`This release has ${p.lps+p.extraLps} discs; only the first 2 are modelled`)}</div>`:''}</span></label>`];
+  const params=!p.vinyl?[]:[`<label class="lib-item param"><input type="checkbox" data-param="count" checked><span>${tr('唱片数量','Records')}${tr('：',': ')}${p.lps===2?'2LP':tr('单 LP','1LP')}${p.extraLps?`<div class="lib-meta">${tr(`这一版共 ${p.lps+p.extraLps} 张，只做前 2 张`,`This release has ${p.lps+p.extraLps} discs; only the first 2 are modelled`)}</div>`:''}</span></label>`];
   if(p.jacket)params.push(`<label class="lib-item param"><input type="checkbox" data-param="jacket" checked><span>${tr('封套','Jacket')}${tr('：',': ')}${p.jacket==='gatefold'?tr('双开','Gatefold'):tr('单开','Single')}</span></label>`);
   p.sides.forEach((s,i)=>{if(!s.length)return;const n=Math.min(20,Math.max(...s));
     params.push(`<label class="lib-item param"><input type="checkbox" data-param="tracks${i+1}" checked><span>${tr(`第 ${i+1} 张每面音轨`,`Disc ${i+1} tracks per side`)}${tr('：',': ')}${n}${new Set(s).size>1?`<div class="lib-meta">${tr(`各面曲目数 ${s.join(' / ')}，按最多的一面`,`Sides have ${s.join(' / ')} tracks; using the largest`)}</div>`:''}</span></label>`)});
   const notes=[];
   if(p.kept.length)notes.push(tr(`${p.kept.map(s=>names[s]).join('、')}已有你上传的图，默认保留；要替换就在图下面选。`,`You uploaded your own ${p.kept.map(s=>names[s].toLowerCase()).join(' and ')}; it stays unless you pick an image for it below.`));
   if(!p.images.length)notes.push(tr('这一版在曲库里没有图片，只能应用下面的唱片参数。','This release has no images in the library; only the record settings below apply.'));
-  else if(!p.ownCount)notes.push(tr('这一版还没有图，下面是同一张专辑其他版本和格式的图。CD 的背面比例和黑胶不同，用作背面前先看看。','This pressing has no images yet; these come from other pressings and formats of the album. A CD back has different proportions from an LP back, so check it before using it.'));
+  const fmt=[...new Set((r.media||[]).map(m=>m.format).filter(Boolean))].join(' + ')||tr('其他','other');
+  if(!p.vinyl)notes.unshift(tr(`这是 ${fmt} 版本，只用它的图，唱片参数不会改。它的背面比例和黑胶不同，应用后看一下。`,`This is the ${fmt} release, so only its images are used and the record settings stay as they are. Its back has different proportions from an LP back, so check it after applying.`));
+  if(p.images.length&&!p.ownCount)notes.push(tr('这一版还没有图，下面是同一张专辑其他版本和格式的图。CD 的背面比例和黑胶不同，用作背面前先看看。','This pressing has no images yet; these come from other pressings and formats of the album. A CD back has different proportions from an LP back, so check it before using it.'));
   libShow(`<div class="lib-head"><button class="chip" type="button" data-back="${libReleaseList.length>1?'releases':'groups'}">← ${tr('返回','Back')}</button><span>${esc(r.title)} · ${releaseMeta(r)}</span></div>
     ${p.images.length?`<p class="note">${tr('每张图下面选它用在哪个位置，点图看大图。','Choose where each image goes; click an image to see it full size.')}</p><div id="lib-crop"></div><div class="lib-gallery">${cards}</div>`:''}
     ${notes.map(n=>`<p class="note">${n}</p>`).join('')}
