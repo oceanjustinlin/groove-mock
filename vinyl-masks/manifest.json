@@ -352,29 +352,38 @@
       "thumb": "thumbs/pinwheel-02.jpg",
       "size": 1024,
       "accents": 2,
-      "base": "#510d1f",
+      "base": "#e1087c",
       "colors": [
-        "#eeeef2",
-        "#c965b6"
+        "#ffc000",
+        "#ec0f16"
       ],
       "palette": {
         "mode": "accent",
         "derive": [
           {
-            "t": 0.4704,
-            "dL": 0.0116
+            "t": 0.8036,
+            "dL": -0.0454
           }
         ]
       },
-      "labelRadius": 0.34,
+      "labelRadius": null,
       "source": {
-        "kind": "generated",
-        "master": "VinylLab/assets/masks/pinwheel-02",
-        "file": "codex-clipboard-9fb73e34-cf54-4517-94f2-be8540ea091c.png"
+        "kind": "unlicensed-reference",
+        "master": "output/texture-gen/library/pinwheel-02",
+        "file": [
+          "layer1.png",
+          "layer2.png"
+        ],
+        "operation": "photo variant + colour extraction",
+        "date": "2026-10-21",
+        "reference": "https://www.pinterest.com/pin/91479436177557268/",
+        "referenceSha256": "bd8201edccd3cea2ddaac38fb8b0927a42626ebb3bb9d16e21e0927efbe911b7",
+        "generatedSha256": "2e09eb8cf3e3bc115d079ae640a6c7c7f94bc9318f9ec72397176621268583b1",
+        "prompt": "附图是一张彩胶唱片照片。\n\n请生成一张新的产品照片：和附图同一批次压出来的另一张唱片。材料、颜色和压片工艺完全相同，纹路的样子和附图一致，只是具体排布不同。\n\n拍摄要求：\n- 严格正俯拍，相机正对中心孔，无透视，唱片是正圆，居中，直径约占画面边长的 92%。\n- 背景是均匀的纯中灰色。\n- 光线均匀漫射，没有高光、反光条和暗角；看不到沟槽。\n- 中心标签是完全空白的浅色哑光纸，没有文字或图案。\n- 没有手、封套、道具、文字或水印。"
       },
       "status": "draft",
       "bake": {
-        "crop": 0.92,
+        "crop": 1.0,
         "floor": [
           0.0,
           0.0,
