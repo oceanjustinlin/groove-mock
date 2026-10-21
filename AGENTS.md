@@ -57,6 +57,7 @@ cd cli && npm install
 | 输出 | `output.width` / `height`（px，最大 4096），`output.background`：`"transparent"` 或 `#rrggbb` |
 | 视频 / 动图 | `animation.preset`：`turntable` 转一整圈 / `swing` 左右摆 `angle` 度（不露背面）/ `spin` 唱片自转（标签要露出来）/ `gatefold` 双开封面打开再合上（开到 `jacket.gateOpen`，为 0 时 160°）/ `pull` 内袋和唱片抽出再推回（抽到 `sleeveOut` / `recordOut`，都为 0 时用常见值）；`direction` 只用于 turntable 和 swing，`duration`（秒），`aspect`：`16:9` / `1:1` / `9:16`，`size` 短边 px。用 `video spec.json -o x.mp4`（或 `.gif`）出片，构图沿用 `camera.*`，镜头自动拉远到整段不出画。网页工作台的 ▶ 播放同一段动画 |
 | 素材来源 | `meta.assets.<贴图位>.source`，渲染器不读，`render` 会在结果的 `assets` 里汇总 |
+| 标题信息 | `meta.title` / `meta.artist` / `meta.album`，渲染器不画进图里。网页在手机上大屏查看时，顶部标题第一行显示 `title`（默认 Record Mockup），第二行显示「artist – album」，都没写就显示唱片规格。从曲库套用素材时会自动填写 artist 和 album |
 
 ## 容易踩的点
 
