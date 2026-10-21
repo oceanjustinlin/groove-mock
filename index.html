@@ -2,6 +2,13 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Record Mockup</title>
 <meta name="claude:viewport-fit-sides" content="cover">
+<!-- Before first paint: mark phone layout so CSS settles the first frame without waiting for three.js. -->
+<script>{const m=matchMedia('(max-width:860px)'),set=()=>document.documentElement.dataset.layout=m.matches?'phone':'desktop';set();m.addEventListener('change',set)}</script>
+<!-- The import map has to precede any module fetch, preloads included. -->
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"}}</script>
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js" crossorigin>
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/controls/OrbitControls.js" crossorigin>
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/environments/RoomEnvironment.js" crossorigin>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=IBM+Plex+Mono:wght@400;500;600&family=Caveat:wght@600&family=Noto+Serif+SC:wght@600&family=Special+Elite&family=Noto+Sans+SC:wght@400;500;700&display=swap">
@@ -35,6 +42,9 @@ button,input,select{font:inherit;color:inherit}
 .brand h1{margin:0;white-space:nowrap;font-family:var(--font-display);font-stretch:78%;font-weight:800;font-size:24px;letter-spacing:.01em;line-height:1}
 .spec{font-family:var(--font-mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
 .views{display:flex;gap:4px}
+/* Two copies of the view buttons, header and stage; the head script's data-layout picks one before first paint. */
+.stage .views,:root[data-layout="phone"] .bar .views{display:none}
+:root[data-layout="phone"] .stage .views{display:flex}
 /* Icon-only: no side padding, including the phone rule that pads .stage .views .chip. */
 .chip.play,.stage .views .chip.play{display:inline-grid;place-items:center;width:30px;padding:0}
 .play svg{width:14px;height:14px;fill:currentColor}
@@ -204,8 +214,8 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
       <button class="chip" data-view="quarter" aria-pressed="true">斜侧</button>
       <button class="chip" data-view="front" aria-pressed="false">正面</button>
       <button class="chip" data-view="side" aria-pressed="false">侧面</button>
-      <button class="chip play" id="play-btn" aria-pressed="false"><svg class="i-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 2.5v11l9-5.5z"/></svg><svg class="i-pause" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 2.5h3v11h-3zM9.5 2.5h3v11h-3z"/></svg></button>
-      <button class="chip" id="play-reset" hidden>复位</button>
+      <button class="chip play" data-play aria-pressed="false"><svg class="i-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 2.5v11l9-5.5z"/></svg><svg class="i-pause" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 2.5h3v11h-3zM9.5 2.5h3v11h-3z"/></svg></button>
+      <button class="chip" data-play-reset hidden>复位</button>
     </div>
     <a class="chip gh" href="https://github.com/oceanjustinlin/record-mockup" target="_blank" rel="noopener" title="源码、命令行和 Agent 用法" aria-label="源码、命令行和 Agent 用法（GitHub）"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
     <button class="chip" id="lang-btn" lang="en" aria-label="Switch language">EN</button>
@@ -217,6 +227,13 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
       <div class="loading" id="loading">正在准备工作台…</div>
       <div class="export-overlay" id="export-overlay" hidden><span id="export-status"></span><progress id="export-progress" max="1" value="0"></progress></div>
       <div class="err" id="gl-error" hidden><div><strong>无法启动 3D 预览</strong><p class="note">请使用支持 WebGL 2 的最新版浏览器，并开启硬件加速。</p></div></div>
+      <div class="views" role="group" aria-label="视角">
+        <button class="chip" data-view="quarter" aria-pressed="true">斜侧</button>
+        <button class="chip" data-view="front" aria-pressed="false">正面</button>
+        <button class="chip" data-view="side" aria-pressed="false">侧面</button>
+        <button class="chip play" data-play aria-pressed="false"><svg class="i-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 2.5v11l9-5.5z"/></svg><svg class="i-pause" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 2.5h3v11h-3zM9.5 2.5h3v11h-3z"/></svg></button>
+        <button class="chip" data-play-reset hidden>复位</button>
+    </div>
       <span class="hint">拖动旋转 · 滚轮缩放 · 右键拖动平移</span>
       <div class="sheet-backdrop" id="picker-backdrop" hidden></div>
       <div class="assets" id="picker" data-open="false">
@@ -506,7 +523,6 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
   </div>
 </div>
 
-<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"}}</script>
 <script type="module">
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
@@ -1333,7 +1349,7 @@ document.querySelector('.rail').addEventListener('keydown',e=>{const step={Arrow
   showPage(RAIL[n].dataset.page);RAIL[n].focus()});
 showPage((()=>{try{return localStorage.getItem('gm-page')}catch(e){}})());
 // On phones the picker is a bottom sheet with a backdrop, always starts closed and closes after Apply;
-// the view buttons move from the header onto the stage.
+// the view buttons sit on the stage (CSS shows that copy instead of the header's).
 const phone=matchMedia('(max-width:860px)');
 const pickerOpen=()=>$('picker').dataset.open==='true';
 function setPicker(open,focus){$('picker').dataset.open=open;$('picker-toggle').setAttribute('aria-expanded',open);$('lib').hidden=!open;
@@ -1344,9 +1360,7 @@ $('picker-toggle').addEventListener('click',()=>setPicker(!pickerOpen(),true));
 $('picker-backdrop').addEventListener('click',()=>setPicker(false));
 addEventListener('keydown',e=>{if(e.key==='Escape'&&pickerOpen()&&phone.matches){setPicker(false);$('picker-toggle').focus()}});
 setPicker(!phone.matches&&(()=>{try{return localStorage.getItem('gm-picker')==='1'}catch(e){return false}})());
-function placeViews(){const v=document.querySelector('.views');if(phone.matches)$('stage').append(v);else document.querySelector('.bar .brand').after(v)}
-placeViews();
-phone.addEventListener('change',()=>{placeViews();setPicker(pickerOpen())});
+phone.addEventListener('change',()=>setPicker(pickerOpen()));
 // Panel width: drag the splitter, arrow keys nudge it, double-click goes back to 340px. Remembered per viewer.
 const PANEL_W={min:300,max:640,def:340};
 const panelMax=()=>Math.max(PANEL_W.min,Math.min(PANEL_W.max,Math.round(document.querySelector('.work').clientWidth*.5)));
@@ -2230,11 +2244,12 @@ function shadowReach(r){const sh=key.shadow.camera;Object.assign(sh,r?{left:-r,r
 function fitPreview(){shadowReach(fitClipCamera().reach)}
 function setPlaying(on){
   preview.playing=on;if(on){preview.last=performance.now();fitPreview()}syncAnimPanel();
-  const b=$('play-btn'),label=on?tr('暂停','Pause'):tr('播放动画','Play animation');b.setAttribute('aria-pressed',on);b.setAttribute('aria-label',label);b.title=label;
-  $('play-reset').hidden=on||preview.phase===0}
+  const label=on?tr('暂停','Pause'):tr('播放动画','Play animation');
+  for(const b of document.querySelectorAll('[data-play]')){b.setAttribute('aria-pressed',on);b.setAttribute('aria-label',label);b.title=label}
+  for(const b of document.querySelectorAll('[data-play-reset]'))b.hidden=on||preview.phase===0}
 function resetPreview(){preview.playing=false;preview.phase=0;shadowReach(0);setPlaying(false);setView(state.view)}
-$('play-btn').addEventListener('click',()=>setPlaying(!preview.playing));
-$('play-reset').addEventListener('click',resetPreview);
+for(const b of document.querySelectorAll('[data-play]'))b.addEventListener('click',()=>setPlaying(!preview.playing));
+for(const b of document.querySelectorAll('[data-play-reset]'))b.addEventListener('click',resetPreview);
 setPlaying(false);
 function syncAnimPanel(){
   // Opening needs a gatefold, so a single jacket hides the choice. A spec that still asks for it keeps it
