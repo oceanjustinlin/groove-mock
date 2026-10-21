@@ -48,7 +48,6 @@ CURATED = {
     'starburst-06': {'role': 'effect', 'palette': 'accent'},
     'blob-01': {'role': 'layout', 'palette': 'accent'},
     'blob-03': {'role': 'layout', 'palette': 'accent'},
-    'pinwheel-02': {'role': 'layout', 'palette': 'accent', 'crop': 0.92},
     'ripple-01': {'role': 'layout', 'palette': 'tonal', 'status': 'review'},
     'swirl-02': {'role': 'layout', 'palette': 'accent', 'status': 'review'},
     # Smoke: photo variants of unlicensed references, colour-extracted (docs/vinyl-mask-image-to-image-workflow.md
@@ -135,6 +134,16 @@ CURATED = {
                                'master': 'output/texture-gen/library/starburst-07', 'reference': 'https://www.pinterest.com/pin/981573681287214589/',
                                'referenceSha256': '8dacbdb4ed11155d5970cddf7dae5cc41879c77e1c3ae5d1e7b7747c4b3a5de8',
                                'generatedSha256': '9d22a3fef06694086d299fdf2620166afd33f1aa33e48914a2be959853f14229'}},
+    'pinwheel-02': {'role': 'layout', 'palette': 'accent', 'layers': ['layer1.png', 'layer2.png'], 'base': '#e1087c', 'colors': ['#ffc000', '#ec0f16'],
+                   'source': {'kind': 'unlicensed-reference', 'operation': 'photo variant + colour extraction', 'date': '2026-10-21',
+                              'master': 'output/texture-gen/library/pinwheel-02', 'reference': 'https://www.pinterest.com/pin/91479436177557268/',
+                              'referenceSha256': 'bd8201edccd3cea2ddaac38fb8b0927a42626ebb3bb9d16e21e0927efbe911b7',
+                              'generatedSha256': '2e09eb8cf3e3bc115d079ae640a6c7c7f94bc9318f9ec72397176621268583b1'}},
+    'pinwheel-03': {'role': 'layout', 'palette': 'tonal', 'layers': ['layer1.png', 'layer2.png'], 'base': '#4b0b1b', 'colors': ['#f6e5f3', '#e1338c'],
+                   'source': {'kind': 'unlicensed-reference', 'operation': 'photo variant + colour extraction', 'date': '2026-10-21',
+                              'master': 'output/texture-gen/library/pinwheel-03', 'reference': 'https://www.pinterest.com/pin/836965912045205685/',
+                              'referenceSha256': 'aae7ee6badddf04881afa19356a5277f780a12f5a638607a1d0032417a3ed22b',
+                              'generatedSha256': '413499ac03a06a24f85d0c39b6de7267339999eb668edfb203c95f3c1e9d5284'}},
 }
 
 # meta.disc_frac is the disc diameter as a fraction of the master's width. The masters extend the
