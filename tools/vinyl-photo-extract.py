@@ -93,10 +93,17 @@ def extract(photo, crop=0.975, clusters=3, accents=1):
     if accents == 1:
         axes = [cents[rest[0]] - B]
     else:
-        # The two pattern colours: the farthest cluster, then the one farthest from the line base -> first.
+        # The first pattern colour is the farthest cluster. The second is taken from pixels, not clusters: the
+        # 0.5 % of the face that the first colour explains worst. A small, saturated colour (red flecks among
+        # black splatter) never gets a cluster of its own; k-means folds it into a muddy in-between one. The
+        # first colour only explains pixels on its own side of the base (t >= 0), so a colour lying the other
+        # way along the same line (white veins against navy ones on a mid-blue base) still counts as far.
         a1 = cents[rest[0]] - B
-        off = [np.linalg.norm((cents[i] - B) - a1 * ((cents[i] - B) @ a1) / (a1 @ a1)) for i in rest[1:]]
-        axes = [a1, cents[rest[1:][int(np.argmax(off))]] - B]
+        d = px - B
+        with np.errstate(all='ignore'):
+            t = np.clip(d @ a1 / float(a1 @ a1), 0, None)
+            res = np.linalg.norm(d - np.outer(t, a1), axis=1)
+        axes = [a1, d[res >= np.percentile(res, 99.5)].mean(0)]
     M = np.stack(axes, 1)                                       # 3 x k
     with np.errstate(all='ignore'):
         w = (lab - B).reshape(-1, 3) @ np.linalg.pinv(M).T      # least-squares weights

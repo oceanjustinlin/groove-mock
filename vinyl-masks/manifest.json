@@ -649,6 +649,53 @@
       }
     },
     {
+      "id": "splatter-09",
+      "family": "splatter",
+      "role": "effect",
+      "file": "splatter-09.png",
+      "thumb": "thumbs/splatter-09.jpg",
+      "size": 1024,
+      "accents": 2,
+      "base": "#e4bc6e",
+      "colors": [
+        "#e31c21",
+        "#000000"
+      ],
+      "palette": {
+        "mode": "accent",
+        "derive": [
+          {
+            "t": -1.0956,
+            "dL": -0.3326
+          }
+        ]
+      },
+      "labelRadius": null,
+      "source": {
+        "kind": "unlicensed-reference",
+        "master": "output/texture-gen/library/splatter-09",
+        "file": [
+          "layer1.png",
+          "layer2.png"
+        ],
+        "operation": "photo variant + colour extraction",
+        "date": "2026-10-21",
+        "reference": "https://www.pinterest.com/pin/27866091425467164/",
+        "referenceSha256": "d3e0a7ced8002863ed23f6b01b0621c810991bbda60852aae2ab3996a85af7d5",
+        "generatedSha256": "042ee1a4847fbc63695c75faf2dabb2668a3a75a90a89751164ebb783ade77f1",
+        "prompt": "附图是一张彩胶唱片照片。\n\n请生成一张新的产品照片：和附图同一批次压出来的另一张唱片。材料、颜色和压片工艺完全相同，纹路的样子和附图一致，只是具体排布不同。\n\n拍摄要求：\n- 严格正俯拍，相机正对中心孔，无透视，唱片是正圆，居中，直径约占画面边长的 92%。\n- 背景是均匀的纯中灰色。\n- 光线均匀漫射，没有高光、反光条和暗角；看不到沟槽。\n- 中心标签是完全空白的浅色哑光纸，没有文字或图案。\n- 没有手、封套、道具、文字或水印。"
+      },
+      "status": "draft",
+      "bake": {
+        "crop": 1.0,
+        "floor": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    {
       "id": "starburst-04",
       "family": "starburst",
       "role": "effect",
