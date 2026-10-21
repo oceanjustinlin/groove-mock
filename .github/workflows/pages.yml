@@ -1,4 +1,8 @@
-# Publish the browser editor to GitHub Pages: node site/build.mjs wraps index.html into _site/.
+# Publish the browser editor: node site/build.mjs wraps index.html into _site/, deployed with functions/
+# (the /api/log error reports) to the Cloudflare Pages production branch.
+# Needs repository secrets CLOUDFLARE_API_TOKEN (Cloudflare Pages: Edit) and CLOUDFLARE_ACCOUNT_ID, and the
+# repository variable CF_WEB_ANALYTICS_TOKEN for the Web Analytics beacon (optional).
+# The github-pages job keeps the old host current until recordmockup.com points at Cloudflare; remove it then.
 name: Deploy site
 
 on:
@@ -7,6 +11,8 @@ on:
     paths:
       - index.html
       - site/**
+      - functions/**
+      - wrangler.toml
       - vinyl-masks/**
       - docs/images/social-preview.png
       - .github/workflows/pages.yml
@@ -22,7 +28,28 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  cloudflare:
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://recordmockup.com/
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22   # wrangler 4 needs Node 22
+      - run: node site/build.mjs
+        env:
+          SITE_RELEASE: ${{ github.sha }}
+          CF_WEB_ANALYTICS_TOKEN: ${{ vars.CF_WEB_ANALYTICS_TOKEN }}
+      - name: Deploy to Cloudflare Pages
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          npx -y wrangler@4.148.0 pages deploy --branch=main --commit-hash="$GITHUB_SHA" --commit-dirty=true
+
+  github-pages:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -33,6 +60,8 @@ jobs:
         with:
           node-version: 20
       - run: node site/build.mjs
+        env:
+          SITE_RELEASE: ${{ github.sha }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

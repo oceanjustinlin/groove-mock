@@ -30,3 +30,6 @@ Thumbs.db
 # Private research notes (asset surveys, competitor analysis); keep out of the public repo
 /docs/research/
 /docs/vinyl-mask-library-research.md
+
+# wrangler pages dev state
+/.wrangler/

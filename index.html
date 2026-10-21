@@ -771,11 +771,15 @@ function paperBump(){const N=512,c=canvas(N,N),g=c.getContext('2d'),d=g.createIm
   g.putImageData(d,0,0);const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(10,10);t.colorSpace=THREE.NoColorSpace;return t}
 
 // ---------- Renderer / scene ----------
+// Usage reports go to the deployed site's /api/log through site/rum.js; elsewhere window.rmTrack is absent.
+const track=(type,data)=>{try{window.rmTrack?.(type,data)}catch(e){}};
 const stage=$('stage');let renderer;
 try{
   renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,premultipliedAlpha:true});
   if(!renderer.capabilities.isWebGL2)throw new Error('WebGL2 unavailable');
-}catch(e){$('loading').hidden=true;$('gl-error').hidden=false;throw e}
+}catch(e){$('loading').hidden=true;$('gl-error').hidden=false;track('gl-unavailable',{msg:String(e&&e.message||e)});throw e}
+const gpuName=()=>{try{const gl=renderer.getContext(),x=gl.getExtension('WEBGL_debug_renderer_info');
+  return gl.getParameter(x?x.UNMASKED_RENDERER_WEBGL:gl.RENDERER)}catch(e){return ''}};
 maxAniso=Math.min(8,renderer.capabilities.getMaxAnisotropy());
 renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
 renderer.setClearColor(0x000000,0);
@@ -1274,7 +1278,7 @@ const SHADOW_BOX=(({left,right,top,bottom})=>({left,right,top,bottom}))(key.shad
 const loop=now=>{controls.update();
   if(preview.playing){preview.phase=(preview.phase+Math.min(.1,(now-preview.last)/1000)/state.animDuration)%1;preview.last=now}
   renderStage();
-  if(first){first=false;$('loading').hidden=true}};
+  if(first){first=false;$('loading').hidden=true;track('ready',{ms:Math.round(performance.now()),gpu:gpuName()})}};
 renderer.setAnimationLoop(loop);
 
 // ---------- Texture swapping ----------
@@ -1848,12 +1852,15 @@ for(const b of document.querySelectorAll('[data-view]'))b.addEventListener('clic
 let lastUrl;
 $('export-btn').addEventListener('click',async()=>{
   const btn=$('export-btn');btn.disabled=true;btn.textContent=tr('生成中…','Rendering…');
-  try{const w=stage.clientWidth,h=stage.clientHeight,k=Math.min(state.scale,4096/Math.max(w,h)),tw=Math.round(w*k),th=Math.round(h*k);
+  const t0=performance.now();let tw=0,th=0;
+  try{const w=stage.clientWidth,h=stage.clientHeight,k=Math.min(state.scale,4096/Math.max(w,h));tw=Math.round(w*k);th=Math.round(h*k);
     renderer.setPixelRatio(1);renderer.setSize(tw,th,false);camera.aspect=tw/th;camera.updateProjectionMatrix();renderStage();
     const blob=await new Promise((res,rej)=>renderer.domElement.toBlob(b=>b?res(b):rej(new Error('toBlob')),'image/png'));
     if(lastUrl)URL.revokeObjectURL(lastUrl);lastUrl=URL.createObjectURL(blob);
+    track('export',{format:'png',ok:1,ms:Math.round(performance.now()-t0),w:tw,h:th,bytes:blob.size});
     showResult({title:tr('PNG 已生成','PNG ready'),url:lastUrl,file:'record-mockup.png',size:`${tw} × ${th} px · ${(blob.size/1048576).toFixed(1)} MB`});
-  }catch(e){alertNote(tr('导出失败，请把分辨率调到 1× 再试。','Export failed. Set the resolution to 1× and try again.'))}
+  }catch(e){track('export',{format:'png',ok:0,ms:Math.round(performance.now()-t0),w:tw,h:th,msg:String(e&&e.message||e)});
+    alertNote(tr('导出失败，请把分辨率调到 1× 再试。','Export failed. Set the resolution to 1× and try again.'))}
   finally{renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));resize();btn.disabled=false;btn.textContent=tr('导出 PNG','Export PNG')}
 });
 $('modal-close').addEventListener('click',closeModal);
@@ -2249,12 +2256,15 @@ $('video-btn').addEventListener('click',async()=>{
   // Let the last result go first, so its file is not held in memory through this export.
   $('modal-img').removeAttribute('src');for(const u of[videoUrl,posterUrl])if(u)URL.revokeObjectURL(u);videoUrl=posterUrl=null;
   videoAbort=new AbortController();btn.textContent=tr('取消导出','Cancel');status.textContent=tr('正在准备…','Preparing…');bar.value=0;$('export-overlay').hidden=false;
+  const t0=performance.now();
   try{
     const r=await renderAnimation(format,{encoder:'software',signal:videoAbort.signal,poster:LOW_MEMORY&&720,onProgress:(d,n)=>{status.textContent=tr(`正在生成 ${d} / ${n} 帧`,`Rendering frame ${d} / ${n}`);bar.value=d/n}});
     const blob=r.blob;videoUrl=URL.createObjectURL(blob);if(r.poster)posterUrl=URL.createObjectURL(r.poster);
+    track('export',{format,ok:1,ms:Math.round(performance.now()-t0),w:r.width,h:r.height,bytes:blob.size});
     showResult({title:format==='gif'?tr('GIF 已生成','GIF ready'):tr('视频已生成','Video ready'),url:videoUrl,poster:posterUrl,file:`record-mockup.${format}`,video:format==='mp4',
       size:`${r.width} × ${r.height} px · ${r.duration} s · ${(blob.size/1048576).toFixed(1)} MB`});
-  }catch(e){if(e.name!=='AbortError')alertNote(tr(`视频导出失败：${e.message}`,`Video export failed: ${e.message}`))}
+  }catch(e){if(e.name!=='AbortError'){track('export',{format,ok:0,ms:Math.round(performance.now()-t0),msg:String(e&&e.message||e)});
+    alertNote(tr(`视频导出失败：${e.message}`,`Video export failed: ${e.message}`))}}
   finally{videoAbort=null;$('export-overlay').hidden=true;btn.textContent=tr('导出视频','Export video')}});
 slider('anim-duration','animDuration','sec',()=>{});slider('anim-angle','animAngle','deg',refitPreview);
 syncAnimPanel();

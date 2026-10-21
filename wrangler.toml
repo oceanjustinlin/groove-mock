@@ -1,0 +1,10 @@
+# Cloudflare Pages project for the site (node site/build.mjs builds _site/; functions/ holds /api/*).
+# Deploy: npx wrangler pages deploy --branch=<branch>   (production is the project's production branch, main)
+name = "record-mockup"
+pages_build_output_dir = "_site"
+compatibility_date = "2025-09-01"
+
+# Error and timing reports from /api/log (functions/api/log.js). Query them with the Analytics Engine SQL API.
+[[analytics_engine_datasets]]
+binding = "LOGS"
+dataset = "record_mockup_logs"
