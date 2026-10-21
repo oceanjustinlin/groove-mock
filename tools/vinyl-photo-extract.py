@@ -68,6 +68,19 @@ def kmeans(x, k, iters=25, seed=0):
     return c, lab
 
 
+def label_edge(lab, R, crop):
+    """Radius (crop units) just past the photo's label, or None. The label colour is read from a ring between the
+    spindle hole and the page's label edge; the edge is the first thin band where fewer than half the pixels still
+    match it. Only searched up to a little past the page's label, so a label the colour of the vinyl finds nothing."""
+    page = LABEL / crop
+    ref = np.median(lab[(R > 0.10) & (R < page - 0.08)], axis=0)
+    for r0 in np.arange(page - 0.04, page + 0.08, 0.004):
+        band = (R >= r0) & (R < r0 + 0.004)
+        if (np.linalg.norm(lab[band] - ref, axis=1) < 0.04).mean() < 0.5:
+            return float(r0 + 0.014) if r0 > page else None
+    return None
+
+
 def extract(photo, crop=0.975, clusters=3, accents=1):
     """Returns (list of N x N coverage arrays in 0..1, info dict)."""
     src = Image.open(photo).convert('RGB')
@@ -121,10 +134,26 @@ def extract(photo, crop=0.975, clusters=3, accents=1):
                 w[neg, o] = np.clip(d[neg] @ axes[o] / float(axes[o] @ axes[o]), 0, None)
     w = w.reshape(N, N, len(axes))
     layers, patterns = [], []
+    # The photo's blank label is often a little larger than the page's (radius 100 of 302), so its edge lands on
+    # visible vinyl and unmixes as whichever pattern colour is nearest (a pale ring of pink round a white label).
+    # Find where the label colour stops and fill the coverage inside it from the vinyl just outside.
+    edge = label_edge(lab, R, crop)
     for k in range(len(axes)):
         top = float(np.percentile(w[..., k][face], 99.5))
         cov = np.clip(w[..., k] / max(top, 1e-3), 0, 1)
         cov[R > 1.0] = 0
+        if edge:
+            # Mirror the vinyl just outside the edge inward across it, so the strip between the page's label and
+            # the photo's carries pattern instead of a flat band of base colour.
+            # Only the strip that shows: under the page's own label nothing is visible, so it stays empty (and the
+            # PNG stays small).
+            cov[R < LABEL / crop - 0.02] = 0
+            inner = (R < edge) & (R >= LABEL / crop - 0.02)
+            th = np.arctan2(yy - N / 2 + .5, xx - N / 2 + .5)
+            rm = np.minimum(2 * edge - R[inner], 0.99)
+            sx = np.clip(np.round(N / 2 - .5 + rm * np.cos(th[inner]) * N / 2), 0, N - 1).astype(int)
+            sy = np.clip(np.round(N / 2 - .5 + rm * np.sin(th[inner]) * N / 2), 0, N - 1).astype(int)
+            cov[inner] = cov[sy, sx]
         layers.append(cov)
         patterns.append(oklab_to_hex(B + axes[k] * top))
     t0 = w[..., 0][face]
@@ -133,6 +162,7 @@ def extract(photo, crop=0.975, clusters=3, accents=1):
         'photo': Path(photo).name, 'photoSize': list(src.size),
         'disc': {'cx': round(cx, 1), 'cy': round(cy, 1), 'r': round(r, 1), 'crop': crop,
                  'border': '#' + ''.join(f'{int(v):02x}' for v in border)},
+        'labelEdge': round(edge, 3) if edge else None,
         'base': oklab_to_hex(B), 'patterns': patterns,
         'clusters': [{'hex': oklab_to_hex(c), 'share': round(float(n / counts.sum()), 3)} for c, n in zip(cents, counts)],
         'baseLightnessStd': round(float(base_px[:, 0].std()), 4) if len(base_px) else None,
