@@ -4,11 +4,12 @@
   python3 tools/vinyl-gen.py new marble-p132 --ref refs/p132.jpg --url https://www.pinterest.com/pin/... [--accents 2] [--role layout]
   python3 tools/vinyl-gen.py gen marble-p132 [more ids] [-j 2]     # Codex: ref.jpg + prompt.txt -> gen.png
   python3 tools/vinyl-gen.py post marble-p132 [more ids]           # extract, bake into the review library, 3D, review sheet
+  python3 tools/vinyl-gen.py promote marble-p132 marble-02         # accepted: library master + CURATED entry + live bake
 
 Each candidate is a folder under output/texture-gen/masters/<id> (ignored) holding ref.jpg, prompt.txt, job.json and,
 once generated, gen.png. job.json carries what used to be guessed from the id: the reference URL, how many pattern
 colours to unmix, and the role. `gen` skips folders that already have gen.png; move the old one into attempts/ first
-to regenerate. Nothing here touches the live vinyl-masks library: promote accepted masks with bake-vinyl-masks.py.
+to regenerate. Only `promote` touches the live vinyl-masks library, and only after a person has accepted the mask.
 """
 import argparse, json, shutil, subprocess, sys
 from concurrent.futures import ThreadPoolExecutor
@@ -141,6 +142,31 @@ def sheet(mid, d, ex, qc):
     return p
 
 
+def pattern_colour_first(d, ex):
+    """In accent mode layer 1 is the user's pattern colour. When the disc colour changes, the page moves it onto the
+    new base but keeps its lightness within 0.28..0.94 (patternColorsFor in index.html), so a near-black layer 1 on a
+    dark base flips light. Put the layer whose colour is in that range first; derived layers have no such limit."""
+    def L(h):
+        c = [int(h[i:i + 2], 16) / 255 for i in (1, 3, 5)]
+        r, g, b = [v / 12.92 if v <= 0.04045 else ((v + 0.055) / 1.055) ** 2.4 for v in c]
+        l, m, s = (0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b, 0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b,
+                   0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b)
+        return 0.2104542553 * l ** (1 / 3) + 0.7936177850 * m ** (1 / 3) - 0.0040720468 * s ** (1 / 3)
+    ok = lambda h: 0.28 <= L(h) <= 0.94
+    p = ex['patterns']
+    if ok(p[0]) or not ok(p[1]):
+        return ex
+    for f in ('layer1.png', 'layer2.png'):
+        (d / f).rename(d / f'{f}.swap')
+    (d / 'layer1.png.swap').rename(d / 'layer2.png')
+    (d / 'layer2.png.swap').rename(d / 'layer1.png')
+    ex['patterns'] = [p[1], p[0]]
+    ex['coverage'] = ex['coverage'][::-1]
+    ex['layerOrder'] = 'swapped so the pattern colour stays in the page\'s lightness range'
+    (d / 'extract.json').write_text(json.dumps(ex, ensure_ascii=False, indent=2) + '\n')
+    return ex
+
+
 def cmd_post(a):
     placeholders()
     (G / 'renders').mkdir(exist_ok=True)
@@ -150,6 +176,8 @@ def cmd_post(a):
             print(f'skip {mid}: no gen.png')
             continue
         ex = json.loads(run(['python3', 'tools/vinyl-photo-extract.py', str(d), '--accents', str(j.get('accents', 1))]))
+        if j.get('palette') == 'accent' and len(ex['layers']) == 2:
+            ex = pattern_colour_first(d, ex)
         qc = ['python3', 'tools/vinyl-gen-qc.py', str(d), '--master', ','.join(ex['layers']),
               '--palette', j.get('palette', 'tonal'), '--role', j.get('role', 'layout')]
         if j.get('reference'):
@@ -161,6 +189,33 @@ def cmd_post(a):
         out = json.loads(run(qc + ['--render', str(G / 'renders' / f'{mid}-front.png')]).strip().splitlines()[-1])
         print(json.dumps({'id': mid, 'base': ex['base'], 'patterns': ex['patterns'], 'similarity': out['similarityNcc'],
                           'flags': out['flags'], 'sheet': str(sheet(mid, d, ex, out).relative_to(ROOT))}, ensure_ascii=False))
+
+
+def cmd_promote(a):
+    """Accepted candidate -> library master + CURATED entry in bake-vinyl-masks.py -> baked into vinyl-masks/."""
+    import hashlib
+    d, j = job(a.id)
+    ex = json.loads((d / 'extract.json').read_text())
+    baker = ROOT / 'tools/bake-vinyl-masks.py'
+    text = baker.read_text()
+    if f"\n    '{a.new_id}':" in text:
+        sys.exit(f'{a.new_id} is already in CURATED')
+    lib = G / 'library' / a.new_id
+    lib.mkdir(parents=True, exist_ok=True)
+    for f in [*ex['layers'], 'ref.jpg', 'gen.png', 'prompt.txt', 'extract.json', 'job.json']:
+        shutil.copy(d / f, lib / f)
+    sha = lambda p: hashlib.sha256(p.read_bytes()).hexdigest()
+    entry = (f"    '{a.new_id}': {{'role': '{j.get('role', 'layout')}', 'palette': '{j.get('palette', 'tonal')}', "
+             f"'layers': {ex['layers']!r}, 'base': '{ex['base']}', 'colors': {ex['patterns']!r},\n"
+             f"{' ' * (len(a.new_id) + 8)}'source': {{'kind': '{a.kind}', 'operation': 'photo variant + colour extraction', "
+             f"'date': '{a.date}',\n"
+             f"{' ' * (len(a.new_id) + 19)}'master': 'output/texture-gen/library/{a.new_id}', 'reference': '{j.get('reference')}',\n"
+             f"{' ' * (len(a.new_id) + 19)}'referenceSha256': '{sha(d / 'ref.jpg')}',\n"
+             f"{' ' * (len(a.new_id) + 19)}'generatedSha256': '{sha(d / 'gen.png')}'}}}},\n")
+    start = text.index('CURATED = {')
+    end = text.index('\n}\n', start) + 1
+    baker.write_text(text[:end] + entry + text[end:])
+    print(run(['python3', 'tools/bake-vinyl-masks.py', '--src', str(G / 'library'), a.new_id]).strip())
 
 
 def main():
@@ -178,8 +233,13 @@ def main():
     g.add_argument('-j', type=int, default=1, help='parallel Codex runs (default 1)')
     p = sub.add_parser('post', help='extract, bake for review, render, write the review sheet')
     p.add_argument('ids', nargs='+')
+    pr = sub.add_parser('promote', help='add an accepted candidate to the live library')
+    pr.add_argument('id')
+    pr.add_argument('new_id', help='library id, e.g. marble-02')
+    pr.add_argument('--kind', default='unlicensed-reference', help='source.kind (docs section 3)')
+    pr.add_argument('--date', default=__import__('datetime').date.today().isoformat())
     a = ap.parse_args()
-    {'new': cmd_new, 'gen': cmd_gen, 'post': cmd_post}[a.cmd](a)
+    {'new': cmd_new, 'gen': cmd_gen, 'post': cmd_post, 'promote': cmd_promote}[a.cmd](a)
 
 
 if __name__ == '__main__':
