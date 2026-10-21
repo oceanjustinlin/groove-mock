@@ -96,6 +96,37 @@ body.resizing .stage canvas{pointer-events:none}
 .stage{position:relative;border-radius:12px;overflow:hidden;background:var(--stage);min-height:0}
 .stage.transparent{background-color:var(--stage);background-image:conic-gradient(var(--check) 25%,transparent 0 50%,var(--check) 0 75%,transparent 0);background-size:24px 24px}
 .stage canvas{display:block;width:100%;height:100%;touch-action:none}
+/* Full-screen viewer (phone): the stage covers the page on a dark ground, with floating round buttons over it.
+   Tapping empty space hides the buttons (data-viewer="bare") for a clean screenshot. */
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.vw-open,.vw-top,.vw-bottom,.vw-menu{display:none}
+:root[data-layout="phone"]:not([data-viewer]) .vw-open{display:grid;position:absolute;top:8px;right:8px;z-index:2;place-items:center;width:34px;height:34px;padding:0}
+.vw-open svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+:root[data-viewer] .stage{position:fixed;inset:0;z-index:8;border-radius:0;background:#0b0c0b}
+:root[data-viewer] .stage .views,:root[data-viewer] .stage .hint,:root[data-viewer] .stage .assets,:root[data-viewer] .stage .sheet-backdrop{display:none}
+:root[data-viewer] .vw-top,:root[data-viewer] .vw-bottom{display:flex;position:absolute;left:0;right:0;z-index:4;align-items:center;justify-content:space-between;gap:10px;
+  padding-inline:max(14px,env(safe-area-inset-left,0px)) max(14px,env(safe-area-inset-right,0px));transition:opacity .2s}
+:root[data-viewer] .vw-top{top:0;padding-top:calc(10px + env(safe-area-inset-top,0px))}
+:root[data-viewer] .vw-bottom{bottom:0;padding-bottom:calc(14px + env(safe-area-inset-bottom,0px))}
+:root[data-viewer="bare"] .vw-top,:root[data-viewer="bare"] .vw-bottom{opacity:0;pointer-events:none}
+.vw-btn,.vw-title,.vw-group{background:rgba(44,46,44,.78);color:#f4f5f3;border:0}
+.vw-spacer{flex:none;width:46px}
+.vw-btn{flex:none;display:grid;place-items:center;width:46px;height:46px;padding:0;border-radius:50%;cursor:pointer}
+.vw-btn svg,.vw-group svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.vw-btn[aria-pressed="true"]{background:#f4f5f3;color:#111}
+.vw-title{min-width:0;max-width:calc(100% - 128px);display:grid;justify-items:center;padding:6px 18px;border-radius:999px;line-height:1.3;text-align:center}
+.vw-title b,.vw-title span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vw-title b{font-size:14px;font-weight:600}
+.vw-title span{font-size:12px;opacity:.82}
+.vw-group{display:flex;align-items:center;gap:2px;padding:0 6px;height:46px;border-radius:999px}
+.vw-group>button,.vw-group .play-split button{display:grid;place-items:center;height:46px;min-width:46px;padding:0;border:0;background:none;color:inherit;cursor:pointer}
+.vw-group .play-split .chip.play{width:40px;border-radius:0}
+.vw-group .play-split .chip.play-more{width:22px;border-radius:0}
+.vw-group .play-split .play svg{width:20px;height:20px;fill:currentColor;stroke:none}
+.vw-group .play-split .play-more svg{width:10px;height:10px;fill:currentColor;stroke:none}
+.vw-group button:disabled{opacity:.45}
+:root[data-viewer] .vw-menu:not([hidden]){display:grid}
+.vw-menu [aria-pressed="true"] span:first-child::before{content:"✓"}
 .hint{position:absolute;left:12px;bottom:10px;font-size:12px;color:var(--muted);background:color-mix(in srgb,var(--surface) 80%,transparent);padding:3px 8px;border-radius:6px;pointer-events:none}
 .loading{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-size:13px}
 .export-overlay{position:absolute;inset:0;z-index:3;display:grid;place-content:center;justify-items:center;gap:10px;background:var(--stage);font-size:14px}
@@ -336,6 +367,21 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
         <button class="chip" data-play-reset hidden>复位</button>
     </div>
       <span class="hint">拖动旋转 · 滚轮缩放 · 右键拖动平移</span>
+      <button class="chip vw-open" id="vw-open" type="button" aria-label="大屏查看" title="大屏查看"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M9.5 2.5h4v4M6.5 13.5h-4v-4M13.5 2.5 9 7M2.5 13.5 7 9"/></svg></button>
+      <div class="vw-top">
+        <span class="vw-spacer" aria-hidden="true"></span>
+        <div class="vw-title" id="vw-title"><b id="vw-t1">Record Mockup</b><span id="vw-t2"></span></div>
+        <button class="vw-btn" id="vw-more" type="button" aria-label="更多" title="更多" aria-controls="vw-menu" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="12" r=".6"/><circle cx="12" cy="12" r=".6"/><circle cx="18" cy="12" r=".6"/></svg></button>
+      </div>
+      <div class="vw-bottom">
+        <button class="vw-btn" id="vw-disc" type="button" aria-pressed="false" aria-label="只看唱片" title="只看唱片"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2.5"/></svg></button>
+        <div class="vw-group">
+          <button type="button" data-export-png aria-label="导出 PNG" title="导出 PNG"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5v11M7.5 10 12 14.5 16.5 10M4.5 16v4h15v-4"/></svg><span class="sr"></span></button>
+          <button type="button" id="vw-share" aria-label="分享" title="分享" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3.5M8 7.5l4-4 4 4M7 10.5H5.5v10h13v-10H17"/></svg></button>
+          <span class="play-split"><button class="chip play" type="button" data-play aria-pressed="false"><svg class="i-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 2.5v11l9-5.5z"/></svg><svg class="i-pause" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 2.5h3v11h-3zM9.5 2.5h3v11h-3z"/></svg></button><button class="chip play-more" type="button" data-play-menu aria-haspopup="menu" aria-expanded="false" aria-label="选择动画" title="选择动画"><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2 3.5h6L5 7z"/></svg></button></span>
+        </div>
+        <button class="vw-btn" id="vw-edit" type="button" aria-label="调整参数" title="调整参数"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg></button>
+      </div>
       <div class="sheet-backdrop" id="picker-backdrop" hidden></div>
       <div class="assets" id="picker" data-open="false">
         <button class="picker-toggle" id="picker-toggle" type="button" aria-expanded="false" aria-controls="lib"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5"/></svg>素材<small>MusicBrainz · Cover Art Archive</small><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
@@ -639,6 +685,11 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
 </div>
 
 <div class="play-menu" id="play-menu" role="menu" hidden></div>
+<div class="play-menu vw-menu" id="vw-menu" role="group" aria-label="视角" hidden>
+  <button type="button" data-view="quarter" aria-pressed="true"><span aria-hidden="true"></span><span>斜侧</span><span></span></button>
+  <button type="button" data-view="front" aria-pressed="false"><span aria-hidden="true"></span><span>正面</span><span></span></button>
+  <button type="button" data-view="side" aria-pressed="false"><span aria-hidden="true"></span><span>侧面</span><span></span></button>
+</div>
 <div class="modal" id="modal" hidden>
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="modal-title">
     <div class="row"><strong id="modal-title">PNG 已生成</strong><span class="spec" id="modal-size"></span></div>
@@ -702,7 +753,7 @@ const $ = id => document.getElementById(id);
 // viewer's last choice, then the browser language. Runtime strings go through tr(zh,en).
 const EN={
   '12″ LP · 封套 314 × 314 mm · 唱片 Ø302 mm':'12″ LP · Jacket 314 × 314 mm · Disc Ø302 mm',
-  '视角':'View','斜侧':'Angled','正面':'Front','侧面':'Side','导出 PNG':'Export PNG','3D 预览':'3D preview',
+  '视角':'View','大屏查看':'Full screen','更多':'More','分享':'Share','调整参数':'Adjust settings','斜侧':'Angled','正面':'Front','侧面':'Side','导出 PNG':'Export PNG','3D 预览':'3D preview',
   '正在准备工作台…':'Setting up the workbench…','无法启动 3D 预览':'Can’t start the 3D preview',
   '请使用支持 WebGL 2 的最新版浏览器，并开启硬件加速。':'Use an up-to-date browser with WebGL 2 and hardware acceleration turned on.',
   '拖动旋转 · 滚轮缩放 · 右键拖动平移':'Drag to rotate · Scroll to zoom · Right-drag to pan',
@@ -1611,7 +1662,15 @@ function setView(name){userMoved=false;const v=VIEWS[name],half=Math.tan(THREE.M
 // ---------- Resize / loop ----------
 // Re-frame on resize until the viewer moves the camera themselves.
 let userMoved=false;controls.addEventListener('start',()=>{userMoved=true});
-function resize(){const w=stage.clientWidth,h=stage.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();if(!userMoved)setView(state.view)}
+// A moved camera keeps its angle and backs off (or comes in) so the narrower side of the frame still covers
+// as much: the tall full-screen viewer then shows what the wide stage did, and back again on leaving.
+// Exports resize the renderer to other shapes for a moment, so the stage's own last shape is kept here.
+let stageAspect=0;
+function resize(){const w=stage.clientWidth,h=stage.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);
+  const was=stageAspect;stageAspect=camera.aspect=w/h;camera.updateProjectionMatrix();
+  if(!userMoved){setView(state.view);return}
+  const k=Math.min(was||stageAspect,1)/Math.min(stageAspect,1);if(Math.abs(k-1)<1e-3)return;
+  camera.position.sub(controls.target).multiplyScalar(k).add(controls.target);controls.update()}
 function applyBg(){stage.classList.toggle('transparent',state.bg==='transparent');scene.background=state.bg==='color'?new THREE.Color(state.bgColor):null;stage.style.backgroundColor=state.bg==='color'?state.bgColor:''}
 let first=true;
 // Stage preview of spec.animation: phase is the loop position in [0, 1); paused keeps the turned pose.
@@ -1641,6 +1700,8 @@ for(const slot of['front','back','spine','labelA','labelB','labelC','labelD','st
 // One loader for every artwork slot, shared by the upload tiles and the agent API.
 // slotOrigin remembers who filled each slot, so a library pick leaves the viewer's own uploads alone.
 const slotOrigin={},assetLog={};
+// Spec meta the renderer doesn't draw: the viewer's title pill shows it (title, then "artist – album").
+const sceneMeta={};
 async function setSlotImage(slot,img,thumbUrl,origin='user',src){
   if(slot==='sticker'){userSticker.img=img;stickerTexture()}
   else if(slot==='obi'){userObi.img=img;obiTexture()}
@@ -2076,6 +2137,7 @@ async function libApply(){const p=libPlan,v=$('lib-view'),btn=v.querySelector('[
   // A part given new art is switched on, so the image is actually seen.
   if(done.includes('obi'))spec.obi={on:true};
   if(done.includes('sticker'))spec.sticker={on:true};
+  if(libGroup)spec.meta={artist:artistName(libGroup['artist-credit']),album:libGroup.title};
   await applySpec(spec);
   const names=libSlotNames(),msg=[failed.length?tr(`已应用。${failed.map(s=>names[s]).join('、')}下载失败，保留原来的图。`,`Applied. Couldn’t download the ${failed.map(s=>names[s].toLowerCase()).join(', ')} image; the previous one stays.`):tr('已应用。','Applied.')];
   const hidden=done.map(s=>[s,libSlotOff(s)]).filter(([,o])=>o);
@@ -2492,7 +2554,7 @@ function specFromState(){
   if(state.animPreset==='swing')s.animation.angle=state.animAngle;
   if(state.animFps)s.animation.fps=state.animFps;
   if(state.animSize)s.animation.size=state.animSize;
-  if(Object.keys(assetLog).length)s.meta={assets:structuredClone(assetLog)};
+  if(Object.keys(assetLog).length||Object.keys(sceneMeta).length)s.meta={...sceneMeta,...Object.keys(assetLog).length?{assets:structuredClone(assetLog)}:{}};
   return s}
 function buildSchema(){
   const root={$schema:'https://json-schema.org/draft/2020-12/schema',title:'Record Mockup scene spec',
@@ -2514,7 +2576,9 @@ function buildSchema(){
     panX:{type:'number',minimum:-600,maximum:600,default:0,description:'平移画面中心（mm，场景坐标：正值朝唱片抽出的一侧，即从正面看的右边）'},
     panY:{type:'number',minimum:-400,maximum:400,default:0,description:'平移画面中心（mm，正值向上）'}}};
   root.properties.meta={type:'object',description:'渲染器不读取的说明信息，供 agent 和人登记素材来源',properties:{
-    title:{type:'string',description:'这套模型图的名称'},
+    title:{type:'string',description:'这套模型图的名称，手机大屏查看时显示在顶部标题第一行'},
+    artist:{type:'string',description:'艺人。和 album 一起显示在手机大屏查看的标题第二行；从曲库套用素材时自动填写'},
+    album:{type:'string',description:'专辑名。没有 artist 和 album 时，标题第二行显示唱片规格'},
     assets:{type:'object',additionalProperties:false,description:'每张贴图的来源登记，键与 images 相同',
       properties:Object.fromEntries(Object.keys(IMAGE_SLOTS).map(k=>[k,{type:'object',required:['source'],additionalProperties:false,properties:{
         source:{enum:ASSET_SOURCES,description:'user 用户提供，generated 生图模型生成，typeset 代码排版，composite 生成底图加排版，sample 工具示例图，fetched 从曲库（MusicBrainz / Cover Art Archive）取得的真实发行素材'},
@@ -2545,6 +2609,8 @@ async function applySpec(spec){
   walk(spec,'');
   const clampNum=(path,v,min,max,integer)=>{let n=Number(v);if(!Number.isFinite(n)){warnings.push(`${path} 需要数字，已忽略`);return null}
     if(integer)n=Math.round(n);const c=Math.min(max,Math.max(min,n));if(c!==n)warnings.push(`${path}=${n} 超出范围 ${min}–${max}，已改为 ${c}`);return c};
+  for(const k of['title','artist','album']){const v=spec.meta?.[k];if(v===undefined)continue;
+    if(typeof v==='string'&&v.trim())sceneMeta[k]=v.trim().slice(0,120);else delete sceneMeta[k]}
   const sleeveWas=state.sleeveOn;
   for(const f of SPEC_FIELDS){const v=getPath(spec,f.path);if(v===undefined)continue;
     if(f.type==='enum'){if(!f.values.includes(v)){warnings.push(`${f.path}=${JSON.stringify(v)} 无效，可选值：${f.values.join(' / ')}`);continue}state[f.key]=v}
@@ -2803,7 +2869,7 @@ function openPlayMenu(btn){
   (playMenu.querySelector('[aria-checked="true"]')||playMenu.querySelector('button')).focus()}
 for(const b of document.querySelectorAll('[data-play-menu]'))b.addEventListener('click',()=>{const same=playMenuBtn===b;closePlayMenu();if(!same)openPlayMenu(b)});
 playMenu.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;closePlayMenu(true);
-  if(b.dataset.more!==undefined){showPage('output');$('anim-preset').scrollIntoView({block:'center'});return}
+  if(b.dataset.more!==undefined){closeViewer();showPage('output');$('anim-preset').scrollIntoView({block:'center'});return}
   // Switching presets mid-play starts the new one from the top.
   $('anim-preset').querySelector(`[data-v=${b.dataset.v}]`).click();preview.phase=0;setPlaying(true)});
 playMenu.addEventListener('keydown',e=>{const bs=[...playMenu.querySelectorAll('button')],i=bs.indexOf(document.activeElement);
@@ -2814,6 +2880,57 @@ playMenu.addEventListener('keydown',e=>{const bs=[...playMenu.querySelectorAll('
 addEventListener('pointerdown',e=>{if(!playMenu.hidden&&!playMenu.contains(e.target)&&!playMenuBtn.contains(e.target))closePlayMenu()});
 addEventListener('resize',()=>closePlayMenu());
 setPlaying(false);
+
+// ---------- Full-screen viewer (phone) ----------
+// The stage itself goes full screen (CSS keys off data-viewer), so the camera, the scene and a playing clip
+// carry over untouched. A history entry lets the phone's back gesture close it.
+const vwMenu=$('vw-menu'),vwOn=()=>document.documentElement.hasAttribute('data-viewer');
+function syncViewer(){const m=sceneMeta,who=[m.artist,m.album].filter(Boolean).join(' – ');
+  const kind=discOnly()?tr('只看唱片','Disc only'):state.jacketType==='gatefold'?tr('双开','Gatefold'):tr('单开','Single');
+  $('vw-t1').textContent=m.title||'Record Mockup';
+  $('vw-t2').textContent=who||`${state.lpCount}LP · ${kind}`;
+  $('vw-disc').setAttribute('aria-pressed',String(discOnly()))}
+function setViewerMenu(open){vwMenu.hidden=!open;$('vw-more').setAttribute('aria-expanded',String(open));if(!open)return;
+  const r=$('vw-more').getBoundingClientRect();vwMenu.style.left=`${Math.max(8,r.right-vwMenu.offsetWidth)}px`;vwMenu.style.top=`${r.bottom+6}px`}
+function openViewer(){if(vwOn())return;syncViewer();document.documentElement.dataset.viewer='';
+  history.pushState({gmViewer:1},'');$('vw-edit').focus({preventScroll:true})}
+function leaveViewer(){if(!vwOn())return;document.documentElement.removeAttribute('data-viewer');setViewerMenu(false);closePlayMenu()}
+function closeViewer(){if(!vwOn())return;if(history.state?.gmViewer)history.back();else leaveViewer()}
+addEventListener('popstate',leaveViewer);
+$('vw-open').addEventListener('click',openViewer);
+// The viewer sits over the editor rather than below a page of its own, so leaving it is this button (or Back /
+// Escape), which opens the settings for what's on screen: Records when the disc is shown alone
+// (the other pages don't apply then), otherwise the page last open, from its top.
+$('vw-edit').addEventListener('click',()=>{closeViewer();
+  const cur=RAIL.find(b=>b.getAttribute('aria-selected')==='true')?.dataset.page;const pg=discOnly()?'records':cur;showPage(pg);if(pg==='output')syncAnimPanel();
+  RAIL.find(b=>b.getAttribute('aria-selected')==='true')?.focus({preventScroll:true})});
+$('vw-disc').addEventListener('click',()=>{setDiscOnly(!discOnly());syncViewer()});
+$('vw-more').addEventListener('click',()=>setViewerMenu(vwMenu.hidden));
+vwMenu.addEventListener('click',e=>{if(e.target.closest('button'))setViewerMenu(false)});
+addEventListener('pointerdown',e=>{if(!vwMenu.hidden&&!vwMenu.contains(e.target)&&!$('vw-more').contains(e.target))setViewerMenu(false)});
+addEventListener('resize',()=>setViewerMenu(false));
+// Capture phase, so an open dialog or menu takes Escape first.
+addEventListener('keydown',e=>{if(e.key!=='Escape'||!vwOn()||!$('modal').hidden||!playMenu.hidden)return;
+  if(!vwMenu.hidden){setViewerMenu(false);$('vw-more').focus()}else closeViewer()},true);
+// A tap (not a drag or pinch) on the model: in the viewer it hides or shows the buttons; on the phone stage,
+// two taps in a row open the viewer.
+{const cv=renderer.domElement;let down=null,lastTap=0;
+  cv.addEventListener('pointerdown',e=>{down=e.isPrimary?{x:e.clientX,y:e.clientY,t:e.timeStamp}:null});
+  cv.addEventListener('pointerup',e=>{const d=down;down=null;
+    if(!d||!e.isPrimary||Math.hypot(e.clientX-d.x,e.clientY-d.y)>8||e.timeStamp-d.t>350)return;
+    if(vwOn()){if(!vwMenu.hidden||!playMenu.hidden)return;
+      const r=document.documentElement;r.dataset.viewer=r.dataset.viewer==='bare'?'':'bare';return}
+    if(!phone.matches)return;
+    if(e.timeStamp-lastTap<320){lastTap=0;openViewer()}else lastTap=e.timeStamp})}
+// Share hands a PNG of the current view to the system sheet, where the browser can share files.
+{const b=$('vw-share');
+  try{b.hidden=!(navigator.canShare&&navigator.canShare({files:[new File([''],'x.png',{type:'image/png'})]}))}catch(e){b.hidden=true}
+  b.addEventListener('click',async()=>{if(b.disabled)return;b.disabled=true;
+    try{const w=stage.clientWidth,h=stage.clientHeight,k=Math.min(state.scale,4096/Math.max(w,h));
+      const blob=await renderToBlob(Math.round(w*k),Math.round(h*k));
+      await navigator.share({files:[new File([blob],'record-mockup.png',{type:'image/png'})],title:$('vw-t1').textContent})}
+    catch(e){if(e?.name!=='AbortError')alertNote(tr('分享失败，可以先导出 PNG 再分享。','Sharing failed. Export a PNG and share that instead.'))}
+    finally{b.disabled=false}})}
 function syncAnimPanel(){
   // Opening needs a gatefold, so a single jacket hides the choice. A spec that still asks for it keeps it
   // (shown pressed, with the issue note), so the API and CLI can warn instead of quietly rendering a turntable.
