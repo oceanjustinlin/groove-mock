@@ -209,8 +209,8 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
 .sub{display:grid;gap:10px}
 
 .modal{position:fixed;inset:0;background:color-mix(in srgb,var(--ink) 55%,transparent);display:grid;place-items:center;padding:24px max(16px,env(safe-area-inset-right,0px)) 24px max(16px,env(safe-area-inset-left,0px));z-index:10}
-.sheet{background:var(--surface);border-radius:12px;padding:16px;max-width:min(720px,100%);max-height:100%;overflow:auto;display:grid;gap:12px}
-.sheet img{border-radius:8px;background-image:conic-gradient(var(--check) 25%,transparent 0 50%,var(--check) 0 75%,transparent 0);background-size:16px 16px;max-height:60vh;justify-self:center}
+.sheet{background:var(--surface);border-radius:12px;padding:16px;max-width:min(720px,100%);max-height:100%;overflow:hidden auto;display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+.sheet img{border-radius:8px;background-image:conic-gradient(var(--check) 25%,transparent 0 50%,var(--check) 0 75%,transparent 0);background-size:16px 16px;max-width:100%;height:auto;max-height:60vh;object-fit:contain;justify-self:center}
 .sheet .row{flex-wrap:wrap}
 
 /* Hype sticker templates: the panel entry, and the library dialog (categories | cards | detail; on phones a
