@@ -348,8 +348,8 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
                 <div class="slider" id="pattern-contrast-row" data-look="pattern"><label for="pattern-contrast">反差</label><input type="range" id="pattern-contrast" min="0" max="200" value="100"><output id="pattern-contrast-v">100%</output></div>
                 <div class="slider" data-look="pattern"><label for="pattern-rot">纹路角度</label><input type="range" id="pattern-rot" min="-180" max="180" value="0"><output id="pattern-rot-v">0°</output></div>
               </div>
-              <div class="slider"><label for="sleeve-x">内袋抽出</label><input type="range" id="sleeve-x" min="0" max="100" value="35"><output id="sleeve-x-v">35%</output></div>
-              <div class="slider"><label for="record-x">唱片抽出</label><input type="range" id="record-x" min="0" max="100" value="40"><output id="record-x-v">40%</output></div>
+              <div class="slider" hidden><label for="sleeve-x">内袋抽出</label><input type="range" id="sleeve-x" min="0" max="100" value="0"><output id="sleeve-x-v">0%</output></div>
+              <div class="slider"><label for="record-x">唱片抽出</label><input type="range" id="record-x" min="0" max="100" value="60"><output id="record-x-v">60%</output></div>
               <div class="slider"><label for="tracks">每面音轨</label><input type="range" id="tracks" min="1" max="20" value="6"><output id="tracks-v">6</output></div>
             </div>
 
@@ -384,11 +384,12 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
                   <div class="slider" data-look="pattern"><label for="pattern2-rot">纹路角度</label><input type="range" id="pattern2-rot" min="-180" max="180" value="0"><output id="pattern2-rot-v">0°</output></div>
                 </div>
               </div>
-              <div class="slider"><label for="sleeve2-x">内袋抽出</label><input type="range" id="sleeve2-x" min="0" max="100" value="60"><output id="sleeve2-x-v">60%</output></div>
-              <div class="slider"><label for="record2-x">唱片抽出</label><input type="range" id="record2-x" min="0" max="100" value="30"><output id="record2-x-v">30%</output></div>
+              <div class="slider" hidden><label for="sleeve2-x">内袋抽出</label><input type="range" id="sleeve2-x" min="0" max="100" value="0"><output id="sleeve2-x-v">0%</output></div>
+              <div class="slider"><label for="record2-x">唱片抽出</label><input type="range" id="record2-x" min="0" max="100" value="70"><output id="record2-x-v">70%</output></div>
               <div class="slider"><label for="tracks2">每面音轨</label><input type="range" id="tracks2" min="1" max="20" value="6"><output id="tracks2-v">6</output></div>
             </div>
-            <p class="note">内袋抽出：内袋连同唱片一起从封套开口拉出。唱片抽出：唱片再从内袋里往外拉。</p>
+            <p class="note" id="out-note-sleeve" hidden>内袋抽出：内袋连同唱片一起从封套开口拉出。唱片抽出：唱片再从内袋里往外拉。</p>
+            <p class="note" id="out-note-bare">唱片抽出：唱片从封套开口拉出的比例，100% 时完全抽出。</p>
           </section>
         </div>
         <div class="page" id="page-insert" data-page="insert" role="tabpanel" aria-labelledby="tab-insert" hidden>
@@ -597,6 +598,7 @@ const EN={
   '纹路':'Pattern','第 1 张纹路':'Disc 1 pattern','第 2 张纹路':'Disc 2 pattern','纹路色':'Pattern colour','第 1 张纹路色':'Disc 1 pattern colour','第 2 张纹路色':'Disc 2 pattern colour',
   '第 1 张第三块颜色':'Disc 1 third region colour','胶色和纹路与第 1 张相同':'Same vinyl and pattern as disc 1','样式':'Style','纯色':'Solid','颜色':'Colour','透明度':'Transparency','纹路透明度':'Pattern transparency','第 2 张第三块颜色':'Disc 2 third region colour','反差':'Contrast','纹路角度':'Pattern angle','从封面取色':'Colours from cover','换一款同类纹路，颜色不变':'Shuffle: another pattern of the same kind, same colours',
   '内袋抽出：内袋连同唱片一起从封套开口拉出。唱片抽出：唱片再从内袋里往外拉。':'Sleeve out pulls the inner sleeve, record inside, out of the jacket. Record out then slides the record out of the sleeve.',
+  '唱片抽出：唱片从封套开口拉出的比例，100% 时完全抽出。':'Record out is how far the record comes out of the jacket; at 100% it is all the way out.',
   'Insert 插页':'Insert','304 × 304 mm · 双面':'304 × 304 mm · double-sided','放入插页':'Include insert','上传插页正面':'Upload insert front','上传插页背面':'Upload insert back',
   '抽出':'Out','插页在内袋后面，抽得比内袋多才看得到。':'The insert sits behind the inner sleeve; pull it out further than the sleeve to see it.',
   '塑封膜':'Shrink wrap','套上塑封膜':'Shrink-wrapped','褶皱':'Wrinkles','反光':'Sheen','唱片抽出时，开口一侧的膜会被视为已拆开。':'When a record is pulled out, the wrap on the open edge counts as torn.',
@@ -629,7 +631,7 @@ function translateStatic(){
   b.setAttribute('aria-label',lang==='en'?'切换到中文':'Switch to English')}
 translateStatic();
 const state = {
-  finish:'satin', sleeveOn:false, sleeveColor:'#f3f1ea', sleeveX:.35, recordX:.40, recordRot:0,
+  finish:'satin', sleeveOn:false, sleeveColor:'#f3f1ea', sleeveX:0, recordX:.6, recordRot:0,
   vinyl:'black', vinylColor:'#c8392b', vinyl2:'black', vinyl2Color:'#d9a441', wrapOn:true, wrinkle:1, gloss:1,
   pattern:'none', patternColor:'#1b1b1b', patternAlt:'#2a6f4e', patternContrast:1, patternClear:0, patternRot:0, patternFromCover:false,
   pattern2:'none', pattern2Color:'#1b1b1b', pattern2Alt:'#2a6f4e', pattern2Contrast:1, pattern2Clear:0, pattern2Rot:0, pattern2FromCover:false, vinylSame:true,
@@ -637,7 +639,7 @@ const state = {
   stickerOn:true, stickerShape:'circle', stickerSize:7.6, stickerX:8.8, stickerY:9.2, stickerRot:0,
   numOn:true, numCur:123, numTotal:1000, numPrefix:'No.', numFormat:'slash', numFont:'auto', numPlace:'back', numFinish:'stamp', numColor:'#25336f',
   numX:10.5, numY:-13.6, numSize:.5, numRot:0,
-  jacketType:'single', gateOpen:0, lpCount:1, lpLayout:'split', sleeve2X:.6, record2X:.3, obiOn:true, obiWidth:3.2, insertOn:true, insertX:0,
+  jacketType:'single', gateOpen:0, lpCount:1, lpLayout:'split', sleeve2X:0, record2X:.7, obiOn:true, obiWidth:3.2, insertOn:true, insertX:0,
   bg:'transparent', bgColor:'#e6e3dc', scale:2, view:'quarter',
   camZoom:1, camAz:0, camEl:0, camPanX:0, camPanY:0, outW:2400, outH:1600,   // used by the agent API / CLI
   animPreset:'turntable', animDuration:6, animFps:0, animDir:'left', animAngle:25, animAspect:'16:9', animSize:0,   // 0 = per-format default
@@ -1248,6 +1250,16 @@ function placeNumber(){
   numMesh.position.set(state.numX,state.numY,0);numMesh.rotation.z=THREE.MathUtils.degToRad(state.numRot);numMesh.scale.set(state.numSize*numAspect,state.numSize,1)}
 
 // ---------- Pose ----------
+// How far a disc's sleeve and record sit from the pocket centre. With the sleeve shown, sleeve out (24 at
+// 100%) and record out of the sleeve (27) add up; without it, record out alone is the share of the way out
+// of the jacket, 100% lying fully clear on the ground, and sleeve out takes no part.
+const OUT_FULL=J.w/2+LP.r+1.5;
+const travel=(sX,rX)=>{const x=state.sleeveOn?sX*24:0;return[x,state.sleeveOn?x+rX*27:rX*OUT_FULL]};
+// Showing or hiding the sleeve keeps each record where it is: its travel moves between the two sliders,
+// split evenly between sleeve and record when the sleeve comes back.
+function foldSleeve(discs=['','2']){for(const s of discs){const sk=`sleeve${s}X`,rk=`record${s}X`;
+  if(state.sleeveOn){const rx=state[rk]*OUT_FULL;state[sk]=Math.min(1,rx/48);state[rk]=Math.min(1,rx/54)}
+  else{state[rk]=Math.min(1,(state[sk]*24+state[rk]*27)/OUT_FULL);state[sk]=0}}}
 function pose(){
   const gate=isGate(),opened=gateOpened();
   pocketFront.material[4]=gate?innerRightMat:frontMat;
@@ -1262,9 +1274,9 @@ function pose(){
   // host is the container's frame and ox the pocket centre in it; x runs from the pocket centre to its mouth.
   const placeSet=(sl,rec,sX,rX,z,on,host=scene,ox=0,flip=0)=>{
     for(const o of[sl,rec])if(o.parent!==host)host.add(o);
-    const S=SLV.s,x=sX*24,sy=THREE.MathUtils.lerp(jacketFloor+S/2,GROUND_Y+S/2,settle(x-S/2-J.w/2));
+    const S=SLV.s,[x,rx]=travel(sX,rX),sy=THREE.MathUtils.lerp(jacketFloor+S/2,GROUND_Y+S/2,settle(x-S/2-J.w/2));
     sl.visible=on&&state.sleeveOn;sl.position.set(ox+x,sy,z);sl.rotation.y=flip;rec.visible=on;
-    const rx=x+rX*27,floor=state.sleeveOn?sy-S/2+.04:jacketFloor,mouth=state.sleeveOn?x+S/2:J.w/2;
+    const floor=state.sleeveOn?sy-S/2+.04:jacketFloor,mouth=state.sleeveOn?x+S/2:J.w/2;
     rec.position.set(ox+rx,THREE.MathUtils.lerp(floor+LP.r,GROUND_Y+LP.r,settle(rx-LP.r-mouth)),z);
     rec.rotation.set(0,flip,THREE.MathUtils.degToRad(state.recordRot))};
   placeSet(sleeve,record,state.sleeveX,state.recordX,zc,true);
@@ -1274,7 +1286,7 @@ function pose(){
   else placeSet(sleeve2,record2,state.sleeve2X,state.record2X,-zc,two);
   const ix=state.insertX*25;
   insert.visible=state.insertOn;insert.position.set(ix,THREE.MathUtils.lerp(jacketFloor+INS.s/2,GROUND_Y+INS.s/2,settle(ix-INS.s/2-J.w/2)),two&&!split?-.23:INS.z);
-  const mouthOpen=state.sleeveX>.005||state.recordX>.005||(state.insertOn&&state.insertX>.005)||(two&&(state.sleeve2X>.005||state.record2X>.005));
+  const mouthOpen=travel(state.sleeveX,state.recordX)[1]>.1||(state.insertOn&&state.insertX>.005)||(two&&travel(state.sleeve2X,state.record2X)[1]>.1);
   const wrapZ=gate?coverDepth()/2:0,wrapFront=wrapZ+(jacketDepth()+WRAP.extra)/2;
   wrap.visible=state.wrapOn&&!opened;wrap.position.z=wrapZ;wrapMouthMat.visible=!mouthOpen;
   wrapStrength.value=state.gloss;wrapMat.normalScale.setScalar(.35*state.wrinkle);wrapMouthMat.normalScale.setScalar(.35*state.wrinkle);
@@ -1799,6 +1811,8 @@ function syncUI(){
     else if(c.kind==='slider'){const u=UNITS[c.unit],x=u.toUI(v);el.value=x;$(c.id+'-v').textContent=u.fmt(x)}
     else if(c.kind==='toggle'){el.checked=!!v;if(c.sub)$(c.sub).hidden=!v}
     else el.value=v}
+  for(const id of['sleeve-x','sleeve2-x'])$(id).parentElement.hidden=!state.sleeveOn;
+  $('out-note-sleeve').hidden=!state.sleeveOn;$('out-note-bare').hidden=state.sleeveOn;
   $('lp2-sub').hidden=state.lpCount!==2;$('vinyl-same').checked=state.vinylSame;$('vinyl2-own').hidden=state.vinylSame;$('gate-sub').hidden=!isGate();$('jacket-spec').textContent=specText();syncAnimPanel();syncExportSummary();
   for(const b of document.querySelectorAll('[data-view]'))b.setAttribute('aria-pressed',b.dataset.view===state.view);
   syncPatterns()}
@@ -1889,7 +1903,7 @@ for(const i of[1,2]){const s=i===1?'':'2';buildPicker(s);
   slider(`pattern${s}-rot`,`pattern${s}Rot`,'deg',queueVinyl);
   $(`pattern${s}-shuffle`).addEventListener('click',()=>shufflePattern(i));
   $(`pattern${s}-cover`).addEventListener('click',()=>{if(applyCover(i)){colorSet[i-1]=true;applyVinyl();syncUI()}else alertNote(tr('封面颜色太单一，没取到可用的配色。','The cover has too few distinct colours to suggest a palette.'))})}
-toggle('sleeve-on','sleeveOn');
+toggle('sleeve-on','sleeveOn',null,()=>{foldSleeve();syncUI();pose()});
 // 2LP: disc 2 follows disc 1 until unlinked; unlinking starts it from disc 1's current look.
 $('vinyl-same').addEventListener('change',e=>{state.vinylSame=e.target.checked;
   if(!state.vinylSame){for(const k of STYLE_KEYS)state[k.replace('#','2')]=state[k.replace('#','')];colorSet[1]=colorSet[0]}
@@ -1997,14 +2011,14 @@ const SPEC_FIELDS=[
   enumF('records.layout','lpLayout',['split','stacked'],'2LP 双开时两张怎么装：split 左右两扇各一张（默认），第 2 张在左扇（封面）里，打开后向左抽出；stacked 两张叠在右扇同一个口袋。单开或单 LP 时不使用'),
   numF('records.count','lpCount',1,2,1,'唱片数量：1 为单 LP，2 为 2LP。单开时两张叠在同一个口袋里（封套自动加厚）；双开时按 records.layout 分装，默认两扇各一张',true),
   numF('records.labelRotation','recordRot',-180,180,1,'唱片标签旋转角度（度），两张共用'),
-  boolF('records.sleeve.on','sleeveOn','是否显示内袋'),
+  boolF('records.sleeve.on','sleeveOn','是否显示内袋。不显示时没有 sleeveOut，唱片位置只看 recordOut（唱片抽出封套的比例）'),
   colorF('records.sleeve.color','sleeveColor','内袋纸色，未提供 images.sleeve 时生效'),
   ...[1,2].flatMap(i=>{const s=i===1?'':'2',note=i===2?'（仅 records.count=2 时生效）':'';return[
     enumF(`records.disc${i}.vinyl`,`vinyl${s}`,['black','color'],`第 ${i} 张胶色：black 纯黑胶（不叠纹路、不透明）；color 彩胶，用 color 和 transparency，可再加 pattern。旧值 clear 仍可用，等于 color + transparency 38${note}`),
     numF(`records.disc${i}.transparency`,`vinyl${s}Clear`,0,80,.01,`第 ${i} 张彩胶的透明度（%），0 为不透明。有纹路时是底色的透明度：主次类纹路的透明度另用 pattern.transparency；分色类只有第一块变透明，同色系的深浅纹路不透明；black 不使用${note}`),
     colorF(`records.disc${i}.color`,`vinyl${s}Color`,`第 ${i} 张彩胶颜色；有纹路时是底色（分色类的第一块）${note}`),
-    numF(`records.disc${i}.sleeveOut`,`sleeve${s}X`,0,100,.01,`第 ${i} 张内袋连同唱片从封套开口抽出的比例（%）${note}${i===2?'。双开且 records.layout=split 时从左扇的开口抽出：合上时朝右，打开后朝左':''}`),
-    numF(`records.disc${i}.recordOut`,`record${s}X`,0,100,.01,`第 ${i} 张唱片再从内袋里抽出的比例（%）${note}`),
+    numF(`records.disc${i}.sleeveOut`,`sleeve${s}X`,0,100,.01,`第 ${i} 张内袋连同唱片从封套开口抽出的比例（%），只在 records.sleeve.on=true 时生效，内袋不显示时写了会被忽略并给出警告${note}${i===2?'。双开且 records.layout=split 时从左扇的开口抽出：合上时朝右，打开后朝左':''}`),
+    numF(`records.disc${i}.recordOut`,`record${s}X`,0,100,.01,`第 ${i} 张唱片抽出的比例（%）。显示内袋时是唱片再从内袋里抽出的比例；不显示内袋时是唱片直接抽出封套的比例，100 为完全抽出、落在地面${note}`),
     numF(`records.disc${i}.tracks`,`tracks${s}`,1,20,1,`第 ${i} 张每面的音轨数，盘面按等宽分成这么多圈，相邻音轨之间有一道亮环；两面相同${note}`,true),
     enumF(`records.disc${i}.pattern.id`,`pattern${s}`,['none',...MASKS.map(m=>m.id)],`第 ${i} 张彩胶纹路，none 或不写为纯色，只在 vinyl=color 时生效。按配色方式分三类——分色（底色是第一块，pattern.color 第二块，split-tri 再用 pattern.color2 第三块；split-quad 对角同色）：${patternIds('regions')}；主次（底色 + pattern.color，其余色层自动推算）：${patternIds('accent')}；同色系（只用底色，纹路是它的深浅变化，pattern.contrast 调反差）：${patternIds('tonal')}。底色是 color；写了 color 而没写 pattern.color / pattern.color2 时，纹路色按底色推算；color 也没写时，用这款纹路的默认配色${note}`),
     colorF(`records.disc${i}.pattern.color`,`pattern${s}Color`,`第 ${i} 张纹路色：主次类为纹路颜色，分色类为第二块颜色；同色系不使用${note}`),
@@ -2080,6 +2094,7 @@ function specFromState(){
   for(const f of SPEC_FIELDS)setPath(s,f.path,toSpecValue(f,state[f.key]));
   // A linked disc 2 has no style of its own; writing disc 1's copy would contradict sameAsDisc1.
   if(state.vinylSame)for(const k of['vinyl','color','transparency','pattern'])delete s.records.disc2[k];
+  if(!state.sleeveOn)for(const i of[1,2])delete s.records[`disc${i}`].sleeveOut;
   // Plain black has no colour, transparency or pattern; solid colour has no pattern.
   for(const i of[1,2]){const d=s.records[`disc${i}`],sx=i===1?'':'2';if(!('vinyl' in d))continue;
     if(state['vinyl'+sx]==='black')for(const k of['color','transparency','pattern'])delete d[k];
@@ -2143,12 +2158,19 @@ async function applySpec(spec){
   walk(spec,'');
   const clampNum=(path,v,min,max,integer)=>{let n=Number(v);if(!Number.isFinite(n)){warnings.push(`${path} 需要数字，已忽略`);return null}
     if(integer)n=Math.round(n);const c=Math.min(max,Math.max(min,n));if(c!==n)warnings.push(`${path}=${n} 超出范围 ${min}–${max}，已改为 ${c}`);return c};
+  const sleeveWas=state.sleeveOn;
   for(const f of SPEC_FIELDS){const v=getPath(spec,f.path);if(v===undefined)continue;
     if(f.type==='enum'){if(!f.values.includes(v)){warnings.push(`${f.path}=${JSON.stringify(v)} 无效，可选值：${f.values.join(' / ')}`);continue}state[f.key]=v}
     else if(f.type==='number'){const c=clampNum(f.path,v,f.min,f.max,f.integer);if(c!==null)state[f.key]=c*f.k}
     else if(f.type==='boolean')state[f.key]=!!v;
     else if(f.type==='color'){if(typeof v!=='string'||!/^#[0-9a-f]{6}$/i.test(v)){warnings.push(`${f.path} 需要 #rrggbb 格式，已忽略`);continue}state[f.key]=v.toLowerCase()}
     else state[f.key]=String(v).slice(0,f.maxLength)}
+  // Like the panel switch, turning the sleeve on or off keeps a disc the spec doesn't place where it was;
+  // without the sleeve, sleeve out has nothing to move.
+  const unplaced=['','2'].filter(s=>!has(`records.disc${s||1}.sleeveOut`)&&!has(`records.disc${s||1}.recordOut`));
+  if(state.sleeveOn!==sleeveWas)foldSleeve(unplaced);
+  if(!state.sleeveOn)for(const i of[1,2]){const pre=`records.disc${i}`;if(!has(pre+'.sleeveOut'))continue;state[`sleeve${i===1?'':'2'}X`]=0;
+    warnings.push(`records.sleeve.on=false 时不显示内袋，${pre}.sleeveOut 已忽略；唱片抽出封套多少只看 ${pre}.recordOut`)}
   // Same conveniences as the panel: a new place brings its own default position, a new finish its default ink.
   if(has('number.place')){const d=NUM_DEFAULTS[state.numPlace];if(!has('number.x'))state.numX=d.x;if(!has('number.y'))state.numY=d.y;if(!has('number.size'))state.numSize=d.size;if(!has('number.rotation'))state.numRot=d.rot}
   if(has('number.finish')&&!has('number.color'))state.numColor=NUM_INK[state.numFinish];
@@ -2241,10 +2263,11 @@ function animSettings(format){
 function outAndBack(u){const ease=(a,b)=>THREE.MathUtils.smoothstep(u,a,b);return u<.5?ease(.08,.42):1-ease(.58,.92)}
 // Where a pull ends: the scene's own sleeve / record / insert positions, or a typical pull when all are in.
 function pullTargets(){
-  const two=state.lpCount===2,t={sleeveX:state.sleeveX,recordX:state.recordX,...(state.insertOn&&{insertX:state.insertX}),...(two&&{sleeve2X:state.sleeve2X,record2X:state.record2X})};
-  // Stacked discs stagger so both show; split ones leave by their own pockets and can pull alike.
+  const two=state.lpCount===2,on=state.sleeveOn,t={...(on&&{sleeveX:state.sleeveX}),recordX:state.recordX,...(state.insertOn&&{insertX:state.insertX}),...(two&&{...(on&&{sleeve2X:state.sleeve2X}),record2X:state.record2X})};
+  // Stacked discs stagger so both show; split ones leave by their own pockets and can pull alike. Without the
+  // sleeve, record out is the share of the way out of the jacket: half out, or three quarters for disc 2 behind.
   const split=isSplit();
-  if(Object.values(t).every(v=>v<.05))Object.assign(t,state.sleeveOn?{sleeveX:.5,recordX:.45,...(two&&(split?{sleeve2X:.5,record2X:.45}:{sleeve2X:.75,record2X:.3}))}:{recordX:.6,...(two&&{record2X:split?.6:.9})});
+  if(Object.values(t).every(v=>v<.05))Object.assign(t,state.sleeveOn?{sleeveX:.5,recordX:.45,...(two&&(split?{sleeve2X:.5,record2X:.45}:{sleeve2X:.75,record2X:.3}))}:{recordX:.5,...(two&&{record2X:split?.5:.75})});
   return t}
 // One frame of the clip at loop phase u in [0, 1): turn is the product's turn (radians about the vertical
 // axis); set holds state keys posed for this frame only. Stage preview and video export both draw from it.
@@ -2260,7 +2283,7 @@ function animFrame(u){
   return{set:Object.fromEntries(Object.entries(pullTargets()).map(([key,v])=>[key,v*k]))}}
 // Whether disc i's label shows from the front (as pose() places it): clear of the jacket, and of the sleeve
 // unless the record still sits centred in it, where the sleeve's hole shows the label.
-function labelShows(i){const s=i===1?'':'2',x=state[`sleeve${s}X`]*24,rx=x+state[`record${s}X`]*27,clear=edge=>rx-LP.label>edge;
+function labelShows(i){const s=i===1?'':'2',[x,rx]=travel(state[`sleeve${s}X`],state[`record${s}X`]),clear=edge=>rx-LP.label>edge;
   if(!state.sleeveOn)return clear(J.w/2);
   return clear(Math.max(J.w/2,x+SLV.s/2))||(state[`record${s}X`]<.01&&x-SLV.hole>J.w/2)}
 // Things in the scene that leave a preset with nothing to show. Codes, so the API and the panel can word them.

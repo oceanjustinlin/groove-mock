@@ -87,10 +87,10 @@ def scene(mid, base, view):
          'images': {'front': 'cover-neutral.png', 'labelA': 'label-neutral.png'},
          'meta': {'assets': {k: {'source': 'typeset', 'note': 'Neutral review placeholder'} for k in ('front', 'labelA')}},
          'records': {'count': 1, 'sleeve': {'on': False},
-                     'disc1': {'vinyl': 'color', 'color': base, 'recordOut': 100 if view == 'front' else 88, 'pattern': {'id': mid}}},
+                     'disc1': {'vinyl': 'color', 'color': base, 'recordOut': 100, 'pattern': {'id': mid}}},
          'obi': {'on': False}, 'wrap': {'on': False}, 'sticker': {'on': False}, 'number': {'on': False}}
     if view == 'front':
-        s['camera'] = {'view': 'front', 'zoom': 1.4, 'panX': 300}
+        s['camera'] = {'view': 'front', 'zoom': 1.4, 'panX': 270}
         s['output'] = {'width': 1200, 'height': 1200, 'background': '#eeece7'}
     else:
         s['camera'] = {'view': 'quarter', 'zoom': 0.72}
