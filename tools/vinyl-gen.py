@@ -144,15 +144,16 @@ def sheet(mid, d, ex, qc):
 
 def pattern_colour_first(d, ex):
     """In accent mode layer 1 is the user's pattern colour. When the disc colour changes, the page moves it onto the
-    new base but keeps its lightness within 0.28..0.94 (patternColorsFor in index.html), so a near-black layer 1 on a
-    dark base flips light. Put the layer whose colour is in that range first; derived layers have no such limit."""
+    new base keeping the default's lightness gap, and where that falls outside 0.15..0.97 it may go the other way
+    (patternColorsFor in index.html), so a near-black layer 1 on a dark base flips light. Put the layer whose colour
+    is in that range first; derived layers have no such limit."""
     def L(h):
         c = [int(h[i:i + 2], 16) / 255 for i in (1, 3, 5)]
         r, g, b = [v / 12.92 if v <= 0.04045 else ((v + 0.055) / 1.055) ** 2.4 for v in c]
         l, m, s = (0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b, 0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b,
                    0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b)
         return 0.2104542553 * l ** (1 / 3) + 0.7936177850 * m ** (1 / 3) - 0.0040720468 * s ** (1 / 3)
-    ok = lambda h: 0.28 <= L(h) <= 0.94
+    ok = lambda h: 0.15 <= L(h) <= 0.97
     p = ex['patterns']
     if ok(p[0]) or not ok(p[1]):
         return ex
