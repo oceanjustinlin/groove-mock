@@ -50,6 +50,7 @@ cd cli && npm install
 | 内袋 | `records.sleeve.on` 默认 `false`，不显示内袋，唱片直接从封套抽出；要显示就设为 `true` |
 | 抽出程度 | 显示内袋时：`records.discN.sleeveOut`（内袋出封套），`records.discN.recordOut`（唱片出内袋）；不显示内袋时只用 `recordOut`（唱片出封套，100 为完全抽出），`sleeveOut` 会被忽略并给出警告。`insert.out` 为插页 |
 | 塑封、贴纸、Obi | `wrap.*`、`sticker.*`、`obi.*`，图片为 `images.sticker` / `images.obi` |
+| 贴纸模板 | `sticker.template` 选模板库里的预设（可选值见 `schema`），`sticker.lines` 从上到下写每行文字（不写用默认，空字符串去掉该行），`sticker.color` 配色（`cover` 从封面取色）。用模板时形状由模板决定，`images.sticker` 和 `sticker.shape` 不生效。方括号里的默认文字是占位，要换成真实信息 |
 | 限量编号 | `number.current` / `total` / `format` / `place` / `finish` / `font`，自定义字体用 `number.fontFile` |
 | 构图 | `camera.view`：quarter / front / side，再用 `zoom`、`azimuth`、`elevation` 微调，用 `panX` / `panY`（mm）平移画面中心；拍背面用 `view: front` + `azimuth: 180` + `panX: -90` |
 | 输出 | `output.width` / `height`（px，最大 4096），`output.background`：`"transparent"` 或 `#rrggbb` |
