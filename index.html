@@ -432,8 +432,8 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
             <label class="switch"><input type="checkbox" id="sticker-on" checked>显示贴纸</label>
             <div class="sub" id="sticker-sub">
               <div class="row">
-                <div class="tiles" style="flex:1"><label class="tile" data-slot="sticker"><span class="thumb"><span class="tag">示例</span></span><input id="up-sticker" type="file" accept="image/*" aria-label="上传贴纸">贴纸图</label></div>
-                <div class="seg" id="sticker-shape"><button data-v="circle" aria-pressed="true">圆形</button><button data-v="rect" aria-pressed="false">长方形</button><button data-v="square" aria-pressed="false">方形</button></div>
+                <div class="tiles one" style="flex:0 0 72px"><label class="tile" data-slot="sticker"><span class="thumb"><span class="tag">示例</span></span><input id="up-sticker" type="file" accept="image/*" aria-label="上传贴纸">贴纸图</label></div>
+                <div class="seg" id="sticker-shape" style="flex:1 1 auto"><button data-v="circle" aria-pressed="true">圆形</button><button data-v="rect" aria-pressed="false">长方形</button><button data-v="square" aria-pressed="false">方形</button></div>
               </div>
               <div class="slider"><label for="sticker-size">尺寸</label><input type="range" id="sticker-size" min="40" max="140" value="76"><output id="sticker-size-v">76 mm</output></div>
               <div class="slider"><label for="sticker-x">水平</label><input type="range" id="sticker-x" min="-120" max="120" value="88"><output id="sticker-x-v">88 mm</output></div>
@@ -1831,7 +1831,7 @@ function coverOnColour(i){const s=i===1?'':'2';if(state['vinyl'+s]!=='color'||co
   syncUI()}
 seg('vinyl-style','vinyl',()=>{coverOnColour(1);applyVinyl();syncPatterns()});
 seg('vinyl2-style','vinyl2',()=>{coverOnColour(2);applyVinyl();syncPatterns()});
-seg('sticker-shape','stickerShape',()=>{buildSticker();stickerTexture();pose()});
+seg('sticker-shape','stickerShape',()=>{buildSticker();stickerTexture();if(!userSticker.img)thumb('sticker',tex.sticker.image.toDataURL('image/jpeg',.6));pose()});
 seg('bg-mode','bg',()=>{applyBg();syncAnimPanel();syncExportSummary()});
 seg('export-scale','scale',()=>syncExportSummary());
 // Picking a colour while on black switches that disc to coloured vinyl.
