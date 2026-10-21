@@ -48,7 +48,6 @@ CURATED = {
     'starburst-06': {'role': 'effect', 'palette': 'accent'},
     'blob-01': {'role': 'layout', 'palette': 'accent'},
     'blob-03': {'role': 'layout', 'palette': 'accent'},
-    'ripple-01': {'role': 'layout', 'palette': 'tonal', 'status': 'review'},
     'swirl-02': {'role': 'layout', 'palette': 'accent', 'status': 'review'},
     # Smoke: photo variants of unlicensed references, colour-extracted (docs/vinyl-mask-image-to-image-workflow.md
     # sections 3, 4.1, 4.2). Each master folder also keeps ref.jpg, gen.png, prompt.txt and extract.json.
@@ -144,6 +143,16 @@ CURATED = {
                               'master': 'output/texture-gen/library/pinwheel-03', 'reference': 'https://www.pinterest.com/pin/836965912045205685/',
                               'referenceSha256': 'aae7ee6badddf04881afa19356a5277f780a12f5a638607a1d0032417a3ed22b',
                               'generatedSha256': '413499ac03a06a24f85d0c39b6de7267339999eb668edfb203c95f3c1e9d5284'}},
+    'ripple-01': {'role': 'layout', 'palette': 'tonal', 'layers': ['layer1.png', 'layer2.png'], 'base': '#90c9b9', 'colors': ['#eef0e1', '#538a85'],
+                 'source': {'kind': 'unlicensed-reference', 'operation': 'photo variant + colour extraction', 'date': '2026-10-22',
+                            'master': 'output/texture-gen/library/ripple-01', 'reference': 'https://www.pinterest.com/pin/884464814351029201/',
+                            'referenceSha256': '3da1a351d89f770250bcfbdaf64ba3f5140da731a0fc8e0687f4fd3fbfa8dc73',
+                            'generatedSha256': '8d1c40fd180b4b5b222e598c75049c12c40760df5c079294992a1d6b06cc11e7'}},
+    'ripple-02': {'role': 'layout', 'palette': 'accent', 'layers': ['layer1.png', 'layer2.png'], 'base': '#42d9ea', 'colors': ['#000104', '#4bfcff'],
+                 'source': {'kind': 'unlicensed-reference', 'operation': 'photo variant + colour extraction', 'date': '2026-10-22',
+                            'master': 'output/texture-gen/library/ripple-02', 'reference': 'https://www.pinterest.com/pin/388717011610002399/',
+                            'referenceSha256': '4bac173d278d3f1010213034294b3bcfc4257f5d478d76ad0b753a1b171c181f',
+                            'generatedSha256': '805efa6673cc81446b995906133e3f64184e11267981bc596dc520088f6bb905'}},
 }
 
 # meta.disc_frac is the disc diameter as a fraction of the master's width. The masters extend the
