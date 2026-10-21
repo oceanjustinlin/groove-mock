@@ -164,6 +164,7 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
 .lib-has{display:flex;flex-wrap:wrap;gap:4px;margin-top:2px}
 .lib-has span{font-size:10px;border:1px solid var(--line);border-radius:4px;padding:0 4px;color:var(--muted)}
 .lib-has span.on{color:var(--ink);border-color:var(--ink)}
+.lib-more{justify-self:center;margin:6px 0 2px;font-size:12px;padding:3px 12px}
 .lib-sec{margin:6px 4px 2px;font-size:11px;color:var(--muted);font-family:var(--font-mono)}
 .lib-pick{display:grid;gap:6px}
 .lib-item{display:grid;grid-template-columns:auto 36px minmax(0,1fr);gap:8px;align-items:center;font-size:13px;cursor:pointer}
@@ -1053,7 +1054,7 @@ let studioEnv;
   // Diagonal sheets placed where the front face mirrors the default "front" and "quarter" cameras.
   const sheet=(deg,elev,width,power)=>{const a=THREE.MathUtils.degToRad(deg),e=THREE.MathUtils.degToRad(elev),m=new THREE.Mesh(new THREE.PlaneGeometry(width,220),new THREE.MeshBasicMaterial({color:new THREE.Color(1,1,1).multiplyScalar(power),side:THREE.DoubleSide}));
     m.position.set(100*Math.sin(a),100*Math.sin(e),100*Math.cos(a));m.lookAt(0,0,0);m.rotateZ(.5);studio.add(m)};
-  sheet(-7,5,13,5);sheet(19,-2,16,5);
+  sheet(-7,5,13,3);sheet(19,-2,16,3);
   studioEnv=pm.fromScene(studio,.012).texture;studio.traverse(o=>{o.geometry?.dispose();o.material?.dispose()});pm.dispose()}
 const camera=new THREE.PerspectiveCamera(26,1,1,600);
 const controls=new OrbitControls(camera,renderer.domElement);
@@ -1265,10 +1266,10 @@ function wrapMaterial(){
       vec3 wrapSpec = max(outgoingLight - reflectedLight.directDiffuse - reflectedLight.indirectDiffuse, vec3(0.0));
       float wrapFres = pow(1.0 - abs(dot(normalize(normal), normalize(vViewPosition))), 4.0);
       float wrapLum = max(max(wrapSpec.r, wrapSpec.g), wrapSpec.b);
-      diffuseColor.a = clamp(uWrap * (diffuseColor.a + 0.42 * wrapFres + min(wrapLum * 0.5, 0.82)), 0.0, 0.94);
+      diffuseColor.a = clamp(uWrap * (diffuseColor.a + 0.42 * wrapFres + min(wrapLum * 0.35, 0.6)), 0.0, 0.94);
       outgoingLight = wrapSpec * uWrap / max(diffuseColor.a, 0.04) + vec3(0.025);
       #include <opaque_fragment>`)};
-  m.customProgramCacheKey=()=>'shrink-wrap-v1';return m}
+  m.customProgramCacheKey=()=>'shrink-wrap-v2';return m}
 const wrapMat=wrapMaterial(),wrapMouthMat=wrapMaterial();
 // Coated paper: matte stock with a thin glossy varnish that catches the studio strips; die-cut edge comes
 // from the texture alpha, smoothed by alpha-to-coverage instead of a hard alpha test.
@@ -1670,12 +1671,13 @@ const libFail=()=>{libStatus(tr('曲库暂时连不上。可以稍后再试，�
 $('lib-form').addEventListener('submit',async e=>{e.preventDefault();
   const artist=luceneTerm($('lib-artist').value),album=luceneTerm($('lib-album').value);
   if(!album&&!artist){libStatus(tr('请输入艺人或专辑名。','Enter an artist or an album.'));return}
-  const turn=++libTurn;libStatus(tr('正在搜索…','Searching…'));libShow('');
+  libPager=null;const turn=++libTurn;libStatus(tr('正在搜索…','Searching…'));libShow('');
   // Every artist word must match ("Jay Chou" shouldn't find any Jay); album words stay loose.
   const q=[album&&`releasegroup:(${album})`,artist&&`artist:(${artist.split(' ').join(' AND ')})`].filter(Boolean).join(' AND ');
-  try{const j=await mbGet(`release-group?query=${encodeURIComponent(q)}&limit=15`);if(turn!==libTurn)return;
+  try{const page=off=>`release-group?query=${encodeURIComponent(q)}&limit=${LIB_PAGE}&offset=${off}`;
+    const j=await mbGet(page(0));if(turn!==libTurn)return;
     const groups=sortGroups(j['release-groups']||[]);
-    if(groups.length||!artist){libGroups(groups);return}
+    if(groups.length||!artist){libPager={page,next:LIB_PAGE,total:j.count||0};libGroups(groups);return}
     // Release-group search only sees the credited name, so "Jay Chou" misses 周杰倫. Artist search also reads
     // aliases: look the artist up that way and let the viewer pick, since the top hit isn't always the one meant.
     libStatus(tr('没有直接匹配，正在按艺人别名查找…','No direct match; looking the artist up by alias…'));
@@ -1686,6 +1688,12 @@ $('lib-form').addEventListener('submit',async e=>{e.preventDefault();
     if(found.length===1)libArtistAlbums(found[0]);else libArtists()}
   catch(err){if(turn===libTurn)libFail()}});
 // Equal matches: albums before EPs, singles and the rest, since a mockup is usually for an album.
+// Search hits come a page at a time; libPager fetches the next page onto the end of the list.
+const LIB_PAGE=25;let libPager=null;
+async function libMoreGroups(btn){const p=libPager,turn=libTurn;if(!p)return;btn.disabled=true;btn.textContent=tr('正在读取…','Loading…');
+  try{const j=await mbGet(p.page(p.next));if(turn!==libTurn||p!==libPager)return;
+    p.next+=LIB_PAGE;p.total=j.count||p.total;libGroups([...libGroupList,...sortGroups(j['release-groups']||[])],libGroupOpts)}
+  catch(err){if(turn===libTurn)libFail()}}
 const sortGroups=gs=>{const rank=g=>({Album:0,EP:1,Single:2}[g['primary-type']]??3);
   return gs.map((g,i)=>({g,i})).sort((a,b)=>(b.g.score??0)-(a.g.score??0)||rank(a.g)-rank(b.g)||a.i-b.i).map(x=>x.g)};
 
@@ -1695,13 +1703,15 @@ function libArtists(){libView=libArtists;libGroupOpts=null;libStatus('');
   libShow(`<p class="note">${tr('没有直接匹配的专辑。你找的是哪位艺人？','No album matched directly. Which artist do you mean?')}</p>
   <div class="lib-list" role="list">${libArtistList.map((x,i)=>`<button class="lib-row noart" type="button" role="listitem" data-artist="${i}">
     <span><div class="lib-title">${esc(x.name)}</div><div class="lib-meta">${[x.disambiguation,x.type,x.country,x['life-span']?.begin?.slice(0,4)].filter(Boolean).map(esc).join(' · ')||esc(x['sort-name']||'')}</div></span></button>`).join('')}</div>`)}
-async function libArtistAlbums(x,all=false){libArtistPick=x;const turn=++libTurn;libStatus(tr('正在读取专辑…','Loading albums…'));libShow('');
+async function libArtistAlbums(x,all=false){libArtistPick=x;libPager=null;const turn=++libTurn;libStatus(tr('正在读取专辑…','Loading albums…'));libShow('');
   const back=libArtistList.length>1?'artists':null;
   try{if(libAlbumQuery&&!all){const j=await mbGet(`release-group?query=${encodeURIComponent(`arid:${x.id} AND releasegroup:(${libAlbumQuery})`)}&limit=15`);if(turn!==libTurn)return;
       const gs=sortGroups(j['release-groups']||[]);
       if(gs.length){libGroups(gs,{back,all:true});return}}
-    const j=await mbGet(`release-group?artist=${x.id}&type=album|ep&inc=artist-credits&limit=100`);if(turn!==libTurn)return;
-    const gs=(j['release-groups']||[]).sort((a,b)=>String(b['first-release-date']||'').localeCompare(String(a['first-release-date']||'')));
+    // Browse returns 100 at a time; prolific artists have more, so read them all (up to 500) before sorting by date.
+    let gs=[];for(let off=0,total=1;off<total&&off<500;off+=100){const j=await mbGet(`release-group?artist=${x.id}&type=album|ep&inc=artist-credits&limit=100&offset=${off}`);if(turn!==libTurn)return;
+      gs=gs.concat(j['release-groups']||[]);total=j['release-group-count']||0}
+    gs.sort((a,b)=>String(b['first-release-date']||'').localeCompare(String(a['first-release-date']||'')));
     libGroups(gs,{back,note:libAlbumQuery&&!all?tr(`没找到「${libAlbumQuery}」，这是 ${x.name} 的全部专辑，可能用了原文标题。`,`Nothing called “${libAlbumQuery}”; here are all of ${x.name}’s albums, which may use the original-language title.`):''})}
   catch(err){if(turn===libTurn)libFail()}}
 
@@ -1715,12 +1725,15 @@ function libGroups(groups,opts=null){libGroupList=groups;libGroupOpts=opts;libVi
   libStatus('');
   libShow(`${head}<div class="lib-list" role="list">${groups.map((g,i)=>`<button class="lib-row" type="button" role="listitem" data-group="${i}">
     <span class="lib-cover" style="background-image:url('${CAA}release-group/${g.id}/front-250')"></span>
-    <span><div class="lib-title">${esc(g.title)}</div><div class="lib-meta">${esc(artistName(g['artist-credit']))}${g['first-release-date']?' · '+esc(g['first-release-date'].slice(0,4)):''}${g['primary-type']?' · '+esc(g['primary-type']):''}</div></span></button>`).join('')}</div>`)}
+    <span><div class="lib-title">${esc(g.title)}</div><div class="lib-meta">${esc(artistName(g['artist-credit']))}${g['first-release-date']?' · '+esc(g['first-release-date'].slice(0,4)):''}${g['primary-type']?' · '+esc(g['primary-type']):''}</div></span></button>`).join('')}
+  ${libPager&&libPager.next<libPager.total?`<button class="chip lib-more" type="button" data-more="groups">${tr(`更多结果 · 已显示 ${groups.length} / ${libPager.total}`,`More results · ${groups.length} of ${libPager.total}`)}</button>`:''}</div>`)}
 
 $('lib-view').addEventListener('click',e=>{
   const g=e.target.closest('[data-group]'),r=e.target.closest('[data-release]'),b=e.target.closest('[data-back]'),a=e.target.closest('[data-apply]');
   const cr=e.target.closest('[data-crop]'),un=e.target.closest('[data-unuse]'),ar=e.target.closest('[data-artist]'),all=e.target.closest('[data-all-albums]');
   if(cr){openCrop(+cr.dataset.crop);return}
+  const more=e.target.closest('[data-more]');
+  if(more){if(more.dataset.more==='groups')libMoreGroups(more);else libReleases(libGroup,libGroupReleases.length+300);return}
   if(ar){libArtistAlbums(libArtistList[+ar.dataset.artist]);return}
   if(all){libArtistAlbums(libArtistPick,true);return}
   if(un){delete libPlan.assign[un.dataset.useSlot];syncCards();return}
@@ -1729,24 +1742,25 @@ $('lib-view').addEventListener('click',e=>{
   else if(b){if(b.dataset.back==='groups')libGroups(libGroupList,libGroupOpts);else if(b.dataset.back==='artists')libArtists();else libReleaseRows()}
   else if(a)libApply()});
 
-async function libReleases(group){libGroup=group;const turn=++libTurn;libStatus(tr('正在读取版本…','Loading releases…'));libShow('');
-  try{let all=[],offset=0,total=1;
-    // Big albums have a few hundred releases; three pages cover almost all of them.
-    while(offset<total&&offset<300){const j=await mbGet(`release?release-group=${group.id}&inc=labels+media&limit=100&offset=${offset}`);if(turn!==libTurn)return;
+// upTo: how many releases to read. Big albums have a few hundred; the first 300 cover almost all of them,
+// and "More releases" reads the next 300.
+async function libReleases(group,upTo=300){const keep=upTo>300?libGroupReleases:[];libGroup=group;const turn=++libTurn;libStatus(tr('正在读取版本…','Loading releases…'));libShow('');
+  try{let all=keep,offset=keep.length,total=offset+1;
+    while(offset<total&&offset<upTo){const j=await mbGet(`release?release-group=${group.id}&inc=labels+media&limit=100&offset=${offset}`);if(turn!==libTurn)return;
       all=all.concat(j.releases||[]);total=j['release-count']||0;offset+=100}
     // Artwork belongs to the album, not the format: vinyl pressings come first (they also set the record
     // settings), then any other release that has images, so an album with no vinyl yet still has art.
     const art=r=>r['cover-art-archive']||{},byArt=(a,b)=>(art(b).count||0)-(art(a).count||0)||(+!!art(b).back)-(+!!art(a).back)||String(a.date||'9').localeCompare(String(b.date||'9'));
     const lps=all.filter(isLpRelease).sort(byArt),rest=all.filter(r=>!isLpRelease(r)&&art(r).artwork).sort(byArt);
-    libGroupReleases=all;libReleaseList=[...lps,...rest];libLpCount=lps.length;
+    libGroupReleases=all;libReleaseTotal=total;libReleaseList=[...lps,...rest];libLpCount=lps.length;
     if(!libReleaseList.length){libStatus(tr('这张专辑在曲库里还没有图片，也没有黑胶版本。可以直接上传图片。','This album has no images or vinyl releases in the library yet. You can upload images directly.'));
       libShow(`<div class="lib-head"><button class="chip" type="button" data-back="groups">← ${tr('返回','Back')}</button></div>`);return}
-    if(libReleaseList.length===1){libConfirm(libReleaseList[0]);return}
+    if(libReleaseList.length===1&&total<=all.length){libConfirm(libReleaseList[0]);return}
     libStatus('');libReleaseRows()}
   catch(err){if(turn===libTurn)libFail()}}
 
 const isLpRelease=r=>(r.media||[]).some(isLp);
-let libLpCount=0;
+let libLpCount=0,libReleaseTotal=0;
 // Vinyl shows its disc count; other releases show their formats (CD, Digital Media…).
 function releaseMeta(r){const lp=(r.media||[]).filter(isLp).length,cat=(r['label-info']||[]).map(l=>l['catalog-number']).filter(Boolean)[0];
   const fmt=lp?(lp>1?`${lp}LP`:'1LP'):[...new Set((r.media||[]).map(m=>m.format).filter(Boolean))].join(' + ');
@@ -1760,7 +1774,8 @@ function libReleaseRows(){const g=libGroup,art=r=>r['cover-art-archive']||{};lib
   <div class="lib-list" role="list">${libReleaseList.map((r,i)=>{const c=art(r);return`${sec(i)}<button class="lib-row${c.front?'':' noart'}" type="button" role="listitem" data-release="${i}">
     ${c.front?`<span class="lib-cover" style="background-image:url('${CAA}release/${r.id}/front-250')"></span>`:''}
     <span>${r.title!==g.title?`<div class="lib-title">${esc(r.title)}</div>`:''}<div class="lib-meta">${releaseMeta(r)}</div>
-    <div class="lib-has"><span class="${c.front?'on':''}">${tr('正面','Front')}</span><span class="${c.back?'on':''}">${tr('背面','Back')}</span><span class="${c.count?'on':''}">${tr(`共 ${c.count||0} 张图`,`${c.count||0} images`)}</span></div></span></button>`}).join('')}</div>`)}
+    <div class="lib-has"><span class="${c.front?'on':''}">${tr('正面','Front')}</span><span class="${c.back?'on':''}">${tr('背面','Back')}</span><span class="${c.count?'on':''}">${tr(`共 ${c.count||0} 张图`,`${c.count||0} images`)}</span></div></span></button>`}).join('')}
+  ${libReleaseTotal>libGroupReleases.length?`<button class="chip lib-more" type="button" data-more="releases">${tr(`读取更多版本 · 已读 ${libGroupReleases.length} / ${libReleaseTotal}`,`More releases · ${libGroupReleases.length} of ${libReleaseTotal} read`)}</button>`:''}</div>`)}
 
 // Tracks per side from the A1 / B2 numbering; plain 1, 2, 3 numbering splits the disc in half.
 function sideCounts(medium){const by={};for(const t of medium.tracks||[]){const m=/^([A-Z])/i.exec(t.number||'');if(m){const k=m[1].toUpperCase();by[k]=(by[k]||0)+1}}
