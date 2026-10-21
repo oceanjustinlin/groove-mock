@@ -269,6 +269,15 @@ def main():
     if args.render and args.render.exists():
         tiles.append(tile(square(Image.open(args.render)), S, '3D render'))
     fl = flags(g, r, ncc, notes, args.role, bool(args.master))
+    # The page re-derives the pattern colours from the base; if that cannot reproduce the default palette (e.g. a
+    # tonal near-black accent on a dark base sinks below the floor and flips light), the disc will not look like this.
+    mode, params = entry['palette']['mode'], entry['palette']['derive']
+    want = entry['colors'][1:] if mode == 'accent' else entry['colors']
+    got = baker.apply_params(mode, entry['base'], entry['colors'][0], params)
+    err = max((abs(int(x[i:i + 2], 16) - int(y[i:i + 2], 16)) for x, y in zip(got, want) for i in (1, 3, 5)), default=0)
+    if err > 40:
+        fl.append(f'default palette does not survive derivation (max channel error {err}/255, {want} -> {got})'
+                  + ('; try palette accent' if mode == 'tonal' else ''))
     rows = [tiles[:4], tiles[4:]]
     board = Image.new('RGB', (4 * (S + 8) + 8, 2 * (S + 30) + 150), 'white')
     for ri, row in enumerate(rows):
