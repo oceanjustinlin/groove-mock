@@ -60,6 +60,12 @@ button,input,select{font:inherit;color:inherit}
 .play-menu .dot{width:6px;height:6px;border-radius:50%;background:var(--accent)}
 .play-menu hr{margin:4px 0;border:0;border-top:1px solid var(--line)}
 .play-menu .more{color:var(--muted)}
+/* Disc only: the package's controls step back; their pages say why and offer the way back. */
+.disc-note{display:none}
+:root[data-disc-only] .disc-note{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:0 0 8px}
+:root[data-disc-only] .pkg-only,:root[data-disc-only] [data-pkg]{display:none!important}
+:root[data-disc-only] :is(#page-jacket,#page-insert,#page-pack,#page-number)>:not(.disc-note){opacity:.5}
+:root[data-disc-only] .rail :is([data-page=jacket],[data-page=insert],[data-page=pack],[data-page=number]){opacity:.55}
 #export-btn{display:inline-flex;align-items:center;gap:6px}
 .i-export{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none}
 .export-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
@@ -351,6 +357,7 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
       </nav>
       <div class="pages">
         <div class="page" id="page-jacket" data-page="jacket" role="tabpanel" aria-labelledby="tab-jacket" hidden>
+          <p class="note disc-note">只看唱片时，这一页的内容不显示。<button class="chip" type="button" data-disc-exit>显示完整包装</button></p>
           <section class="group">
             <h2>封套 <small id="jacket-spec">单开 · 书脊 4 mm</small></h2>
             <div class="row"><span class="lbl">类型</span>
@@ -377,14 +384,19 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
         <div class="page" id="page-records" data-page="records" role="tabpanel" aria-labelledby="tab-records" hidden>
           <section class="group">
             <h2>唱片与内袋 <small>33⅓ RPM · 标签 Ø100</small></h2>
+            <label class="switch"><input type="checkbox" id="disc-only">只看唱片</label>
+            <p class="note" id="disc-only-note" hidden>只显示唱片本体（盘面和标签）；封套、内袋、插页、塑封、Obi、贴纸和编号都不显示，关掉后原样恢复。</p>
+            <div class="row" id="disc-show-row" hidden><span class="lbl">展示</span>
+              <div class="seg" id="disc-show"><button data-v="1" aria-pressed="true">第 1 张</button><button data-v="2" aria-pressed="false">第 2 张</button></div>
+            </div>
             <div class="row"><span class="lbl">数量</span>
               <div class="seg" id="lp-count"><button data-v="1" aria-pressed="true">单 LP</button><button data-v="2" aria-pressed="false">2LP</button></div>
             </div>
-            <div class="row" id="lp-layout-row" hidden><span class="lbl">分装</span>
+            <div class="row pkg-only" id="lp-layout-row" hidden><span class="lbl">分装</span>
               <div class="seg" id="lp-layout"><button data-v="split" aria-pressed="true">左右各一张</button><button data-v="stacked" aria-pressed="false">同一口袋</button></div>
             </div>
             <div class="slider"><label for="record-rot">标签角度</label><input type="range" id="record-rot" min="-180" max="180" value="0"><output id="record-rot-v">0°</output></div>
-            <div class="row">
+            <div class="row pkg-only">
               <label class="switch"><input type="checkbox" id="sleeve-on">显示内袋</label>
               <div class="row" style="justify-content:flex-end">
                 <label class="tile mini" data-slot="sleeve"><span class="thumb"></span><input id="up-sleeve" type="file" accept="image/*" aria-label="上传内袋印刷图">印刷图</label>
@@ -420,8 +432,8 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
                 <div class="slider" id="pattern-contrast-row" data-look="pattern"><label for="pattern-contrast">反差</label><input type="range" id="pattern-contrast" min="0" max="200" value="100"><output id="pattern-contrast-v">100%</output></div>
                 <div class="slider" data-look="pattern"><label for="pattern-rot">纹路角度</label><input type="range" id="pattern-rot" min="-180" max="180" value="0"><output id="pattern-rot-v">0°</output></div>
               </div>
-              <div class="slider" hidden><label for="sleeve-x">内袋抽出</label><input type="range" id="sleeve-x" min="0" max="100" value="0"><output id="sleeve-x-v">0%</output></div>
-              <div class="slider"><label for="record-x">唱片抽出</label><input type="range" id="record-x" min="0" max="100" value="60"><output id="record-x-v">60%</output></div>
+              <div class="slider pkg-only" hidden><label for="sleeve-x">内袋抽出</label><input type="range" id="sleeve-x" min="0" max="100" value="0"><output id="sleeve-x-v">0%</output></div>
+              <div class="slider pkg-only"><label for="record-x">唱片抽出</label><input type="range" id="record-x" min="0" max="100" value="60"><output id="record-x-v">60%</output></div>
               <div class="slider"><label for="tracks">每面音轨</label><input type="range" id="tracks" min="1" max="20" value="6"><output id="tracks-v">6</output></div>
             </div>
 
@@ -456,15 +468,16 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
                   <div class="slider" data-look="pattern"><label for="pattern2-rot">纹路角度</label><input type="range" id="pattern2-rot" min="-180" max="180" value="0"><output id="pattern2-rot-v">0°</output></div>
                 </div>
               </div>
-              <div class="slider" hidden><label for="sleeve2-x">内袋抽出</label><input type="range" id="sleeve2-x" min="0" max="100" value="0"><output id="sleeve2-x-v">0%</output></div>
-              <div class="slider"><label for="record2-x">唱片抽出</label><input type="range" id="record2-x" min="0" max="100" value="70"><output id="record2-x-v">70%</output></div>
+              <div class="slider pkg-only" hidden><label for="sleeve2-x">内袋抽出</label><input type="range" id="sleeve2-x" min="0" max="100" value="0"><output id="sleeve2-x-v">0%</output></div>
+              <div class="slider pkg-only"><label for="record2-x">唱片抽出</label><input type="range" id="record2-x" min="0" max="100" value="70"><output id="record2-x-v">70%</output></div>
               <div class="slider"><label for="tracks2">每面音轨</label><input type="range" id="tracks2" min="1" max="20" value="6"><output id="tracks2-v">6</output></div>
             </div>
-            <p class="note" id="out-note-sleeve" hidden>内袋抽出：内袋连同唱片一起从封套开口拉出。唱片抽出：唱片再从内袋里往外拉。</p>
-            <p class="note" id="out-note-bare">唱片抽出：唱片从封套开口拉出的比例，100% 时完全抽出。</p>
+            <p class="note" id="out-note-sleeve" data-pkg hidden>内袋抽出：内袋连同唱片一起从封套开口拉出。唱片抽出：唱片再从内袋里往外拉。</p>
+            <p class="note" id="out-note-bare" data-pkg>唱片抽出：唱片从封套开口拉出的比例，100% 时完全抽出。</p>
           </section>
         </div>
         <div class="page" id="page-insert" data-page="insert" role="tabpanel" aria-labelledby="tab-insert" hidden>
+          <p class="note disc-note">只看唱片时，这一页的内容不显示。<button class="chip" type="button" data-disc-exit>显示完整包装</button></p>
           <section class="group">
             <h2>Insert 插页 <small>304 × 304 mm · 双面</small></h2>
             <label class="switch"><input type="checkbox" id="insert-on" checked>放入插页</label>
@@ -479,6 +492,7 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
           </section>
         </div>
         <div class="page" id="page-pack" data-page="pack" role="tabpanel" aria-labelledby="tab-pack" hidden>
+          <p class="note disc-note">只看唱片时，这一页的内容不显示。<button class="chip" type="button" data-disc-exit>显示完整包装</button></p>
           <section class="group">
             <h2>Obi 侧标 <small>包住书脊一侧</small></h2>
             <label class="switch"><input type="checkbox" id="obi-on" checked>显示侧标</label>
@@ -525,6 +539,7 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
           </section>
         </div>
         <div class="page" id="page-number" data-page="number" role="tabpanel" aria-labelledby="tab-number" hidden>
+          <p class="note disc-note">只看唱片时，这一页的内容不显示。<button class="chip" type="button" data-disc-exit>显示完整包装</button></p>
           <section class="group">
             <h2>限量编号 <small id="num-preview">No. 0123 / 1000</small></h2>
             <label class="switch"><input type="checkbox" id="num-on" checked>显示编号</label>
@@ -703,7 +718,7 @@ const EN={
   '水平':'Horizontal','垂直':'Vertical','字高':'Height','角度':'Angle',
   '切换位置时，坐标会回到该位置的默认值。烫金在转动视角时会反光。只含英文的字体遇到中文时，会用黑体补齐。上传的字体只在本地使用。':'Switching position resets the coordinates to that position’s defaults. Foil catches the light as you turn the view. Latin-only fonts fall back to a Chinese sans for CJK characters. Uploaded fonts stay on your device.',
   '唱片与内袋':'Records & sleeves','33⅓ RPM · 标签 Ø100':'33⅓ RPM · Label Ø100','数量':'Count','分装':'Layout','左右各一张':'One per panel','同一口袋':'Both in one pocket','单 LP':'1LP','标签角度':'Label angle',
-  '显示内袋':'Show inner sleeve','上传内袋印刷图':'Upload inner sleeve art','印刷图':'Artwork','内袋颜色':'Sleeve colour',
+  '显示内袋':'Show inner sleeve','只看唱片':'Disc only','展示':'Show','显示完整包装':'Show the full package','只显示唱片本体（盘面和标签）；封套、内袋、插页、塑封、Obi、贴纸和编号都不显示，关掉后原样恢复。':'Only the record itself, vinyl and labels. The jacket, inner sleeve, insert, film, obi, sticker and number are hidden, and come back as they were when you turn this off.','只看唱片时，这一页的内容不显示。':'In disc-only mode, nothing on this page is shown.','上传内袋印刷图':'Upload inner sleeve art','印刷图':'Artwork','内袋颜色':'Sleeve colour',
   '第 1 张':'Disc 1','A / B 面':'Sides A / B','上传 A 面标签':'Upload side A label','上传 B 面标签':'Upload side B label','A 面标签':'Side A label','B 面标签':'Side B label',
   '胶色':'Vinyl','黑胶':'Black','彩胶':'Colour','第 1 张胶色':'Disc 1 vinyl colour','内袋抽出':'Sleeve out','唱片抽出':'Record out','每面音轨':'Tracks per side',
   '第 2 张':'Disc 2','C / D 面 · 放在第 1 张后面':'Sides C / D · behind disc 1','上传 C 面标签':'Upload side C label','上传 D 面标签':'Upload side D label',
@@ -759,6 +774,7 @@ const state = {
   numOn:true, numCur:123, numTotal:1000, numPrefix:'No.', numFormat:'slash', numFont:'auto', numPlace:'back', numFinish:'stamp', numColor:'#25336f',
   numX:10.5, numY:-13.6, numSize:.5, numRot:0,
   jacketType:'single', gateOpen:0, lpCount:1, lpLayout:'split', sleeve2X:0, record2X:.7, obiOn:true, obiWidth:3.2, insertOn:true, insertX:0,
+  sceneMode:'package', sceneDisc:1,   // 'disc': the record alone, sceneDisc picks which on 2LP
   bg:'transparent', bgColor:'#e6e3dc', scale:2, view:'quarter',
   camZoom:1, camAz:0, camEl:0, camPanX:0, camPanY:0, outW:2400, outH:1600,   // used by the agent API / CLI
   animPreset:'turntable', animDuration:6, animFps:0, animDir:'left', animAngle:25, animAspect:'16:9', animSize:0,   // 0 = per-format default
@@ -773,6 +789,7 @@ const coverDepth=()=>isSplit()?POCKET_D[1]:J.board;
 const frontZ=()=>isGate()?J.d/2+coverDepth():J.d/2;      // outer face of the front cover
 const jacketDepth=()=>frontZ()+J.d/2;
 const gateOpened=()=>isGate()&&state.gateOpen>.5;
+const discOnly=()=>state.sceneMode==='disc';
 const specText=()=>`${isGate()?tr('双开','Gatefold'):tr('单开','Single')} · ${state.lpCount===2?'2LP':tr('单 LP','1LP')} · ${tr('书脊','Spine')} ${+(jacketDepth()*10).toFixed(1)} mm`;
 
 // ---------- Seeded random ----------
@@ -1519,9 +1536,14 @@ function pose(){
   sticker.position.set(state.stickerX,state.stickerY,(state.wrapOn?wrapFront:frontZ())+.008);
   sticker.scale.set(state.stickerSize,state.stickerSize,1);sticker.rotation.z=THREE.MathUtils.degToRad(state.stickerRot);conformSticker();
   placeNumber();
+  jacket.visible=true;
+  if(discOnly()){const show=state.lpCount===2&&state.sceneDisc===2?record2:record;
+    for(const o of[jacket,coverPivot,sleeve,sleeve2,insert,wrap,obi,sticker,numAnchor,record,record2])o.visible=false;
+    if(show.parent!==scene)scene.add(show);
+    show.visible=true;show.position.set(0,GROUND_Y+LP.r,0);show.rotation.set(0,0,THREE.MathUtils.degToRad(state.recordRot))}
 }
 function applyLpCount(){
-  $('lp2-sub').hidden=state.lpCount!==2;applyJacketType();
+  $('lp2-sub').hidden=state.lpCount!==2;applyJacketType();syncDiscMode();
 }
 const syncLayoutRow=()=>{$('lp-layout-row').hidden=!(isGate()&&state.lpCount===2)};
 const lp2Where=()=>{$('lp2-where').textContent=isSplit()?tr('C / D 面 · 装在左扇','Sides C / D · in the left panel'):tr('C / D 面 · 放在第 1 张后面','Sides C / D · behind disc 1')};
@@ -1537,20 +1559,23 @@ function applyJacketType(){
 const VIEWS={quarter:{t:[9,-.5,0],dir:[-.36,.1,1],fit:[62,35]},front:{t:[9,0,0],dir:[0,0,1],fit:[64,35]},side:{t:[5,-1,0],dir:[-.86,.12,.5],fit:[56,36]}};
 // Side looks in from the left, along the spine. Once a gatefold opens, the cover swings into that line of
 // sight, so side looks in from the right instead, across the mouth onto the inner pages.
-const viewDir=name=>{const d=VIEWS[name].dir;return name==='side'&&gateOpened()?[-d[0],d[1],d[2]]:d};
+const viewDir=name=>{const d=VIEWS[name].dir;return name==='side'&&gateOpened()&&!discOnly()?[-d[0],d[1],d[2]]:d};
 function setView(name){userMoved=false;const v=VIEWS[name],half=Math.tan(THREE.MathUtils.degToRad(camera.fov/2)),margin=1.06;
   const d=new THREE.Vector3(...viewDir(name)).normalize(),r=new THREE.Vector3().crossVectors(d.clone().negate(),camera.up).normalize(),u=new THREE.Vector3().crossVectors(r,d.clone().negate());
   // The preset frames a v.fit box about v.t. An open gatefold's cover (and on a split 2LP, disc 2 pulled from
   // it) swings out of that box, toward the camera below 90°: frame the box together with the open jacket's
   // real bounds, moving the target to their centre and backing off until every corner fits, nearer ones included.
-  const t=new THREE.Vector3(...v.t),pts=[];let x0=-v.fit[0]/2,x1=-x0,y0=-v.fit[1]/2,y1=-y0;
-  if(gateOpened()){const b=productBox(productParts());
+  // Disc only frames the record alone, from its own bounds, with a little more room around it.
+  const disc=discOnly(),t=disc?productBox(productParts()).getCenter(new THREE.Vector3()):new THREE.Vector3(...v.t),pts=[];
+  let x0=disc?0:-v.fit[0]/2,x1=-x0,y0=disc?0:-v.fit[1]/2,y1=-y0;
+  if(gateOpened()||disc){const b=productBox(productParts());
     for(const x of[b.min.x,b.max.x])for(const y of[b.min.y,b.max.y])for(const z of[b.min.z,b.max.z]){
       const q=new THREE.Vector3(x,y,z);pts.push(q);q.sub(t);
       x0=Math.min(x0,q.dot(r));x1=Math.max(x1,q.dot(r));y0=Math.min(y0,q.dot(u));y1=Math.max(y1,q.dot(u))}}
   const c=t.clone().addScaledVector(r,(x0+x1)/2).addScaledVector(u,(y0+y1)/2);
   let dist=Math.max((y1-y0)/(2*half),(x1-x0)/(2*half*camera.aspect));
   for(const p of pts){const q=p.sub(c),z=q.dot(d);dist=Math.max(dist,z+margin*Math.abs(q.dot(r))/(half*camera.aspect),z+margin*Math.abs(q.dot(u))/half)}
+  if(disc)dist*=1.12;
   controls.target.copy(c);camera.position.copy(c).addScaledVector(d,dist);controls.update();state.view=name;
   for(const b of document.querySelectorAll('[data-view]'))b.setAttribute('aria-pressed',b.dataset.view===name);
   if(previewActive())fitPreview()}
@@ -1839,10 +1864,12 @@ const libSlotNames=()=>Object.fromEntries([['front',tr('正面','Front')],['back
   ['labelA',tr('A 面标签','Side A label')],['labelB',tr('B 面标签','Side B label')],['labelC',tr('C 面标签','Side C label')],['labelD',tr('D 面标签','Side D label')]]);
 // The scene the images will land in: the panel as it is, with the record settings Apply will write if they are ticked.
 function libScene(){const p=libPlan,v=$('lib-view'),on=k=>!!v.querySelector(`[data-param="${k}"]:checked`);
-  return{lps:p?.vinyl&&on('count')?p.lps:state.lpCount,gate:p?.jacket&&on('jacket')?p.jacket==='gatefold':isGate(),sleeve:state.sleeveOn,insert:state.insertOn}}
+  return{lps:p?.vinyl&&on('count')?p.lps:state.lpCount,gate:p?.jacket&&on('jacket')?p.jacket==='gatefold':isGate(),sleeve:state.sleeveOn,insert:state.insertOn,disc:discOnly()}}
 // Why a slot can't be seen in that scene ('' when it can). C / D labels and inner pages don't exist there, so the menu leaves them out;
 // the inner sleeve and the insert are only switched off, so they stay in the menu, disabled, saying where to turn them on.
 function libSlotOff(sl,sc=libScene()){
+  // Disc only shows labels; the front stays open since vinyl colours can be taken from it.
+  if(sc.disc&&!sl.startsWith('label')&&sl!=='front')return{why:tr('只看唱片时不显示','not shown in disc-only mode')};
   if((sl==='labelC'||sl==='labelD')&&sc.lps!==2)return{gone:true,why:tr('只在 2LP 时可见','only shows on 2LP')};
   if(sl.startsWith('inner')&&!sc.gate)return{gone:true,why:tr('只在双开封套里可见','only shows on a gatefold jacket')};
   if(sl==='sleeve'&&!sc.sleeve)return{why:tr('需先在唱片页开启内袋','turn on the inner sleeve on the Records page first')};
@@ -2053,7 +2080,17 @@ function syncUI(){
   $('out-note-sleeve').hidden=!state.sleeveOn;$('out-note-bare').hidden=state.sleeveOn;
   $('lp2-sub').hidden=state.lpCount!==2;$('vinyl-same').checked=state.vinylSame;$('vinyl2-own').hidden=state.vinylSame;$('gate-sub').hidden=!isGate();$('jacket-spec').textContent=specText();syncAnimPanel();syncExportSummary();
   for(const b of document.querySelectorAll('[data-view]'))b.setAttribute('aria-pressed',b.dataset.view===state.view);
-  syncPatterns();syncStickerPanel()}
+  syncPatterns();syncStickerPanel();syncDiscMode()}
+// Disc only: the switch, the 2LP disc picker, and the page-level attribute the CSS keys off.
+function syncDiscMode(){const on=discOnly();document.documentElement.toggleAttribute('data-disc-only',on);
+  $('disc-only').checked=on;$('disc-only-note').hidden=!on;$('disc-show-row').hidden=!(on&&state.lpCount===2);
+  for(const b of $('disc-show').children)b.setAttribute('aria-pressed',String(+b.dataset.v===state.sceneDisc))}
+function setDiscOnly(on){state.sceneMode=on?'disc':'package';pose();syncDiscMode();syncAnimPanel();libRefreshTargets();
+  if(previewActive())fitPreview();else if(!userMoved)setView(state.view)}
+$('disc-only').addEventListener('change',e=>setDiscOnly(e.target.checked));
+for(const b of document.querySelectorAll('[data-disc-exit]'))b.addEventListener('click',()=>setDiscOnly(false));
+$('disc-show').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;state.sceneDisc=+b.dataset.v;pose();syncDiscMode();
+  if(previewActive())fitPreview();else if(!userMoved)setView(state.view)});
 
 seg('finish','finish',applyFinish);
 // Switching to a single jacket in the panel drops an opening clip back to turntable.
@@ -2309,6 +2346,8 @@ const boolF=(path,key,desc)=>({path,key,type:'boolean',desc});
 const colorF=(path,key,desc)=>({path,key,type:'color',desc});
 const strF=(path,key,desc,maxLength)=>({path,key,type:'string',desc,maxLength});
 const SPEC_FIELDS=[
+  enumF('scene.mode','sceneMode',['package','disc'],'场景模式：package 完整包装（默认）；disc 只看唱片，只显示盘面和标签，封套、内袋、插页、塑封、Obi、贴纸、编号都不显示，它们的设置保留'),
+  numF('scene.disc','sceneDisc',1,2,1,'scene.mode=disc 且 records.count=2 时展示哪一张：1 为 A / B 面，2 为 C / D 面',true),
   enumF('jacket.type','jacketType',['single','gatefold'],'封套类型：single 单开，gatefold 双开'),
   enumF('jacket.finish','finish',['matte','satin','gloss'],'纸张工艺：matte 哑光，satin 缎面，gloss 亮面'),
   numF('jacket.gateOpen','gateOpen',0,180,1,'双开封面打开角度（度）。大于 0 时塑封、贴纸、Obi 视为已拆除，不显示'),
@@ -2373,6 +2412,11 @@ const CAMERA_VIEWS=['quarter','front','side'];
 // typesetting or both. Computed from state, so Obi width, gatefold and 2LP are reflected.
 const ASSET_SOURCES=['user','generated','typeset','composite','sample','fetched'];
 function slotGuide(){
+  // Disc only: nothing but the shown record's labels is in the picture.
+  if(discOnly()){const shown=state.lpCount===2&&state.sceneDisc===2?['C','D']:['A','B'];
+    return slotGuideAll().map(g=>g.slot.startsWith('label')?{...g,used:shown.includes(g.slot.slice(5))}:{...g,used:false,notes:[g.notes,'scene.mode=disc 时不显示'].filter(Boolean).join('；')})}
+  return slotGuideAll()}
+function slotGuideAll(){
   const mm=v=>Math.round(v*10*10)/10,obiMm=mm(state.obiWidth),depth=mm(jacketDepth()),{total}=obiLayout(),obiPx=Math.max(64,Math.round(2048*total/J.h));
   const obiFront=state.obiOn?[`Obi 盖住左侧 ${obiMm} mm`]:[],obiBack=state.obiOn?[`Obi 盖住右侧 ${obiMm} mm（从背后看）`]:[];
   const num=p=>state.numOn&&state.numPlace===p?[`编号在中心偏 (${mm(state.numX)}, ${mm(state.numY)}) mm 处，字高 ${mm(state.numSize)} mm`]:[];
@@ -2401,6 +2445,7 @@ function specFromState(){
   // A linked disc 2 has no style of its own; writing disc 1's copy would contradict sameAsDisc1.
   if(state.vinylSame)for(const k of['vinyl','color','transparency','pattern'])delete s.records.disc2[k];
   if(!state.sleeveOn)for(const i of[1,2])delete s.records[`disc${i}`].sleeveOut;
+  if(!discOnly()||state.lpCount!==2)delete s.scene.disc;
   // Plain black has no colour, transparency or pattern; solid colour has no pattern.
   for(const i of[1,2]){const d=s.records[`disc${i}`],sx=i===1?'':'2';if(!('vinyl' in d))continue;
     if(state['vinyl'+sx]==='black')for(const k of['color','transparency','pattern'])delete d[k];
@@ -2519,6 +2564,11 @@ async function applySpec(spec){
     const v=getPath(spec,p);if(v===undefined)continue;const c=clampNum(p,v,min,max,int);if(c!==null)state[key]=c}
   for(const [p,key,values] of[['animation.preset','animPreset',ANIM_PRESETS],['animation.direction','animDir',['left','right']],['animation.aspect','animAspect',Object.keys(ANIM_ASPECTS)]]){
     const v=getPath(spec,p);if(v===undefined)continue;if(values.includes(v))state[key]=v;else warnings.push(`${p}=${JSON.stringify(v)} 无效，可选值：${values.join(' / ')}`)}
+  if(discOnly()){const pkg=['jacket','wrap','obi','sticker','number','insert','records.sleeve','records.layout',
+      ...['back','spine','innerLeft','innerRight','sleeve','obi','sticker','insertFront','insertBack'].map(k=>'images.'+k)].filter(has);
+    if(pkg.length)warnings.push(`scene.mode=disc 只显示唱片，${pkg.join('、')} 不显示`);
+    if(has('scene.disc')&&state.sceneDisc===2&&state.lpCount!==2)warnings.push('scene.disc=2 需要 records.count=2，已展示第 1 张')}
+  else if(has('scene.disc'))warnings.push('scene.disc 只在 scene.mode=disc 时生效');
   if(has('animation.angle')&&state.animPreset!=='swing')warnings.push('animation.angle 只在 preset=swing 时生效');
   const view=getPath(spec,'camera.view');
   if(view!==undefined){if(CAMERA_VIEWS.includes(view))state.view=view;else warnings.push(`camera.view=${JSON.stringify(view)} 无效，可选值：${CAMERA_VIEWS.join(' / ')}`)}
@@ -2601,16 +2651,18 @@ function animFrame(u){
   return{set:Object.fromEntries(Object.entries(pullTargets()).map(([key,v])=>[key,v*k]))}}
 // Whether disc i's label shows from the front (as pose() places it): clear of the jacket, and of the sleeve
 // unless the record still sits centred in it, where the sleeve's hole shows the label.
-function labelShows(i){const s=i===1?'':'2',[x,rx]=travel(state[`sleeve${s}X`],state[`record${s}X`]),clear=edge=>rx-LP.label>edge;
+function labelShows(i){if(discOnly())return true;const s=i===1?'':'2',[x,rx]=travel(state[`sleeve${s}X`],state[`record${s}X`]),clear=edge=>rx-LP.label>edge;
   if(!state.sleeveOn)return clear(J.w/2);
   return clear(Math.max(J.w/2,x+SLV.s/2))||(state[`record${s}X`]<.01&&x-SLV.hole>J.w/2)}
 // Things in the scene that leave a preset with nothing to show. Codes, so the API and the panel can word them.
 function animIssues(){const p=state.animPreset,out=[];
-  if(p==='gatefold'&&!isGate())out.push('gate-single');
+  if((p==='gatefold'||p==='pull')&&discOnly())out.push('disc-only');
+  else if(p==='gatefold'&&!isGate())out.push('gate-single');
   if(p==='spin'&&!labelShows(1)&&!(state.lpCount===2&&labelShows(2)))out.push('spin-hidden');
   return out}
 // Each issue: [API / CLI warning, panel text in Chinese, panel text in English].
-const ANIM_ISSUES={'gate-single':['jacket.type 不是 gatefold，没有可打开的封面','单开封套没有可打开的封面，先在「封套」里选双开。','A single jacket has no cover to open; choose Gatefold under Jacket first.'],
+const ANIM_ISSUES={'disc-only':['scene.mode=disc 只显示唱片，没有可打开的封面或可抽出的内容','只看唱片时没有封套，展开和抽出看不出效果。','With the disc alone there is no jacket, so Open and Pull out show nothing.'],
+  'gate-single':['jacket.type 不是 gatefold，没有可打开的封面','单开封套没有可打开的封面，先在「封套」里选双开。','A single jacket has no cover to open; choose Gatefold under Jacket first.'],
   'spin-hidden':['唱片标签被封套或内袋挡住，看不出自转；把 records.disc1.recordOut 调大，露出标签','唱片标签还被挡着，看不出自转；在「唱片」里把唱片抽出更多。','The label is still covered, so the spin won’t show; pull the record further out under Records.']};
 // Poses the scene with set applied, runs fn, then puts every key back.
 function withPose(set,fn){
@@ -2704,8 +2756,8 @@ const playMenu=$('play-menu');let playMenuBtn=null;
 const issuesFor=v=>{const was=state.animPreset;state.animPreset=v;try{return animIssues()}finally{state.animPreset=was}};
 function closePlayMenu(focus){if(playMenu.hidden)return;playMenu.hidden=true;playMenuBtn.setAttribute('aria-expanded','false');if(focus)playMenuBtn.focus();playMenuBtn=null}
 function openPlayMenu(btn){
-  // Same rule as the Output page: a single jacket has nothing to open, unless a spec already chose it.
-  const items=[...$('anim-preset').children].filter(b=>!(b.dataset.v==='gatefold'&&!isGate()&&state.animPreset!=='gatefold'));
+  // Same presets as the Output page shows (syncAnimPanel hides Open on a single jacket, Open and Pull out on a disc alone).
+  const items=[...$('anim-preset').children].filter(b=>!b.hidden);
   playMenu.innerHTML=items.map(b=>{const v=b.dataset.v,on=v===state.animPreset,iss=issuesFor(v).map(k=>tr(ANIM_ISSUES[k][1],ANIM_ISSUES[k][2])).join(' ');
     return`<button type="button" role="menuitemradio" aria-checked="${on}" data-v="${v}"${iss?` title="${esc(iss)}"`:''}><span aria-hidden="true">${on?'✓':''}</span><span>${esc(presetLabel(v))}</span>${iss?'<span class="dot" aria-hidden="true"></span>':'<span></span>'}</button>`}).join('')
     +`<hr><button type="button" role="menuitem" class="more" data-more><span></span><span>${tr('更多设置…','More settings…')}</span><span></span></button>`;
@@ -2731,7 +2783,8 @@ setPlaying(false);
 function syncAnimPanel(){
   // Opening needs a gatefold, so a single jacket hides the choice. A spec that still asks for it keeps it
   // (shown pressed, with the issue note), so the API and CLI can warn instead of quietly rendering a turntable.
-  const gate=$('anim-preset').querySelector('[data-v=gatefold]');gate.hidden=!isGate()&&state.animPreset!=='gatefold';
+  const gate=$('anim-preset').querySelector('[data-v=gatefold]');gate.hidden=(!isGate()||discOnly())&&state.animPreset!=='gatefold';
+  const pull=$('anim-preset').querySelector('[data-v=pull]');pull.hidden=discOnly()&&state.animPreset!=='pull';
   const p=state.animPreset,issues=animIssues();
   $('anim-dir-row').hidden=p!=='turntable'&&p!=='swing';$('anim-angle-row').hidden=p!=='swing';
   const notes=issues.map(k=>tr(ANIM_ISSUES[k][1],ANIM_ISSUES[k][2]));
