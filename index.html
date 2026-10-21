@@ -68,6 +68,8 @@ body.resizing .stage canvas{pointer-events:none}
 .rail{display:flex;flex-direction:column;gap:2px;padding:8px 6px;border-right:1px solid var(--line);overflow:auto}
 .rail button{display:grid;justify-items:center;gap:3px;border:0;background:transparent;border-radius:8px;padding:8px 0 6px;font-size:11px;line-height:1.2;color:var(--muted);cursor:pointer}
 .rail button:hover{background:var(--bg);color:var(--ink)}
+.rail button{position:relative}
+.rail button.updated::after{content:'';position:absolute;top:6px;right:calc(50% - 15px);width:7px;height:7px;border-radius:50%;background:var(--accent)}
 .rail button[aria-selected="true"]{background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);font-weight:700}
 .rail svg,.picker-toggle svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none}
 .pages{overflow:auto;min-height:0}
@@ -154,6 +156,8 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
 .lib-uses:empty{display:none}
 .lib-use{display:inline-flex;align-items:center;gap:2px;border:1px solid var(--accent);color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,transparent);border-radius:999px;padding:0 4px 0 8px;font-size:11px;line-height:20px;cursor:pointer}
 .lib-use span{font-size:13px;line-height:1;padding:0 2px}
+.lib-use.off{border-style:dashed;color:var(--muted);border-color:var(--muted);background:transparent}
+.lib-goto{border:0;background:none;padding:0;font:inherit;color:var(--accent);text-decoration:underline;cursor:pointer}
 .lib-card .field.select{width:100%;font-size:12px}
 .lib-card .lib-adjust{font-size:11px;padding:2px 8px;justify-self:start}
 .lib-cover.round{border-color:transparent;background-color:transparent}
@@ -1324,7 +1328,7 @@ function closeModal(){$('modal').hidden=true;$('modal-video').pause()}
 // The settings panel shows one page at a time; the last page and the picker's open state are remembered.
 const RAIL=[...document.querySelectorAll('.rail [role="tab"]')];
 function showPage(id){if(!RAIL.some(b=>b.dataset.page===id))id='jacket';
-  for(const b of RAIL){const on=b.dataset.page===id;b.setAttribute('aria-selected',on);b.tabIndex=on?0:-1}
+  for(const b of RAIL){const on=b.dataset.page===id;b.setAttribute('aria-selected',on);b.tabIndex=on?0:-1;if(on)b.classList.remove('updated')}
   for(const pg of document.querySelectorAll('.page'))pg.hidden=pg.dataset.page!==id;
   document.querySelector('.pages').scrollTop=0;try{localStorage.setItem('gm-page',id)}catch(e){}}
 document.querySelector('.rail').addEventListener('click',e=>{const b=e.target.closest('[role="tab"]');if(!b)return;showPage(b.dataset.page);if(b.dataset.page==='output')syncAnimPanel()});
@@ -1365,8 +1369,10 @@ function setPanelWidth(w,save=true){w=Math.round(Math.min(panelMax(),Math.max(PA
   setPanelWidth(+((()=>{try{return localStorage.getItem('gm-panel-w')}catch(e){}})()||PANEL_W.def),false);
   // A narrower window can't keep a wide panel; re-clamp without overwriting the saved width.
   addEventListener('resize',()=>{const w=+(()=>{try{return localStorage.getItem('gm-panel-w')}catch(e){}})()||PANEL_W.def;setPanelWidth(w,false)})}
-// Bring up the page that holds a slot, so a library pick lands where the viewer can see it.
+// The page that holds a slot, so a library pick can point at where it landed.
 const pageOfSlot=slot=>document.querySelector(`[data-slot="${slot}"]`)?.closest('.page')?.dataset.page;
+// LP count, jacket type, inner sleeve and insert are set in the panel; the library's menus follow them.
+for(const ev of['click','change'])$('panel').addEventListener(ev,()=>libRefreshTargets())
 
 // ---------- Record library ----------
 // Straight from the browser to MusicBrainz and the Cover Art Archive (both send CORS headers, need no key).
@@ -1528,12 +1534,28 @@ function renderLabel(img,c,size){const out=canvas(size,size),g=out.getContext('2
 function roundThumb(img,c,size=160){const t=renderLabel(img,c,size),out=canvas(size,size),g=out.getContext('2d');
   g.beginPath();g.arc(size/2,size/2,size/2,0,Math.PI*2);g.clip();g.drawImage(t,0,0);return out.toDataURL('image/png')}
 
-// Every slot a library image can go to; C / D labels only exist on 2LP.
-const libTargets=lps=>[['front',tr('正面','Front')],['back',tr('背面','Back')],['spine',tr('书脊','Spine')],
+// Every slot a library image can go to.
+const libSlotNames=()=>Object.fromEntries([['front',tr('正面','Front')],['back',tr('背面','Back')],['spine',tr('书脊','Spine')],
   ['innerLeft',tr('内页左','Inner left')],['innerRight',tr('内页右','Inner right')],['sleeve',tr('内袋','Inner sleeve')],
   ['insertFront',tr('插页正面','Insert front')],['insertBack',tr('插页背面','Insert back')],['obi',tr('Obi 侧标','Obi strip')],['sticker',tr('贴纸','Sticker')],
-  ['labelA',tr('A 面标签','Side A label')],['labelB',tr('B 面标签','Side B label')],
-  ...(lps===2?[['labelC',tr('C 面标签','Side C label')],['labelD',tr('D 面标签','Side D label')]]:[])];
+  ['labelA',tr('A 面标签','Side A label')],['labelB',tr('B 面标签','Side B label')],['labelC',tr('C 面标签','Side C label')],['labelD',tr('D 面标签','Side D label')]]);
+// The scene the images will land in: the panel as it is, with the record settings Apply will write if they are ticked.
+function libScene(){const p=libPlan,v=$('lib-view'),on=k=>!!v.querySelector(`[data-param="${k}"]:checked`);
+  return{lps:p?.vinyl&&on('count')?p.lps:state.lpCount,gate:p?.jacket&&on('jacket')?p.jacket==='gatefold':isGate(),sleeve:state.sleeveOn,insert:state.insertOn}}
+// Why a slot can't be seen in that scene ('' when it can). C / D labels and inner pages don't exist there, so the menu leaves them out;
+// the inner sleeve and the insert are only switched off, so they stay in the menu, disabled, saying where to turn them on.
+function libSlotOff(sl,sc=libScene()){
+  if((sl==='labelC'||sl==='labelD')&&sc.lps!==2)return{gone:true,why:tr('只在 2LP 时可见','only shows on 2LP')};
+  if(sl.startsWith('inner')&&!sc.gate)return{gone:true,why:tr('只在双开封套里可见','only shows on a gatefold jacket')};
+  if(sl==='sleeve'&&!sc.sleeve)return{why:tr('需先在唱片页开启内袋','turn on the inner sleeve on the Records page first')};
+  if(sl.startsWith('insert')&&!sc.insert)return{why:tr('需先在插页页开启插页','turn on the insert on the Insert page first')};
+  return null}
+// Rebuild every "Use as…" menu for the current scene; runs whenever the panel or the ticked record settings change.
+function libRefreshTargets(){if(!libPlan||libView!==libConfirmView)return;const sc=libScene(),names=libSlotNames();
+  const opts=`<option value="">${tr('+ 用作…','+ Use as…')}</option>`+Object.keys(names).map(sl=>{const off=libSlotOff(sl,sc);if(off?.gone)return'';
+    return`<option value="${sl}"${off?' data-off="1"':''}>${names[sl]}${off?tr(`（${off.why}）`,` (${off.why})`):''}</option>`}).join('');
+  for(const sel of $('lib-view').querySelectorAll('[data-img]'))sel.innerHTML=opts;
+  syncCards()}
 const CAA_TYPE={Front:['正面','Front'],Back:['背面','Back'],Spine:['书脊','Spine'],Liner:['内袋','Liner'],Medium:['盘面','Disc'],Booklet:['小册子','Booklet'],
   Obi:['Obi','Obi'],Tray:['托盘','Tray'],Sticker:['贴纸','Sticker'],Poster:['海报','Poster'],Panel:['折页','Panel'],Track:['单曲','Track'],Other:['其他','Other'],
   'Raw/Unedited':['原始扫描','Raw scan'],'Matrix/Runout':['刻字区','Matrix/runout'],Top:['顶面','Top'],Bottom:['底面','Bottom'],Watermark:['水印','Watermark']};
@@ -1573,7 +1595,7 @@ async function libConfirm(r){const turn=++libTurn;libStatus(tr('正在读取图�
     const assign={},kept=[];
     for(const[slot,f]of[['front',i=>i.front],['front',i=>i.types.includes('Front')],['back',i=>i.back],['back',i=>i.types.includes('Back')],
         ['spine',i=>i.types.includes('Spine')],['sleeve',i=>i.types.includes('Liner')]]){
-      if(slot in assign||kept.includes(slot))continue;const k=own.findIndex((im,n)=>f(im)&&!Object.values(assign).includes(n));if(k<0)continue;
+      if(slot in assign||kept.includes(slot)||libSlotOff(slot,{lps:2,gate:true,sleeve:state.sleeveOn,insert:true}))continue;const k=own.findIndex((im,n)=>f(im)&&!Object.values(assign).includes(n));if(k<0)continue;
       // The viewer's own upload stays unless they pick this image for it.
       if(slotOrigin[slot]==='user')kept.push(slot);else assign[slot]=k}
     // Only a vinyl pressing says anything about the records; a CD or digital release lends its images alone.
@@ -1595,7 +1617,7 @@ async function libConfirm(r){const turn=++libTurn;libStatus(tr('正在读取图�
 
 const typeLabel=im=>im.types.map(t=>tr(...(CAA_TYPE[t]||[t,t]))).join(' / ')||tr('未分类','Untyped');
 const imgLabel=im=>im.other?tr('其他版本封面','Other pressing'):im.from?`${im.from} · ${typeLabel(im)}`:typeLabel(im);
-function libConfirmView(){const p=libPlan,r=p.release,targets=libTargets(p.lps),names=Object.fromEntries(targets);libView=libConfirmView;
+function libConfirmView(){const p=libPlan,r=p.release,names=libSlotNames();libView=libConfirmView;
   // The digital cover leads the gallery; every card keeps its index k for the menus and crops.
   const order=p.images.map((_,k)=>k).sort((a,b)=>(+!!p.images[b].digital)-(+!!p.images[a].digital)||a-b);
   const cards=order.map(k=>[p.images[k],k]).map(([im,k])=>`<div class="lib-card">
@@ -1603,7 +1625,7 @@ function libConfirmView(){const p=libPlan,r=p.release,targets=libTargets(p.lps),
     <div class="lib-meta">${esc(imgLabel(im))}${im.note?`<br>${esc(im.note)}`:''}</div>
     <div><div class="lib-uses" data-uses="${k}"></div>
     <button class="chip lib-adjust" type="button" data-crop="${k}" hidden>${tr('调整裁切','Adjust crop')}</button></div>
-    <select class="field select" data-img="${k}" aria-label="${esc(tr(`给第 ${k+1} 张图添加用途`,`Add a use for image ${k+1}`))}"><option value="">${tr('+ 用作…','+ Use as…')}</option>${targets.map(([s,n])=>`<option value="${s}">${n}</option>`).join('')}</select></div>`).join('');
+    <select class="field select" data-img="${k}" aria-label="${esc(tr(`给第 ${k+1} 张图添加用途`,`Add a use for image ${k+1}`))}"></select></div>`).join('');
   const params=!p.vinyl?[]:[`<label class="lib-item param"><input type="checkbox" data-param="count" checked><span>${tr('唱片数量','Records')}${tr('：',': ')}${p.lps===2?'2LP':tr('单 LP','1LP')}${p.extraLps?`<div class="lib-meta">${tr(`这一版共 ${p.lps+p.extraLps} 张，只做前 2 张`,`This release has ${p.lps+p.extraLps} discs; only the first 2 are modelled`)}</div>`:''}</span></label>`];
   if(p.jacket)params.push(`<label class="lib-item param"><input type="checkbox" data-param="jacket" checked><span>${tr('封套','Jacket')}${tr('：',': ')}${p.jacket==='gatefold'?tr('双开','Gatefold'):tr('单开','Single')}</span></label>`);
   p.sides.forEach((s,i)=>{if(!s.length)return;const n=Math.min(20,Math.max(...s));
@@ -1615,12 +1637,12 @@ function libConfirmView(){const p=libPlan,r=p.release,targets=libTargets(p.lps),
   if(!p.vinyl)notes.unshift(tr(`这是 ${fmt} 版本，只用它的图，唱片参数不会改。它的背面比例和黑胶不同，应用后看一下。`,`This is the ${fmt} release, so only its images are used and the record settings stay as they are. Its back has different proportions from an LP back, so check it after applying.`));
   if(p.images.length&&!p.ownCount)notes.push(tr('这一版还没有图，下面是同一张专辑其他版本和格式的图。CD 的背面比例和黑胶不同，用作背面前先看看。','This pressing has no images yet; these come from other pressings and formats of the album. A CD back has different proportions from an LP back, so check it before using it.'));
   libShow(`<div class="lib-head"><button class="chip" type="button" data-back="${libReleaseList.length>1?'releases':'groups'}">← ${tr('返回','Back')}</button><span>${esc(r.title)} · ${releaseMeta(r)}</span></div>
-    ${p.images.length?`<p class="note">${tr('每张图下面选它用在哪个位置，点图看大图。','Choose where each image goes; click an image to see it full size.')}</p><div id="lib-crop"></div><div class="lib-gallery">${cards}</div>`:''}
+    ${p.images.length?`<p class="note">${tr('每张图下面选它用在哪个位置，点图看大图。','Choose where each image goes; click an image to see it full size.')}</p><div id="lib-crop"></div><div class="lib-gallery">${cards}</div><p class="note" id="lib-off" hidden></p>`:''}
     ${notes.map(n=>`<p class="note">${n}</p>`).join('')}
     <div class="lib-pick">${params.join('')}</div>
     <div class="row" style="justify-content:flex-start"><button class="primary" type="button" data-apply>${tr('应用','Apply')}</button>
     <a class="note" href="https://musicbrainz.org/release/${r.id}" target="_blank" rel="noopener">${tr('在 MusicBrainz 查看','View on MusicBrainz')}</a></div>`);
-  syncCards();if(p.editing!==null)openCrop(p.editing)}
+  libRefreshTargets();if(p.editing!==null)openCrop(p.editing)}
 
 // Disc images used as labels load once, get an automatic crop, and show it as a round thumbnail with an Adjust button.
 function bitmapOf(k){const p=libPlan,im=p.images[k];
@@ -1629,15 +1651,18 @@ function bitmapOf(k){const p=libPlan,im=p.images[k];
 async function ensureCrop(k){const p=libPlan,img=await bitmapOf(k);if(p!==libPlan)return null;p.crops[k]??={...detectLabel(img),zoom:1,rot:0};return img}
 // An image can fill several slots (the same art on front and back, say); each shows as a removable chip.
 const slotsOf=k=>Object.keys(libPlan.assign).filter(s=>libPlan.assign[s]===k);
-function syncCards(){const p=libPlan,v=$('lib-view');if(!p)return;const names=Object.fromEntries(libTargets(2));
+function syncCards(){const p=libPlan,v=$('lib-view');if(!p)return;const names=libSlotNames(),sc=libScene(),off=[];
   p.images.forEach((im,k)=>{const sls=slotsOf(k),btn=v.querySelector(`[data-crop="${k}"]`),uses=v.querySelector(`[data-uses="${k}"]`),card=btn?.closest('.lib-card');if(!card)return;
     const cover=card.querySelector('.lib-cover'),sel=card.querySelector('[data-img]');
-    uses.innerHTML=sls.map(sl=>`<button class="lib-use" type="button" data-unuse="${k}" data-use-slot="${sl}" aria-label="${esc(tr(`不再用作${names[sl]}`,`Stop using as ${names[sl]}`))}">${names[sl]}<span aria-hidden="true">×</span></button>`).join('');
-    for(const o of sel.options)if(o.value)o.disabled=sls.includes(o.value);
+    uses.innerHTML=sls.map(sl=>{const o=libSlotOff(sl,sc);if(o)off.push(`${names[sl]}${tr(`（${o.why}）`,` (${o.why})`)}`);
+      return`<button class="lib-use${o?' off':''}" type="button" data-unuse="${k}" data-use-slot="${sl}"${o?` title="${esc(o.why)}"`:''} aria-label="${esc(tr(`不再用作${names[sl]}`,`Stop using as ${names[sl]}`))}">${names[sl]}<span aria-hidden="true">×</span></button>`}).join('');
+    for(const o of sel.options)if(o.value)o.disabled=sls.includes(o.value)||!!o.dataset.off;
     const label=sls.some(isLabelSlot);btn.hidden=!label;
     if(!label){cover.style.backgroundImage=`url('${im.thumb}')`;cover.classList.remove('round');return}
     ensureCrop(k).then(img=>{if(img&&libPlan===p&&slotsOf(k).some(isLabelSlot)){cover.style.backgroundImage=`url('${roundThumb(img,p.crops[k])}')`;cover.classList.add('round')}})
       .catch(()=>{btn.hidden=true})});
+  // A pick that the scene no longer shows is kept, not dropped: Apply still stores it, and this says why it won't be seen.
+  const note=$('lib-off');if(note){note.hidden=!off.length;note.textContent=off.length?tr(`当前场景看不到：${off.join('、')}。仍会应用，改好场景后就能看到；不要的话点 × 去掉。`,`Not visible in the current scene: ${off.join(', ')}. They still apply and show once the scene allows; click × to drop them.`):''}
   if(p.editing!==null&&!slotsOf(p.editing).some(isLabelSlot))closeCrop()}
 
 // The fine-tune box: drag the photo so the printed hole sits in the dashed ring, then size and rotate.
@@ -1645,7 +1670,7 @@ const CROP_PX=480;
 async function openCrop(k){const p=libPlan,box=$('lib-crop');if(!box)return;p.editing=k;
   let img;try{img=await ensureCrop(k)}catch(e){libStatus(tr('这张图下载失败。','Couldn’t download this image.'));return}
   if(!img||libPlan!==p||p.editing!==k)return;
-  const c=p.crops[k],names=Object.fromEntries(libTargets(2)),name=slotsOf(k).filter(isLabelSlot).map(sl=>names[sl]).join(tr('、',', '));
+  const c=p.crops[k],names=libSlotNames(),name=slotsOf(k).filter(isLabelSlot).map(sl=>names[sl]).join(tr('、',', '));
   box.innerHTML=`<div class="lib-crop"><div class="lib-head"><b>${esc(name)}</b><span>${c.auto?tr('已按中孔自动对位，可拖动微调','Lined up on the spindle hole; drag to fine-tune'):tr('没找到中孔，请拖动让印刷的中孔对准虚线圈','Couldn’t find the hole; drag the printed hole into the dashed ring')}</span></div>
     <canvas class="lib-crop-canvas" width="${CROP_PX}" height="${CROP_PX}" tabindex="0" aria-label="${esc(tr('标签裁切预览，拖动或用方向键移动','Label crop preview; drag or use the arrow keys to move'))}"></canvas>
     <div class="slider"><label for="lib-crop-zoom">${tr('大小','Size')}</label><input type="range" id="lib-crop-zoom" min="60" max="140" value="${Math.round(c.zoom*100)}"><output>${Math.round(c.zoom*100)}%</output></div>
@@ -1671,7 +1696,8 @@ async function openCrop(k){const p=libPlan,box=$('lib-crop');if(!box)return;p.ed
 function closeCrop(){if(libPlan)libPlan.editing=null;const box=$('lib-crop');if(box)box.innerHTML=''}
 
 // Each slot holds one image, an image can hold many slots: adding a slot here takes it from whichever image had it.
-$('lib-view').addEventListener('change',e=>{const sel=e.target.closest('[data-img]');if(!sel||!libPlan||!sel.value)return;
+$('lib-view').addEventListener('change',e=>{if(e.target.closest('[data-param]')){libRefreshTargets();return}
+  const sel=e.target.closest('[data-img]');if(!sel||!libPlan||!sel.value)return;
   const k=+sel.dataset.img,sl=sel.value;sel.value='';
   libPlan.assign[sl]=k;libPlan.kept=libPlan.kept.filter(s=>s!==sl);
   syncCards();if(isLabelSlot(sl)&&libPlan.editing!==null&&libPlan.editing!==k)openCrop(k)});
@@ -1694,17 +1720,20 @@ async function libApply(){const p=libPlan,v=$('lib-view'),btn=v.querySelector('[
   if(on('jacket'))spec.jacket={type:p.jacket};
   p.sides.forEach((s,i)=>{if(s.length&&on('tracks'+(i+1)))spec.records['disc'+(i+1)]={tracks:Math.min(20,Math.max(...s))}});
   // A part given new art is switched on, so the image is actually seen.
-  if(done.includes('sleeve'))spec.records.sleeve={on:true};
-  if(done.some(s=>s.startsWith('insert')))spec.insert={on:true};
   if(done.includes('obi'))spec.obi={on:true};
   if(done.includes('sticker'))spec.sticker={on:true};
   await applySpec(spec);
-  const names=Object.fromEntries(libTargets(2)),msg=[failed.length?tr(`已应用。${failed.map(s=>names[s]).join('、')}下载失败，保留原来的图。`,`Applied. Couldn’t download the ${failed.map(s=>names[s].toLowerCase()).join(', ')} image; the previous one stays.`):tr('已应用。','Applied.')];
-  if(!isGate()&&done.some(s=>s.startsWith('inner')))msg.push(tr('内页只在双开封套里看得到。','Inner pages only show on a gatefold jacket.'));
-  if(state.lpCount!==2&&done.some(s=>s==='labelC'||s==='labelD'))msg.push(tr('C / D 面标签只在 2LP 时可见。','Side C / D labels only show on 2LP.'));
+  const names=libSlotNames(),msg=[failed.length?tr(`已应用。${failed.map(s=>names[s]).join('、')}下载失败，保留原来的图。`,`Applied. Couldn’t download the ${failed.map(s=>names[s].toLowerCase()).join(', ')} image; the previous one stays.`):tr('已应用。','Applied.')];
+  const hidden=done.map(s=>[s,libSlotOff(s)]).filter(([,o])=>o);
+  if(hidden.length)msg.push(tr(`${hidden.map(([s,o])=>`${names[s]}${o.why}`).join('；')}。`,`${hidden.map(([s,o])=>`${names[s]}: ${o.why}`).join('; ')}.`));
   libStatus(msg.join(' '));
+  // Stay on the page the viewer is on: the status line links each updated slot, and the rail marks the pages that changed.
+  if(done.length){const el=$('lib-status'),order=Object.keys(names),pages=new Set();el.append(' '+tr('已更新：','Updated: '));
+    done.sort((a,b)=>order.indexOf(a)-order.indexOf(b)).forEach((sl,i)=>{const pg=pageOfSlot(sl),b=document.createElement('button');pages.add(pg);
+      b.type='button';b.className='lib-goto';b.textContent=names[sl];b.title=tr('转到所在页','Go to its page');b.addEventListener('click',()=>{if(phone.matches)setPicker(false);showPage(pg)});
+      el.append(...(i?[tr('、',', '),b]:[b]))});
+    for(const b of RAIL)if(pages.has(b.dataset.page)&&b.getAttribute('aria-selected')!=='true')b.classList.add('updated')}
   if(done.length&&phone.matches)setPicker(false);
-  if(done.length)showPage(pageOfSlot(done.includes('front')?'front':done[0]));
   btn.disabled=false}
 
 // ---------- Controls wiring ----------
