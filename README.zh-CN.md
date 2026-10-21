@@ -108,7 +108,7 @@ node cli/record-mockup.mjs init -o output/spec.json
 
 单位和编辑器一致：长度用 mm，抽出程度用 %，角度用度。
 
-胶色按张设置，写在 `records.disc1` 和 `records.disc2` 里。`vinyl` 为 `black`（纯黑胶，不透明，不叠纹路）或 `color`（彩胶，用 `color` 和 `transparency`，透明度 0–80%）。`pattern.id` 在彩胶上加纹路，底色是 `color`。分色类（`split-half`、`split-tri`、`split-quad`）用 `pattern.color` 作第二块，`split-tri` 再用 `pattern.color2` 作第三块。其他大多数纹路用 `pattern.color` 作纹路色，其余色层自动推算；同色系纹路（`ripple-01`、`starburst-04`，以及 `smoke-*`、`marble-*`）只用底色的深浅变化，`pattern.contrast` 调反差。`pattern.rotation` 旋转纹路；`pattern.fromCover: true` 从 `images.front` 取色，写明的颜色优先。有透明度时只有底色透明，纹路不透明。第 2 张默认沿用第 1 张（`records.disc2.sameAsDisc1: true`）；写了它的胶色、颜色或纹路字段，就视为单独设置。完整的纹路列表用 `schema` 查看。`records.discN.tracks` 设每面音轨数（1–20，默认 6）。双开 2LP 用 `records.layout` 选分装方式：`split`（默认，第 2 张在左扇，向左抽出）或 `stacked`（两张叠在右扇）。旧值 `"clear"` 仍然可用，等于 `color` 加 38% 透明度。
+胶色按张设置，写在 `records.disc1` 和 `records.disc2` 里。`vinyl` 为 `black`（纯黑胶，不透明，不叠纹路）或 `color`（彩胶，用 `color` 和 `transparency`，透明度 0–80%）。`pattern.id` 在彩胶上加纹路，底色是 `color`。分色类（`split-half`、`split-tri`、`split-quad`）用 `pattern.color` 作第二块，`split-tri` 再用 `pattern.color2` 作第三块。其他大多数纹路用 `pattern.color` 作纹路色，其余色层自动推算；同色系纹路（`ripple-01`、`starburst-04`，以及 `smoke-*`、`marble-*`）只用底色的深浅变化，`pattern.contrast` 调反差。`pattern.rotation` 旋转纹路；`pattern.fromCover: true` 从 `images.front` 取色，写明的颜色优先。`transparency` 是底色的透明度；主次类纹路可以再用 `pattern.transparency`（0–80%，默认 0）让纹路本身也变透明。分色类和同色系没有单独的纹路透明度，写了会给警告。第 2 张默认沿用第 1 张（`records.disc2.sameAsDisc1: true`）；写了它的胶色、颜色或纹路字段，就视为单独设置。完整的纹路列表用 `schema` 查看。`records.discN.tracks` 设每面音轨数（1–20，默认 6）。双开 2LP 用 `records.layout` 选分装方式：`split`（默认，第 2 张在左扇，向左抽出）或 `stacked`（两张叠在右扇）。旧值 `"clear"` 仍然可用，等于 `color` 加 38% 透明度。
 
 ## 命令
 
