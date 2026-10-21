@@ -48,6 +48,7 @@ cd cli && npm install
 | 彩胶纹路 | `records.discN.pattern.id`（可选值和分类见 `schema`）。底色是 `records.discN.color`。分色类（`split-*`）：`pattern.color` 为第二块，`split-tri` 用 `pattern.color2` 为第三块；主次类：`pattern.color` 为纹路色，其余色层自动推算；同色系：只用底色，`pattern.contrast` 调反差。只在 `vinyl: color` 时生效。`rotation` 旋转纹路。`transparency` 是底色的透明度；主次类可以再用 `pattern.transparency`（0–80%，默认 0）让纹路色和推算出的色层也变透明，底色不透明时纹路会变淡、透出底色。分色类（`transparency` 只作用于第一块）和同色系不使用 `pattern.transparency`，写了会给警告。`pattern.fromCover: true` 从 `images.front` 自动取底色和纹路色，写明的颜色优先 |
 | 音轨数 | `records.discN.tracks`：每面音轨数（1–20，默认 6），盘面按等宽分圈，两面相同 |
 | 内袋 | `records.sleeve.on` 默认 `false`，不显示内袋，唱片直接从封套抽出；要显示就设为 `true` |
+| 只看唱片 | `scene.mode: "disc"`：只显示唱片本体（盘面 + 标签），封套、内袋、插页、塑封、Obi、贴纸、编号都不显示，设置保留；2LP 时用 `scene.disc`（1 / 2）选展示哪一张。镜头按唱片取景；动画只用 turntable / swing / spin。`slots` 只把展示中那张的标签标为使用中 |
 | 抽出程度 | 显示内袋时：`records.discN.sleeveOut`（内袋出封套），`records.discN.recordOut`（唱片出内袋）；不显示内袋时只用 `recordOut`（唱片出封套，100 为完全抽出），`sleeveOut` 会被忽略并给出警告。`insert.out` 为插页 |
 | 塑封、贴纸、Obi | `wrap.*`、`sticker.*`、`obi.*`，图片为 `images.sticker` / `images.obi` |
 | 贴纸模板 | `sticker.template` 选模板库里的预设（可选值见 `schema`），`sticker.lines` 从上到下写每行文字（不写用默认，空字符串去掉该行），`sticker.color` 配色（`cover` 从封面取色）。用模板时形状由模板决定，`images.sticker` 和 `sticker.shape` 不生效。方括号里的默认文字是占位，要换成真实信息 |
