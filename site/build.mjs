@@ -1,10 +1,12 @@
 #!/usr/bin/env node
-// Build the GitHub Pages site into _site/.
+// Build the site into _site/ (deployed to Cloudflare Pages, functions/ alongside; see wrangler.toml).
 // index.html stays a head-less fragment (the CLI and the Claude preview load it as is); this script wraps
 // it in a full document with search and sharing metadata, and adds the favicon, social card, robots.txt
 // and sitemap. Usage: node site/build.mjs   (SITE_URL overrides the public address)
 // SITE_PREVIEW=1 builds a preview (e.g. Cloudflare Pages per branch): noindex everywhere, no sitemap, and the
 // canonical link still points at the public site.
+// Every build loads site/rum.js (error and timing reports to /api/log), tagged with SITE_RELEASE (e.g. the
+// commit). CF_WEB_ANALYTICS_TOKEN adds the Cloudflare Web Analytics beacon to non-preview builds.
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -14,6 +16,8 @@ const OUT = path.join(ROOT, '_site');
 const SITE_URL = (process.env.SITE_URL || 'https://recordmockup.com/').replace(/\/?$/, '/');
 const REPO_URL = 'https://github.com/oceanjustinlin/record-mockup';
 const PREVIEW = process.env.SITE_PREVIEW === '1';
+const RELEASE = (process.env.SITE_RELEASE || '').slice(0, 12);
+const BEACON_TOKEN = PREVIEW ? '' : process.env.CF_WEB_ANALYTICS_TOKEN || '';
 
 const TITLE = 'Record Mockup — 3D Vinyl & LP Mockup Generator';
 const DESCRIPTION = 'Make photorealistic 3D vinyl record mockups in your browser: LP jackets, gatefolds, 2LP sets, ' +
@@ -65,6 +69,9 @@ const html = `<!doctype html>
 <meta name="twitter:description" content="${esc(DESCRIPTION)}">
 <meta name="twitter:image" content="${SITE_URL}social-preview.png">
 <script type="application/ld+json">${JSON.stringify(jsonLd)}</script>
+<meta name="rm-release" content="${esc(RELEASE)}">
+<script src="rum.js"></script>${BEACON_TOKEN ? `
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='${esc(JSON.stringify({token: BEACON_TOKEN}))}'></script>` : ''}
 ${headPart.trim()}
 </head>
 <body>
@@ -77,6 +84,7 @@ await fs.rm(OUT, {recursive: true, force: true});
 await fs.mkdir(OUT, {recursive: true});
 await fs.writeFile(path.join(OUT, 'index.html'), html);
 await fs.copyFile(path.join(ROOT, 'site', 'favicon.svg'), path.join(OUT, 'favicon.svg'));
+await fs.copyFile(path.join(ROOT, 'site', 'rum.js'), path.join(OUT, 'rum.js'));
 // Vinyl pattern masks, manifest and picker thumbnails, fetched by the page at runtime.
 await fs.cp(path.join(ROOT, 'vinyl-masks'), path.join(OUT, 'vinyl-masks'), {recursive: true});
 await fs.copyFile(path.join(ROOT, 'docs', 'images', 'social-preview.png'), path.join(OUT, 'social-preview.png'));

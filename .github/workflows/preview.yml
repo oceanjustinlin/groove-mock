@@ -9,6 +9,8 @@ on:
     paths:
       - index.html
       - site/**
+      - functions/**
+      - wrangler.toml
       - vinyl-masks/**
       - docs/images/social-preview.png
       - .github/workflows/preview.yml
@@ -36,9 +38,9 @@ jobs:
       - run: node site/build.mjs
         env:
           SITE_PREVIEW: '1'
+          SITE_RELEASE: ${{ github.event.pull_request.head.sha }}
       - id: deploy
         name: Deploy to Cloudflare Pages
-        working-directory: _site
         shell: bash   # -o pipefail, so a failed deploy is not hidden behind tee
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -46,7 +48,8 @@ jobs:
           BRANCH: ${{ github.head_ref }}
           SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          npx -y wrangler@4.148.0 pages deploy . --project-name=record-mockup \
+          # Run from the repository root: wrangler.toml names _site/ and the binding, and functions/ is picked up here.
+          npx -y wrangler@4.148.0 pages deploy \
             --branch="$BRANCH" --commit-hash="$SHA" --commit-dirty=true | tee deploy.log
           # The branch alias stays the same across pushes; fall back to this deployment's own URL.
           url=$(grep -oE 'https://[^ ]+\.pages\.dev' deploy.log | tail -1)
