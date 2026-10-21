@@ -870,9 +870,18 @@ function stickerOutline(g,shape,w,h,inset){g.beginPath();
 // Lines in one centred stack, each as large as its share of the box allows and shrunk to fit the width.
 function stackLines(g,items,cx,cy,boxW,boxH,maxPx){
   if(!items.length)return;
-  const base=Math.min(maxPx,boxH/items.reduce((a,x)=>a+x.size*1.2,0));
   // track: letter spacing in ems; bold: an outline in ems that thickens a face with no heavier weight.
   const set=(x,p)=>{g.font=`${x.f[0]} ${p}px ${x.f[1]}`;g.letterSpacing=`${(x.track??0)*p}px`};
+  const baseFor=list=>Math.min(maxPx,boxH/list.reduce((a,x)=>a+x.size*1.2,0));
+  // Sizes are relative to the largest line left, so clearing the headline lets the rest grow.
+  const top=Math.max(...items.map(x=>x.size));items=items.map(x=>({...x,size:x.size/top}));
+  // A line that would have to shrink a lot is broken at the space nearest its middle instead.
+  const fit=(x,b)=>{set(x,b*x.size);return boxW/g.measureText(x.s).width};
+  let b0=baseFor(items);
+  items=items.flatMap(x=>{if(fit(x,b0)>.62||!x.s.includes(' '))return[x];
+    const sp=[...x.s.matchAll(/ /g)].map(m=>m.index),mid=x.s.length/2,at=sp.reduce((a,i)=>Math.abs(i-mid)<Math.abs(a-mid)?i:a);
+    return[{...x,s:x.s.slice(0,at).replace(/[ ·]+$/,'')},{...x,s:x.s.slice(at+1).replace(/^[ ·]+/,'')}]});
+  const base=baseFor(items);
   const px=items.map(x=>{set(x,base*x.size);return base*x.size*Math.min(1,boxW/g.measureText(x.s).width)});
   let y=cy-px.reduce((a,p)=>a+p*1.2,0)/2;
   items.forEach((x,i)=>{set(x,px[i]);y+=px[i]*.6;g.fillText(x.s,cx,y);if(x.bold){g.lineWidth=x.bold*px[i];g.lineJoin='round';g.strokeText(x.s,cx,y)}y+=px[i]*.6});
@@ -892,10 +901,13 @@ function drawStickerTemplate(t,lines,colorKey,W=1024){
   const items=tplLines(t,lines).map((s,i)=>({s:s.trim(),size:t.size[i]??.6,f:TPL_FONTS[t.font[i]]??TPL_FONTS.b})).filter(x=>x.s);
   if(t.deco==='score'){
     // Publication name on top, the score large inside a ring below it.
-    const[title,score]=tplLines(t,lines).map(s=>s.trim()),r=w*.293,cy=h*.607;
-    if(title)stackLines(g,[{s:title,size:1,f:TPL_FONTS[t.font[0]],track:-.025,bold:.03}],w/2,h*.215,w*.76,h*.13,104*k);
+    // Without a title the ring grows and centres; a short score gets larger type.
+    const[title,score]=tplLines(t,lines).map(s=>s.trim()),r=title?w*.293:w*.36,cy=title?h*.607:h/2;
+    const head={s:title,size:1,f:TPL_FONTS[t.font[0]],track:-.025,bold:.03};
+    if(!score){if(title)stackLines(g,[head],w/2,h/2,w*.76,h*.5,190*k);return c}   // no score, no ring: the name alone
+    if(title)stackLines(g,[head],w/2,h*.2,w*.76,h*.17,104*k);
     g.lineWidth=54*k;g.beginPath();g.arc(w/2,cy,r-27*k,0,Math.PI*2);g.stroke();
-    if(score)stackLines(g,[{s:score,size:1,f:TPL_FONTS[t.font[1]],track:-.055}],w/2,cy,r*1.3,r*1.1,r*.86);
+    if(score)stackLines(g,[{s:score,size:1,f:TPL_FONTS[t.font[1]],track:-.055}],w/2,cy,r*1.3,r*1.1,r*([...score].length<3?1.05:.86));
     return c}
   const box=rect?[w*.8,h*.6]:t.shape==='square'?[w*.74,h*.62]:[w*.64,h*.54];
   stackLines(g,items,w/2,h/2,box[0],box[1],(rect?150:170)*k);
