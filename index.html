@@ -265,6 +265,8 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
    The asset picker opens as a bottom sheet over everything. */
 .sheet-backdrop{display:none}
 @media (max-width:860px){
+  /* iOS zooms the page into any field or select under 16px when it's focused, and leaves it zoomed. */
+  .field,.lib-card .field.select{font-size:16px}
   .app{height:100vh;height:100dvh;padding-block:8px calc(8px + env(safe-area-inset-bottom,0px));gap:8px}
   .bar{flex-wrap:nowrap;gap:8px}
   .brand h1{font-size:20px}
