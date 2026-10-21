@@ -48,6 +48,13 @@ button,input,select{font:inherit;color:inherit}
 /* Icon-only: no side padding, including the phone rule that pads .stage .views .chip. */
 .chip.play,.stage .views .chip.play{display:inline-grid;place-items:center;width:30px;padding:0}
 .play svg{width:14px;height:14px;fill:currentColor}
+#export-btn{display:inline-flex;align-items:center;gap:6px}
+.i-export{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.export-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.export-action{display:grid;gap:4px;align-content:start;text-align:center}
+.export-action .primary{white-space:nowrap;padding-inline:8px}
+.export-sum{display:flex;flex-wrap:wrap;justify-content:center;column-gap:1ch;font-family:var(--font-mono);font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.export-sum span{white-space:nowrap}
 .chip.icon{display:inline-grid;place-items:center;width:30px;height:26px;padding:0;color:var(--ink)}
 .chip.icon svg{width:14px;height:14px;fill:currentColor}
 .row.tight{flex-wrap:nowrap;min-width:0;text-align:right}
@@ -197,6 +204,8 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
   .brand h1{font-size:20px}
   .brand .spec{display:none}
   .bar .primary{padding:6px 12px}
+  #export-btn{padding:6px 10px}
+  #export-btn span{display:none}
   .work{grid-template-columns:minmax(0,1fr);grid-template-rows:clamp(220px,42dvh,520px) minmax(0,1fr);gap:8px}
   .splitter,.hint{display:none}
   .stage .views{position:absolute;right:8px;bottom:8px;z-index:2}
@@ -227,7 +236,7 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
     </div>
     <a class="chip gh" href="https://github.com/oceanjustinlin/record-mockup" target="_blank" rel="noopener" title="源码、命令行和 Agent 用法" aria-label="源码、命令行和 Agent 用法（GitHub）"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
     <button class="chip" id="lang-btn" lang="en" aria-label="Switch language">EN</button>
-    <button class="primary" id="export-btn">导出 PNG</button>
+    <button class="primary" id="export-btn" data-export-png aria-label="导出 PNG"><svg class="i-export" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5v8M4.5 6.5 8 10l3.5-3.5M2.5 11v3h11v-3"/></svg><span>导出 PNG</span></button>
   </header>
 
   <div class="work">
@@ -486,7 +495,6 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
             <div class="row"><span class="lbl">分辨率</span>
               <div class="seg" id="export-scale"><button data-v="1" aria-pressed="false">1×</button><button data-v="2" aria-pressed="true">2×</button><button data-v="3" aria-pressed="false">3×</button></div>
             </div>
-            <p class="note">图片只在你的浏览器里处理，不会上传。</p>
           </section>
           <section class="group">
             <h2>动画</h2>
@@ -508,8 +516,15 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
               <div class="seg" id="anim-size"><button data-v="0" aria-pressed="true">自动</button><button data-v="720" aria-pressed="false">720</button><button data-v="1080" aria-pressed="false">1080</button><button data-v="2160" aria-pressed="false">2160</button></div>
             </div>
             <p class="note" id="anim-issue" hidden></p>
-            <button class="primary" id="video-btn" type="button">导出视频</button>
             <p class="note">尺寸指短边像素，自动时 MP4 为 1080，GIF 为 600。点视角旁的 ▶ 在工作台预览，导出视频用同一段动画。转台会转到背面，没有背面图时用摆动；展开和抽出会停在当前设置的角度和位置，都为 0 时用常见值。</p>
+          </section>
+          <section class="group">
+            <h2>导出</h2>
+            <div class="export-actions">
+              <div class="export-action"><button class="primary" id="png-btn" data-export-png type="button"><span>导出 PNG</span></button><span class="export-sum" id="png-sum"></span></div>
+              <div class="export-action"><button class="primary" id="video-btn" type="button">导出视频</button><span class="export-sum" id="video-sum"></span></div>
+            </div>
+            <p class="note">图片和视频只在你的浏览器里处理，不会上传。顶栏的导出按钮和 ⌘/Ctrl+E 按这里的设置直接导出 PNG。</p>
           </section>
         </div>
       </div>
@@ -585,10 +600,10 @@ const EN={
   '塑封膜':'Shrink wrap','套上塑封膜':'Shrink-wrapped','褶皱':'Wrinkles','反光':'Sheen','唱片抽出时，开口一侧的膜会被视为已拆开。':'When a record is pulled out, the wrap on the open edge counts as torn.',
   '贴在塑封膜上':'Sits on the shrink wrap','显示贴纸':'Show sticker','上传贴纸':'Upload sticker','贴纸图':'Sticker art','圆形':'Circle','长方形':'Rectangle','尺寸':'Size',
   '输出':'Output','背景':'Background','透明':'Transparent','纯色':'Solid','背景颜色':'Background colour','分辨率':'Resolution',
-  '图片只在你的浏览器里处理，不会上传。':'Images are processed in your browser and never uploaded.',
+  '图片和视频只在你的浏览器里处理，不会上传。顶栏的导出按钮和 ⌘/Ctrl+E 按这里的设置直接导出 PNG。':'Images and video are processed in your browser and never uploaded. The export button in the top bar and ⌘/Ctrl+E export a PNG with these settings.',
   'PNG 已生成':'PNG ready','导出的模型图':'Exported mockup','如果点"下载"没有反应，请右键（手机长按）图片另存。':'If Download does nothing, right-click (long-press on phones) the image and save it.',
   '下载':'Download','关闭':'Close',
-  '复位':'Reset','动画':'Animation','画幅':'Aspect','格式':'Format','尺寸':'Size','自动':'Auto','导出视频':'Export video',
+  '复位':'Reset','动画':'Animation','画幅':'Aspect','格式':'Format','尺寸':'Size','自动':'Auto','导出视频':'Export video','导出':'Export',
   '如果点"下载"没有反应，请右键（手机长按）视频另存。':'If Download does nothing, right-click (long-press on a phone) the video and save it.','手机上只预览第一帧，以免播放大 GIF 时页面崩溃。点"下载"保存完整 GIF。':'Phones preview only the first frame, since playing a large GIF can crash the page. Press Download to save the full GIF.','动作':'Motion','转台':'Turntable','摆动':'Swing','自转':'Spin','展开':'Open','抽出':'Pull out','方向':'Direction','向左':'Left','向右':'Right','时长':'Duration','摆幅':'Swing angle',
   '尺寸指短边像素，自动时 MP4 为 1080，GIF 为 600。点视角旁的 ▶ 在工作台预览，导出视频用同一段动画。转台会转到背面，没有背面图时用摆动；展开和抽出会停在当前设置的角度和位置，都为 0 时用常见值。':'Size is the short side in pixels; Auto is 1080 for MP4 and 600 for GIF. Press ▶ next to the views to preview on the stage; video export uses the same animation. Turntable shows the back, so use Swing without back artwork. Open and Pull out stop at the angle and positions set in the panel, or typical ones when those are 0.',
   '源码、命令行和 Agent 用法':'Source, CLI and agent usage','源码、命令行和 Agent 用法（GitHub）':'Source, CLI and agent usage (GitHub)'};
@@ -1777,7 +1792,7 @@ function syncUI(){
     else if(c.kind==='slider'){const u=UNITS[c.unit],x=u.toUI(v);el.value=x;$(c.id+'-v').textContent=u.fmt(x)}
     else if(c.kind==='toggle'){el.checked=!!v;if(c.sub)$(c.sub).hidden=!v}
     else el.value=v}
-  $('lp2-sub').hidden=state.lpCount!==2;$('vinyl-same').checked=state.vinylSame;$('vinyl2-own').hidden=state.vinylSame;$('gate-sub').hidden=!isGate();$('jacket-spec').textContent=specText();syncAnimPanel();
+  $('lp2-sub').hidden=state.lpCount!==2;$('vinyl-same').checked=state.vinylSame;$('vinyl2-own').hidden=state.vinylSame;$('gate-sub').hidden=!isGate();$('jacket-spec').textContent=specText();syncAnimPanel();syncExportSummary();
   for(const b of document.querySelectorAll('[data-view]'))b.setAttribute('aria-pressed',b.dataset.view===state.view);
   syncPatterns()}
 
@@ -1796,12 +1811,12 @@ function coverOnColour(i){const s=i===1?'':'2';if(state['vinyl'+s]!=='color'||co
 seg('vinyl-style','vinyl',()=>{coverOnColour(1);applyVinyl();syncPatterns()});
 seg('vinyl2-style','vinyl2',()=>{coverOnColour(2);applyVinyl();syncPatterns()});
 seg('sticker-shape','stickerShape',()=>{buildSticker();stickerTexture();pose()});
-seg('bg-mode','bg',()=>{applyBg();syncAnimPanel()});
-seg('export-scale','scale');
+seg('bg-mode','bg',()=>{applyBg();syncAnimPanel();syncExportSummary()});
+seg('export-scale','scale',()=>syncExportSummary());
 // Picking a colour while on black switches that disc to coloured vinyl.
 for(const [cid,sid,key] of[['vinyl-color','vinyl-style','vinyl'],['vinyl2-color','vinyl2-style','vinyl2']])
   $(cid).addEventListener('input',e=>{state[key+'Color']=e.target.value;colorSet[key==='vinyl'?0:1]=true;if(state[key]==='black'){state[key]='color';for(const x of $(sid).children)x.setAttribute('aria-pressed',x.dataset.v==='color')}applyVinyl()});
-$('bg-color').addEventListener('input',e=>{state.bgColor=e.target.value;state.bg='color';for(const x of $('bg-mode').children)x.setAttribute('aria-pressed',x.dataset.v==='color');applyBg()});
+$('bg-color').addEventListener('input',e=>{state.bgColor=e.target.value;state.bg='color';for(const x of $('bg-mode').children)x.setAttribute('aria-pressed',x.dataset.v==='color');applyBg();syncExportSummary()});
 $('sleeve-color').addEventListener('input',e=>{state.sleeveColor=e.target.value;sleeveMat.color.set(tex.sleeve?'#ffffff':e.target.value)});
 field('vinyl-color','vinylColor');field('vinyl2-color','vinyl2Color');field('bg-color','bgColor');field('sleeve-color','sleeveColor');
 // Pattern panel: a thumbnail picker per disc, then only the controls the pattern's palette mode uses.
@@ -1919,8 +1934,24 @@ for(const b of document.querySelectorAll('[data-view]'))b.addEventListener('clic
 
 // ---------- Export ----------
 let lastUrl;
-$('export-btn').addEventListener('click',async()=>{
-  const btn=$('export-btn');btn.disabled=true;btn.textContent=tr('生成中…','Rendering…');
+// Both PNG buttons (top bar, Output page) and ⌘/Ctrl+E run the same export with the Output page's settings.
+const pngBtns=[...document.querySelectorAll('[data-export-png]')];
+let pngBusy=false;
+const setPngLabel=t=>{for(const b of pngBtns){b.querySelector('span').textContent=t;b.disabled=pngBusy}};
+const isMac=/Mac|iPhone|iPad/.test(navigator.platform||navigator.userAgent);
+const shortcut=isMac?'⌘E':'Ctrl+E';
+// Each part is kept whole, so a narrow panel wraps between parts rather than inside one.
+const setSummary=(id,parts)=>$(id).replaceChildren(...parts.map((t,i)=>Object.assign(document.createElement('span'),{textContent:i<parts.length-1?t+' ·':t})));
+const bgSummary=()=>state.bg==='transparent'?tr('透明','transparent'):state.bgColor;
+// One line per action, e.g. "PNG · 2× · transparent" / "MP4 · 1:1 · 6 s"; the top bar shows the PNG one in its tooltip.
+function syncExportSummary(){
+  const png=`${state.scale}× · ${bgSummary()}`;
+  setSummary('png-sum',['PNG',`${state.scale}×`,bgSummary()]);
+  setSummary('video-sum',[state.videoFormat.toUpperCase(),state.animAspect,`${state.animDuration} s`]);
+  const tip=`${tr('导出 PNG','Export PNG')} (${shortcut}) · ${png}`,b=$('export-btn');b.title=tip;b.setAttribute('aria-label',tip)}
+async function exportPNG(){
+  if(pngBusy||videoAbort)return;
+  pngBusy=true;setPngLabel(tr('生成中…','Rendering…'));
   const t0=performance.now();let tw=0,th=0;
   try{const w=stage.clientWidth,h=stage.clientHeight,k=Math.min(state.scale,4096/Math.max(w,h));tw=Math.round(w*k);th=Math.round(h*k);
     renderer.setPixelRatio(1);renderer.setSize(tw,th,false);camera.aspect=tw/th;camera.updateProjectionMatrix();renderStage();
@@ -1930,8 +1961,11 @@ $('export-btn').addEventListener('click',async()=>{
     showResult({title:tr('PNG 已生成','PNG ready'),url:lastUrl,file:'record-mockup.png',size:`${tw} × ${th} px · ${(blob.size/1048576).toFixed(1)} MB`});
   }catch(e){track('export',{format:'png',ok:0,ms:Math.round(performance.now()-t0),w:tw,h:th,msg:String(e&&e.message||e)});
     alertNote(tr('导出失败，请把分辨率调到 1× 再试。','Export failed. Set the resolution to 1× and try again.'))}
-  finally{renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));resize();btn.disabled=false;btn.textContent=tr('导出 PNG','Export PNG')}
-});
+  finally{renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));resize();pngBusy=false;setPngLabel(tr('导出 PNG','Export PNG'))}
+}
+for(const b of pngBtns)b.addEventListener('click',exportPNG);
+addEventListener('keydown',e=>{if(e.key.toLowerCase()!=='e'||!(isMac?e.metaKey:e.ctrlKey)||e.altKey||e.shiftKey||e.repeat)return;
+  e.preventDefault();if($('modal').hidden)exportPNG()});
 $('modal-close').addEventListener('click',closeModal);
 $('modal').addEventListener('click',e=>{if(e.target===$('modal'))closeModal()});
 addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
@@ -2319,7 +2353,7 @@ function syncAnimPanel(){
   $('anim-issue').hidden=!notes.length;$('anim-issue').textContent=notes.join(' ')}
 const refitPreview=()=>{syncAnimPanel();if(previewActive())fitPreview()};
 seg('anim-preset','animPreset',refitPreview);seg('anim-dir','animDir',refitPreview);
-seg('anim-aspect','animAspect');seg('video-format','videoFormat');seg('anim-size','animSize');
+seg('anim-aspect','animAspect',()=>syncExportSummary());seg('video-format','videoFormat',()=>syncExportSummary());seg('anim-size','animSize');
 // Export video from the panel. Pressing the button again while it runs cancels.
 let videoUrl,posterUrl,videoAbort;
 $('video-btn').addEventListener('click',async()=>{
@@ -2338,7 +2372,7 @@ $('video-btn').addEventListener('click',async()=>{
   }catch(e){if(e.name!=='AbortError'){track('export',{format,ok:0,ms:Math.round(performance.now()-t0),msg:String(e&&e.message||e)});
     alertNote(tr(`视频导出失败：${e.message}`,`Video export failed: ${e.message}`))}}
   finally{videoAbort=null;$('export-overlay').hidden=true;btn.textContent=tr('导出视频','Export video')}});
-slider('anim-duration','animDuration','sec',()=>{});slider('anim-angle','animAngle','deg',refitPreview);
+slider('anim-duration','animDuration','sec',()=>syncExportSummary());slider('anim-angle','animAngle','deg',refitPreview);
 syncAnimPanel();
 
 // Returns the clip as a Blob. poster (GIF only): also a JPEG of the first frame, at most that many px on its long side.
@@ -2419,7 +2453,7 @@ $('lang-btn').addEventListener('click',()=>{lang=lang==='en'?'zh':'en';try{local
   for(const s of['','2'])buildPicker(s);syncPatterns();
   for(const t of document.querySelectorAll('.tag.lib'))t.textContent=tr('曲库','Library');if($('lib-view').innerHTML)libView?.()});
 // The play button's label follows its state, so it is relabelled after translateStatic, not by it.
-$('lang-btn').addEventListener('click',()=>setPlaying(preview.playing));
+$('lang-btn').addEventListener('click',()=>{setPlaying(preview.playing);syncExportSummary();if(!pngBusy)setPngLabel(tr('导出 PNG','Export PNG'))});
 const nextFrame=()=>new Promise(r=>requestAnimationFrame(()=>r()));
 const ready=fontsSettled.then(nextFrame).then(nextFrame);
 const toDataUrl=blob=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>rej(r.error);r.readAsDataURL(blob)});
