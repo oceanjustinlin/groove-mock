@@ -7,9 +7,10 @@ Masters stay outside the repo, one folder per mask id under --src, in either of 
 - Grayscale layers (e.g. image-to-image output): one single-channel PNG per accent, listed in the
   CURATED entry's `layers`, square, with the pattern filling the whole canvas (the disc is the
   inscribed circle). A grayscale file carries no colours, so the entry states `base` and `colors`.
-Each baked mask is an 8-bit RGB PNG whose R/G/B channels are the accent1..3 soft masks, cropped so the
-disc fills the square exactly: that matches the record face UVs in index.html (remapUV(face, r*2)).
-Alpha is never used for packing, because canvas premultiplies it and would wipe RGB where A = 0.
+Each baked mask holds the accent1..3 soft masks, cropped so the disc fills the square exactly: that matches
+the record face UVs in index.html (remapUV(face, r*2)). They are stacked as one greyscale WebP (see
+save_mask); the page unstacks them into the R/G/B channels it composites from. Alpha is never used for
+packing, because canvas premultiplies it and would wipe RGB where A = 0.
 
   python3 tools/bake-vinyl-masks.py --src <masters root, e.g. ~/Documents/VinylLab/assets/masks> [--size 1024] [--preview DIR] [ids...]
 
@@ -301,10 +302,9 @@ def bake(src_dir: Path, mask_id: str, size: int):
                 arr[..., c] = np.clip((arr[..., c] - f) / (1 - f), 0, 1)
                 floors[c] = round(f, 3)
 
-    # Corners outside the disc are never visible; blank them (keeping a filtering margin) to shrink the PNG.
+    # Corners outside the disc are never visible; blank them (keeping a filtering margin) to shrink the file.
     arr[r > 1.01] = 0
     arr = np.round(arr * 255).astype(np.uint8)
-    img = Image.fromarray(arr)
     channels = [c for c in range(3) if arr[..., c].max() > 8]
     if not channels:
         raise ValueError(f'{mask_id}: every layer is empty')
@@ -312,7 +312,7 @@ def bake(src_dir: Path, mask_id: str, size: int):
         raise ValueError(f'{mask_id}: accent channels are not contiguous from R ({channels})')
 
     OUT.mkdir(exist_ok=True)
-    img.save(OUT / f'{mask_id}.png', optimize=True)
+    save_mask(arr, len(channels), OUT / f'{mask_id}.webp')
 
     mode = cfg['palette']
     accents = colors[:len(channels)]
@@ -321,7 +321,7 @@ def bake(src_dir: Path, mask_id: str, size: int):
         'id': mask_id,
         'family': mask_id.rsplit('-', 1)[0],
         'role': cfg['role'],
-        'file': f'{mask_id}.png',
+        'file': f'{mask_id}.webp',
         'thumb': f'thumbs/{mask_id}.jpg',
         'size': size,
         'accents': len(channels),
@@ -352,13 +352,30 @@ def tint(m: np.ndarray, palette: list) -> Image.Image:
     return Image.fromarray(out.astype(np.uint8))
 
 
+# The page downloads a mask the first time it is picked, so the file is kept small: the accent channels are
+# stacked top to bottom as one greyscale image (size x size*accents) and saved as lossy WebP. Greyscale keeps
+# the channels apart (a colour WebP's chroma subsampling would bleed one layer into the next); at q90 the mean
+# error is about 1/255, a third of the lossless PNG's size. loadMask() in index.html unstacks it the same way.
+def save_mask(arr: np.ndarray, accents: int, dest: Path):
+    Image.fromarray(np.concatenate([arr[..., c] for c in range(accents)], 0)).save(dest, quality=90, method=6)
+
+
+def unstack(path: Path, accents: int) -> np.ndarray:
+    g = np.asarray(Image.open(path).convert('L'))
+    n = g.shape[1]
+    out = np.zeros((n, n, 3), np.uint8)
+    for c in range(accents):
+        out[..., c] = g[c * n:(c + 1) * n]
+    return out
+
+
 def load(entry: dict) -> np.ndarray:
-    return np.asarray(Image.open(OUT / entry['file'])).astype(np.float32) / 255
+    return unstack(OUT / entry['file'], entry['accents']).astype(np.float32) / 255
 
 
 def thumb(entry: dict):
     """Panel picker thumbnail in the mask's own palette; the page crops it to a circle."""
-    img = Image.fromarray(np.asarray(Image.open(OUT / entry['file']).resize((THUMB, THUMB), Image.LANCZOS)))
+    img = Image.fromarray(unstack(OUT / entry['file'], entry['accents'])).resize((THUMB, THUMB), Image.LANCZOS)
     m = np.asarray(img).astype(np.float32) / 255
     (OUT / 'thumbs').mkdir(exist_ok=True)
     tint(m, [entry['base'] or '#dddddd', *entry['colors']]).save(OUT / entry['thumb'], quality=82)

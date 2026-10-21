@@ -167,6 +167,9 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
 .picker{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
 .picker button{aspect-ratio:1;border:1px solid var(--line);border-radius:50%;padding:0;background:var(--bg) center/cover no-repeat;cursor:pointer;font-size:11px;color:var(--muted)}
 .picker button[aria-checked="true"]{outline:2px solid var(--accent);outline-offset:2px}
+.picker button[data-loading]{animation:mask-wait .9s ease-in-out infinite alternate}
+@keyframes mask-wait{to{opacity:.45}}
+@media (prefers-reduced-motion:reduce){.picker button[data-loading]{animation:none;opacity:.6}}
 .lib-form{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:6px}
 .lib-form .field{width:auto;min-width:0;font-family:var(--font-body)}
 .lib-view{display:grid;gap:8px}
@@ -1151,11 +1154,19 @@ function splitMask(id,N=1024){
   else if(id==='split-tri'){wedge(-PI/2-2*PI/3,-PI/2,'#f00');wedge(-PI/2+2*PI/3,-PI/2+4*PI/3,'#0f0')}
   else{wedge(-PI/2,0,'#f00');wedge(PI/2,PI,'#f00')}
   const out=canvas(N,N),o=out.getContext('2d');o.filter=`blur(${N/512}px)`;o.drawImage(hard,0,0);return out}
-const maskCache=new Map();
+// A baked mask file stacks its accent layers top to bottom in one greyscale WebP (small to download; see
+// save_mask in tools/bake-vinyl-masks.py). Unstack them into the R/G/B channels compositePattern reads.
+function unstackMask(bmp,accents){const N=bmp.width,src=canvas(N,bmp.height).getContext('2d',{willReadFrequently:true});src.drawImage(bmp,0,0);
+  const g=src.getImageData(0,0,N,bmp.height).data,out=canvas(N,N),o=out.getContext('2d'),d=o.createImageData(N,N),px=d.data,n=N*N;
+  for(let k=0;k<accents;k++)for(let j=0,i=k*n*4;j<n;j++,i+=4)px[j*4+k]=g[i];
+  for(let j=3;j<px.length;j+=4)px[j]=255;
+  o.putImageData(d,0,0);bmp.close?.();return out}
+const maskCache=new Map(),maskDone=new Set();
 function loadMask(id){
   const m=maskById(id);
-  if(!maskCache.has(id))maskCache.set(id,m.family==='split'?Promise.resolve(splitMask(id)):fetch('vinyl-masks/'+m.file).then(r=>{if(!r.ok)throw new Error(`HTTP ${r.status}`);return r.blob()}).then(b=>createImageBitmap(b,{colorSpaceConversion:'none',premultiplyAlpha:'none'}))
-    .catch(e=>{maskCache.delete(id);throw e}));
+  if(!maskCache.has(id))maskCache.set(id,(m.family==='split'?Promise.resolve(splitMask(id)):fetch('vinyl-masks/'+m.file).then(r=>{if(!r.ok)throw new Error(`HTTP ${r.status}`);return r.blob()}).then(b=>createImageBitmap(b,{colorSpaceConversion:'none',premultiplyAlpha:'none'}))
+    .then(bmp=>bmp.height>bmp.width?unstackMask(bmp,m.accents):bmp))
+    .then(img=>{maskDone.add(id);return img},e=>{maskCache.delete(id);throw e}));
   return maskCache.get(id)}
 // OKLab (Björn Ottosson); the same conversion and rules as apply_params() in tools/bake-vinyl-masks.py.
 const srgbToLin=c=>c<=.04045?c/12.92:((c+.055)/1.055)**2.4,linToSrgb=c=>{c=Math.min(1,Math.max(0,c));return c<=.0031308?12.92*c:1.055*c**(1/2.4)-.055};
@@ -2140,7 +2151,11 @@ function pickPattern(i,id){const s=i===1?'':'2',m=maskById(id);state['pattern'+s
   if(m){const mode=m.palette.mode,[color,alt]=patternColorsFor(m,state[`vinyl${s}Color`]);
     if(mode!=='tonal')state[`pattern${s}Color`]=color;if(mode==='regions'&&m.accents===2)state[`pattern${s}Alt`]=alt;
     state[`pattern${s}Contrast`]=1}
-  applyVinyl();syncUI()}
+  const done=applyVinyl();syncUI();
+  // A mask not downloaded yet: the swatch pulses until the disc shows it.
+  if(m&&!maskDone.has(id)){const b=$(`pattern${s}-pick`).querySelector(`[data-id="${id}"]`);b.dataset.loading='';done.catch(()=>{}).then(()=>delete b.dataset.loading)}}
+// Start the download as soon as a swatch is pointed at, so the click often finds the mask already here.
+const warmMask=e=>{const id=e.target.closest?.('button')?.dataset.id;if(id)loadMask(id).catch(()=>{})};
 function syncPatterns(){for(const i of[1,2]){const s=i===1?'':'2',black=state['vinyl'+s]==='black',m=maskById(state['pattern'+s]),mode=m?.palette.mode;
   $(`vinyl${s}-colored`).hidden=black;
   for(const b of $(`vinyl${s}-look`).children)b.setAttribute('aria-pressed',String(b.dataset.v===(m?'pattern':'solid')));
@@ -2178,6 +2193,7 @@ let vinylQueued=false;
 function queueVinyl(){if(vinylQueued)return;vinylQueued=true;requestAnimationFrame(()=>{vinylQueued=false;applyVinyl()})}
 for(const i of[1,2]){const s=i===1?'':'2';buildPicker(s);
   $(`pattern${s}-pick`).addEventListener('click',e=>{const b=e.target.closest('button');if(b)pickPattern(i,b.dataset.id)});
+  for(const t of['pointerover','pointerdown','focusin'])$(`pattern${s}-pick`).addEventListener(t,warmMask);
   for(const [id,key] of[[`pattern${s}-color`,`pattern${s}Color`],[`pattern${s}-alt`,`pattern${s}Alt`]]){$(id).addEventListener('input',e=>{state[key]=e.target.value;colorSet[i-1]=true;queueVinyl()});field(id,key)}
   $(`vinyl${s}-look`).addEventListener('click',e=>{const b=e.target.closest('button');if(b)setLook(i,b.dataset.v)});
   slider(`vinyl${s}-clear`,`vinyl${s}Clear`,'pct',queueVinyl);
