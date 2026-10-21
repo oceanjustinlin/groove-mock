@@ -48,6 +48,10 @@ button,input,select{font:inherit;color:inherit}
 /* Icon-only: no side padding, including the phone rule that pads .stage .views .chip. */
 .chip.play,.stage .views .chip.play{display:inline-grid;place-items:center;width:30px;padding:0}
 .play svg{width:14px;height:14px;fill:currentColor}
+.chip.icon{display:inline-grid;place-items:center;width:30px;height:26px;padding:0;color:var(--ink)}
+.chip.icon svg{width:14px;height:14px;fill:currentColor}
+.row.tight{flex-wrap:nowrap;min-width:0;text-align:right}
+.row.tight .chip{flex:none}
 .play .i-pause,.play[aria-pressed="true"] .i-play{display:none}
 .play[aria-pressed="true"] .i-pause{display:block}
 .chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;cursor:pointer;font-size:13px}
@@ -320,10 +324,10 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
                 <div class="row"><span class="lbl">样式</span>
                   <div class="seg" id="vinyl-look"><button data-v="solid" aria-pressed="true">纯色</button><button data-v="pattern" aria-pressed="false">纹路</button></div>
                 </div>
-                <div class="row" data-look="pattern"><span class="lbl">纹路</span><span class="note" id="pattern-name"></span></div>
+                <div class="row" data-look="pattern"><span class="lbl">纹路</span><span class="row tight"><span class="note" id="pattern-name"></span><button class="chip icon" id="pattern-shuffle" type="button" title="换一款同类纹路，颜色不变" aria-label="换一款同类纹路，颜色不变"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M11.5 1.5 14.5 4.5l-3 3v-2h-1.3c-.9 0-1.4.4-2 1.2L5.4 10.4C4.6 11.6 3.6 12 2.5 12h-1v-1.6h1c.6 0 1-.2 1.5-.9L6.8 5.8C7.6 4.6 8.6 4 10.2 4h1.3zM1.5 4h1c1.1 0 2 .4 2.8 1.5l-1 1.3c-.5-.7-.9-1.2-1.8-1.2h-1zm8.2 5.2c.5.7.9 1.2 1.8 1.2v-2l3 3-3 3v-2c-1.4 0-2.3-.5-3-1.5z"/></svg></button></span></div>
                 <div class="picker" id="pattern-pick" role="radiogroup" aria-label="第 1 张纹路" data-look="pattern"></div>
                 <p class="note" id="pattern-hint" data-look="pattern"></p>
-                <div class="row"><span class="lbl" id="vinyl-color-lbl">颜色</span><input type="color" id="vinyl-color" value="#c8392b" aria-label="第 1 张胶色"></div>
+                <div class="row"><span class="lbl" id="vinyl-color-lbl">颜色</span><span class="row"><button class="chip icon" id="pattern-cover" type="button" title="从封面取色" aria-label="从封面取色"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M11.2 1.6a1.9 1.9 0 0 1 2.7 2.7l-1.6 1.6.7.7-1 1-.7-.7-5.6 5.6H3.6l-.9.9-1-1 .9-.9v-2.1l5.6-5.6-.7-.7 1-1 .7.7zM8.5 6.1 4.8 9.8v1.4h1.4l3.7-3.7z"/></svg></button><input type="color" id="vinyl-color" value="#c8392b" aria-label="第 1 张胶色"></span></div>
                 <div class="row" id="pattern-colors" data-look="pattern"><span class="lbl" id="pattern-colors-lbl">纹路色</span>
                   <div class="row" style="justify-content:flex-end">
                     <input type="color" id="pattern-color" aria-label="第 1 张纹路色">
@@ -333,7 +337,6 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
                 <div class="slider" id="pattern-contrast-row" data-look="pattern"><label for="pattern-contrast">反差</label><input type="range" id="pattern-contrast" min="0" max="200" value="100"><output id="pattern-contrast-v">100%</output></div>
                 <div class="slider"><label for="vinyl-clear">透明度</label><input type="range" id="vinyl-clear" min="0" max="80" value="0"><output id="vinyl-clear-v">0%</output></div>
                 <div class="slider" data-look="pattern"><label for="pattern-rot">纹路角度</label><input type="range" id="pattern-rot" min="-180" max="180" value="0"><output id="pattern-rot-v">0°</output></div>
-                <div class="row" style="justify-content:flex-start" data-look="pattern"><button class="chip" id="pattern-cover">从封面取色</button></div>
               </div>
               <div class="slider"><label for="sleeve-x">内袋抽出</label><input type="range" id="sleeve-x" min="0" max="100" value="35"><output id="sleeve-x-v">35%</output></div>
               <div class="slider"><label for="record-x">唱片抽出</label><input type="range" id="record-x" min="0" max="100" value="40"><output id="record-x-v">40%</output></div>
@@ -355,10 +358,10 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
                   <div class="row"><span class="lbl">样式</span>
                     <div class="seg" id="vinyl2-look"><button data-v="solid" aria-pressed="true">纯色</button><button data-v="pattern" aria-pressed="false">纹路</button></div>
                   </div>
-                  <div class="row" data-look="pattern"><span class="lbl">纹路</span><span class="note" id="pattern2-name"></span></div>
+                  <div class="row" data-look="pattern"><span class="lbl">纹路</span><span class="row tight"><span class="note" id="pattern2-name"></span><button class="chip icon" id="pattern2-shuffle" type="button" title="换一款同类纹路，颜色不变" aria-label="换一款同类纹路，颜色不变"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M11.5 1.5 14.5 4.5l-3 3v-2h-1.3c-.9 0-1.4.4-2 1.2L5.4 10.4C4.6 11.6 3.6 12 2.5 12h-1v-1.6h1c.6 0 1-.2 1.5-.9L6.8 5.8C7.6 4.6 8.6 4 10.2 4h1.3zM1.5 4h1c1.1 0 2 .4 2.8 1.5l-1 1.3c-.5-.7-.9-1.2-1.8-1.2h-1zm8.2 5.2c.5.7.9 1.2 1.8 1.2v-2l3 3-3 3v-2c-1.4 0-2.3-.5-3-1.5z"/></svg></button></span></div>
                   <div class="picker" id="pattern2-pick" role="radiogroup" aria-label="第 2 张纹路" data-look="pattern"></div>
                   <p class="note" id="pattern2-hint" data-look="pattern"></p>
-                  <div class="row"><span class="lbl" id="vinyl2-color-lbl">颜色</span><input type="color" id="vinyl2-color" value="#d9a441" aria-label="第 2 张胶色"></div>
+                  <div class="row"><span class="lbl" id="vinyl2-color-lbl">颜色</span><span class="row"><button class="chip icon" id="pattern2-cover" type="button" title="从封面取色" aria-label="从封面取色"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M11.2 1.6a1.9 1.9 0 0 1 2.7 2.7l-1.6 1.6.7.7-1 1-.7-.7-5.6 5.6H3.6l-.9.9-1-1 .9-.9v-2.1l5.6-5.6-.7-.7 1-1 .7.7zM8.5 6.1 4.8 9.8v1.4h1.4l3.7-3.7z"/></svg></button><input type="color" id="vinyl2-color" value="#d9a441" aria-label="第 2 张胶色"></span></div>
                   <div class="row" id="pattern2-colors" data-look="pattern"><span class="lbl" id="pattern2-colors-lbl">纹路色</span>
                     <div class="row" style="justify-content:flex-end">
                       <input type="color" id="pattern2-color" aria-label="第 2 张纹路色">
@@ -368,7 +371,6 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
                   <div class="slider" id="pattern2-contrast-row" data-look="pattern"><label for="pattern2-contrast">反差</label><input type="range" id="pattern2-contrast" min="0" max="200" value="100"><output id="pattern2-contrast-v">100%</output></div>
                   <div class="slider"><label for="vinyl2-clear">透明度</label><input type="range" id="vinyl2-clear" min="0" max="80" value="0"><output id="vinyl2-clear-v">0%</output></div>
                   <div class="slider" data-look="pattern"><label for="pattern2-rot">纹路角度</label><input type="range" id="pattern2-rot" min="-180" max="180" value="0"><output id="pattern2-rot-v">0°</output></div>
-                  <div class="row" style="justify-content:flex-start" data-look="pattern"><button class="chip" id="pattern2-cover">从封面取色</button></div>
                 </div>
               </div>
               <div class="slider"><label for="sleeve2-x">内袋抽出</label><input type="range" id="sleeve2-x" min="0" max="100" value="60"><output id="sleeve2-x-v">60%</output></div>
@@ -576,7 +578,7 @@ const EN={
   '第 2 张':'Disc 2','C / D 面 · 放在第 1 张后面':'Sides C / D · behind disc 1','上传 C 面标签':'Upload side C label','上传 D 面标签':'Upload side D label',
   'C 面标签':'Side C label','D 面标签':'Side D label','第 2 张胶色':'Disc 2 vinyl colour',
   '纹路':'Pattern','第 1 张纹路':'Disc 1 pattern','第 2 张纹路':'Disc 2 pattern','纹路色':'Pattern colour','第 1 张纹路色':'Disc 1 pattern colour','第 2 张纹路色':'Disc 2 pattern colour',
-  '第 1 张第三块颜色':'Disc 1 third region colour','胶色和纹路与第 1 张相同':'Same vinyl and pattern as disc 1','样式':'Style','纯色':'Solid','颜色':'Colour','透明度':'Transparency','第 2 张第三块颜色':'Disc 2 third region colour','反差':'Contrast','纹路角度':'Pattern angle','从封面取色':'Colours from cover',
+  '第 1 张第三块颜色':'Disc 1 third region colour','胶色和纹路与第 1 张相同':'Same vinyl and pattern as disc 1','样式':'Style','纯色':'Solid','颜色':'Colour','透明度':'Transparency','第 2 张第三块颜色':'Disc 2 third region colour','反差':'Contrast','纹路角度':'Pattern angle','从封面取色':'Colours from cover','换一款同类纹路，颜色不变':'Shuffle: another pattern of the same kind, same colours',
   '内袋抽出：内袋连同唱片一起从封套开口拉出。唱片抽出：唱片再从内袋里往外拉。':'Sleeve out pulls the inner sleeve, record inside, out of the jacket. Record out then slides the record out of the sleeve.',
   'Insert 插页':'Insert','304 × 304 mm · 双面':'304 × 304 mm · double-sided','放入插页':'Include insert','上传插页正面':'Upload insert front','上传插页背面':'Upload insert back',
   '抽出':'Out','插页在内袋后面，抽得比内袋多才看得到。':'The insert sits behind the inner sleeve; pull it out further than the sleeve to see it.',
@@ -955,8 +957,10 @@ function coverCandidates(m,cl){
   if(!out.length&&cl.length){const b=cl.reduce((x,y)=>baseScore(y)>baseScore(x)?y:x),pop=b.lab[0]>.6?'#1b1b1b':'#f2efe6';out.push({score:0,cols:[b.hex,pop,b.lab[0]>.6?'#f2efe6':'#1b1b1b'].slice(0,n)})}
   return out.sort((x,y)=>y.score-x.score)}
 const coverTurn=[0,1];
+// Without a pattern only the base comes from the cover (ranked like a tonal pattern's single colour).
+const BASE_ONLY={palette:{mode:'tonal'}};
 // keep: which of base / style / color / alt the caller has fixed and must not be overwritten.
-function applyCover(i,{advance=true,keep={}}={}){const s=i===1?'':'2',m=maskById(state['pattern'+s]);if(!m)return false;
+function applyCover(i,{advance=true,keep={}}={}){const s=i===1?'':'2',m=maskById(state['pattern'+s])??BASE_ONLY;
   const list=coverCandidates(m,coverClusters());if(!list.length)return false;
   const[base,color,alt]=list[coverTurn[i-1]%list.length].cols;if(advance)coverTurn[i-1]++;
   if(!keep.base)state[`vinyl${s}Color`]=base;
@@ -1775,14 +1779,20 @@ seg('jacket-type','jacketType',()=>{applyJacketType();
   if(!isGate()&&state.animPreset==='gatefold'){state.animPreset='turntable';for(const b of $('anim-preset').children)b.setAttribute('aria-pressed',b.dataset.v==='turntable');if(previewActive())fitPreview()}
   syncAnimPanel()});
 seg('lp-count','lpCount',applyLpCount);seg('lp-layout','lpLayout',applyJacketType);
-seg('vinyl-style','vinyl',()=>{applyVinyl();syncPatterns()});
-seg('vinyl2-style','vinyl2',()=>{applyVinyl();syncPatterns()});
+// Black -> colour takes the cover's colours unless this disc's colour was already set (by hand, by the
+// eyedropper or by a spec); a cover that gives nothing keeps the defaults. Disc 2 starts one candidate on.
+const colorSet=[false,false];
+function coverOnColour(i){const s=i===1?'':'2';if(state['vinyl'+s]!=='color'||colorSet[i-1])return;colorSet[i-1]=true;
+  try{applyCover(i)}catch(e){}
+  syncUI()}
+seg('vinyl-style','vinyl',()=>{coverOnColour(1);applyVinyl();syncPatterns()});
+seg('vinyl2-style','vinyl2',()=>{coverOnColour(2);applyVinyl();syncPatterns()});
 seg('sticker-shape','stickerShape',()=>{buildSticker();stickerTexture();pose()});
 seg('bg-mode','bg',()=>{applyBg();syncAnimPanel()});
 seg('export-scale','scale');
 // Picking a colour while on black switches that disc to coloured vinyl.
 for(const [cid,sid,key] of[['vinyl-color','vinyl-style','vinyl'],['vinyl2-color','vinyl2-style','vinyl2']])
-  $(cid).addEventListener('input',e=>{state[key+'Color']=e.target.value;if(state[key]==='black'){state[key]='color';for(const x of $(sid).children)x.setAttribute('aria-pressed',x.dataset.v==='color')}applyVinyl()});
+  $(cid).addEventListener('input',e=>{state[key+'Color']=e.target.value;colorSet[key==='vinyl'?0:1]=true;if(state[key]==='black'){state[key]='color';for(const x of $(sid).children)x.setAttribute('aria-pressed',x.dataset.v==='color')}applyVinyl()});
 $('bg-color').addEventListener('input',e=>{state.bgColor=e.target.value;state.bg='color';for(const x of $('bg-mode').children)x.setAttribute('aria-pressed',x.dataset.v==='color');applyBg()});
 $('sleeve-color').addEventListener('input',e=>{state.sleeveColor=e.target.value;sleeveMat.color.set(tex.sleeve?'#ffffff':e.target.value)});
 field('vinyl-color','vinylColor');field('vinyl2-color','vinyl2Color');field('bg-color','bgColor');field('sleeve-color','sleeveColor');
@@ -1827,21 +1837,29 @@ function setLook(i,look){const s=i===1?'':'2';
   const last=lastPattern[i-1];
   if(maskById(last)&&lastBase[i-1]===state[`vinyl${s}Color`]){state['pattern'+s]=last;applyVinyl();syncUI()}
   else pickPattern(i,maskById(last)?last:maskById('splatter-07')?'splatter-07':MASKS[0].id)}
+// Shuffle: another pattern with the same palette mode, so base, pattern colours, transparency, angle and
+// contrast all still apply as they are. Only a split that gains a third region gets that colour derived.
+function shufflePattern(i){const s=i===1?'':'2',m=maskById(state['pattern'+s]);if(!m)return;
+  const pool=MASKS.filter(x=>x.palette.mode===m.palette.mode&&x.id!==m.id);if(!pool.length)return;
+  const next=pool[Math.floor(Math.random()*pool.length)];
+  if(next.palette.mode==='regions'&&next.accents>m.accents)state[`pattern${s}Alt`]=patternColorsFor(next,state[`vinyl${s}Color`])[1];
+  state['pattern'+s]=next.id;applyVinyl();syncUI()}
 // Sliders and colour pickers fire on every move; recomposite at most once per frame.
 let vinylQueued=false;
 function queueVinyl(){if(vinylQueued)return;vinylQueued=true;requestAnimationFrame(()=>{vinylQueued=false;applyVinyl()})}
 for(const i of[1,2]){const s=i===1?'':'2';buildPicker(s);
   $(`pattern${s}-pick`).addEventListener('click',e=>{const b=e.target.closest('button');if(b)pickPattern(i,b.dataset.id)});
-  for(const [id,key] of[[`pattern${s}-color`,`pattern${s}Color`],[`pattern${s}-alt`,`pattern${s}Alt`]]){$(id).addEventListener('input',e=>{state[key]=e.target.value;queueVinyl()});field(id,key)}
+  for(const [id,key] of[[`pattern${s}-color`,`pattern${s}Color`],[`pattern${s}-alt`,`pattern${s}Alt`]]){$(id).addEventListener('input',e=>{state[key]=e.target.value;colorSet[i-1]=true;queueVinyl()});field(id,key)}
   $(`vinyl${s}-look`).addEventListener('click',e=>{const b=e.target.closest('button');if(b)setLook(i,b.dataset.v)});
   slider(`vinyl${s}-clear`,`vinyl${s}Clear`,'pct',queueVinyl);
   slider(`pattern${s}-contrast`,`pattern${s}Contrast`,'pct',queueVinyl);
   slider(`pattern${s}-rot`,`pattern${s}Rot`,'deg',queueVinyl);
-  $(`pattern${s}-cover`).addEventListener('click',()=>{if(applyCover(i)){applyVinyl();syncUI()}else alertNote(tr('封面颜色太单一，没取到可用的配色。','The cover has too few distinct colours to suggest a palette.'))})}
+  $(`pattern${s}-shuffle`).addEventListener('click',()=>shufflePattern(i));
+  $(`pattern${s}-cover`).addEventListener('click',()=>{if(applyCover(i)){colorSet[i-1]=true;applyVinyl();syncUI()}else alertNote(tr('封面颜色太单一，没取到可用的配色。','The cover has too few distinct colours to suggest a palette.'))})}
 toggle('sleeve-on','sleeveOn');
 // 2LP: disc 2 follows disc 1 until unlinked; unlinking starts it from disc 1's current look.
 $('vinyl-same').addEventListener('change',e=>{state.vinylSame=e.target.checked;
-  if(!state.vinylSame)for(const k of STYLE_KEYS)state[k.replace('#','2')]=state[k.replace('#','')];
+  if(!state.vinylSame){for(const k of STYLE_KEYS)state[k.replace('#','2')]=state[k.replace('#','')];colorSet[1]=colorSet[0]}
   applyVinyl();syncUI()});
 toggle('wrap-on','wrapOn','wrap-sub');
 toggle('obi-on','obiOn','obi-sub');
@@ -2080,6 +2098,8 @@ async function applySpec(spec){
   // Same conveniences as the panel: a new place brings its own default position, a new finish its default ink.
   if(has('number.place')){const d=NUM_DEFAULTS[state.numPlace];if(!has('number.x'))state.numX=d.x;if(!has('number.y'))state.numY=d.y;if(!has('number.size'))state.numSize=d.size;if(!has('number.rotation'))state.numRot=d.rot}
   if(has('number.finish')&&!has('number.color'))state.numColor=NUM_INK[state.numFinish];
+  // A disc whose spec gives a colour keeps it when the panel later switches black -> colour.
+  for(const i of[1,2])colorSet[i-1]=['color','pattern.color','pattern.color2','pattern.fromCover'].some(k=>has(`records.disc${i}.${k}`));
   // Older specs set disc 2's vinyl without the switch: writing its style fields means "set separately".
   const disc2Style=['vinyl','color','transparency','pattern'].filter(k=>has('records.disc2.'+k));
   if(disc2Style.length){if(!has('records.disc2.sameAsDisc1'))state.vinylSame=false;
