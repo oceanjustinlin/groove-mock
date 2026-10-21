@@ -1247,6 +1247,48 @@
           0.0
         ]
       }
+    },
+    {
+      "id": "tiedye-01",
+      "family": "tiedye",
+      "role": "layout",
+      "file": "tiedye-01.webp",
+      "thumb": "thumbs/tiedye-01.jpg",
+      "size": 1024,
+      "accents": 2,
+      "base": "#4b2953",
+      "colors": [
+        "#009faf",
+        "#db6414"
+      ],
+      "palette": {
+        "mode": "regions",
+        "derive": []
+      },
+      "labelRadius": null,
+      "source": {
+        "kind": "unlicensed-reference",
+        "master": "output/texture-gen/library/tiedye-01",
+        "file": [
+          "layer1.png",
+          "layer2.png"
+        ],
+        "operation": "photo variant + colour extraction",
+        "date": "2026-10-22",
+        "reference": "https://www.pinterest.com/pin/545709679838758868/",
+        "referenceSha256": "ce340b544419a58b71c6c93c5891efea4b11ab4f6c1b2f3e41679d25010a5561",
+        "generatedSha256": "56b892877f4582a1845fe4ea58f36157ed17c792325be880710fcf59af00b2fa",
+        "prompt": "附图是一张彩胶唱片照片。\n\n请生成一张新的产品照片：和附图同一批次压出来的另一张唱片。材料、颜色和压片工艺完全相同，纹路的样子和附图一致，只是具体排布不同。\n\n拍摄要求：\n- 严格正俯拍，相机正对中心孔，无透视，唱片是正圆，居中，直径约占画面边长的 92%。\n- 背景是均匀的纯中灰色。\n- 光线均匀漫射，没有高光、反光条和暗角；看不到沟槽。\n- 中心标签是完全空白的浅色哑光纸，没有文字或图案。\n- 没有手、封套、道具、文字或水印。"
+      },
+      "status": "draft",
+      "bake": {
+        "crop": 1.0,
+        "floor": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
     }
   ]
 }

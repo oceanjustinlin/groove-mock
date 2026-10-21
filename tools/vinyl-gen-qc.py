@@ -183,7 +183,7 @@ def tile(img, size, caption):
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('folder', type=Path)
-    ap.add_argument('--palette', choices=['tonal', 'accent'], required=True)
+    ap.add_argument('--palette', choices=['tonal', 'accent', 'regions'], required=True)
     ap.add_argument('--role', choices=['layout', 'effect'], default='effect')
     ap.add_argument('--base', help='default base colour (default: from extract.json)')
     ap.add_argument('--color', help='default colour per layer, comma-separated (default: from extract.json)')
@@ -259,7 +259,7 @@ def main():
             pal = [base, *colors]
         else:
             rest = baker.apply_params(args.palette, b, col, entry['palette']['derive'])
-            pal = [b, *rest] if args.palette == 'tonal' else [b, col, *rest]
+            pal = [b, *rest] if args.palette == 'tonal' else [b, col, *colors[1:]] if args.palette == 'regions' else [b, col, *rest]
         tints.append(baker.tint(baked, pal))
     S = 300
     tiles = [tile(disc_of(Image.open(ref_path)), S, 'reference (photo)'),
@@ -272,7 +272,7 @@ def main():
     # The page re-derives the pattern colours from the base; if that cannot reproduce the default palette (e.g. a
     # tonal near-black accent on a dark base sinks below the floor and flips light), the disc will not look like this.
     mode, params = entry['palette']['mode'], entry['palette']['derive']
-    want = entry['colors'][1:] if mode == 'accent' else entry['colors']
+    want = entry['colors'][1:] if mode == 'accent' else [] if mode == 'regions' else entry['colors']
     got = baker.apply_params(mode, entry['base'], entry['colors'][0], params)
     err = max((abs(int(x[i:i + 2], 16) - int(y[i:i + 2], 16)) for x, y in zip(got, want) for i in (1, 3, 5)), default=0)
     if err > 40:

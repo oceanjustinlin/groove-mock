@@ -153,6 +153,11 @@ CURATED = {
                             'master': 'output/texture-gen/library/ripple-02', 'reference': 'https://www.pinterest.com/pin/388717011610002399/',
                             'referenceSha256': '4bac173d278d3f1010213034294b3bcfc4257f5d478d76ad0b753a1b171c181f',
                             'generatedSha256': '805efa6673cc81446b995906133e3f64184e11267981bc596dc520088f6bb905'}},
+    'tiedye-01': {'role': 'layout', 'palette': 'regions', 'layers': ['layer1.png', 'layer2.png'], 'base': '#4b2953', 'colors': ['#009faf', '#db6414'],
+                 'source': {'kind': 'unlicensed-reference', 'operation': 'photo variant + colour extraction', 'date': '2026-10-22',
+                            'master': 'output/texture-gen/library/tiedye-01', 'reference': 'https://www.pinterest.com/pin/545709679838758868/',
+                            'referenceSha256': 'ce340b544419a58b71c6c93c5891efea4b11ab4f6c1b2f3e41679d25010a5561',
+                            'generatedSha256': '56b892877f4582a1845fe4ea58f36157ed17c792325be880710fcf59af00b2fa'}},
 }
 
 # meta.disc_frac is the disc diameter as a fraction of the master's width. The masters extend the
@@ -201,6 +206,8 @@ GREY = 0.02  # OKLab chroma below which a colour has no usable hue
 
 def derive_params(mode, base, colors):
     """Relation of each derived accent to the user's colours, from the mask's default palette."""
+    if mode == 'regions':
+        return []  # every region colour is picked by the user; nothing is derived
     B = hex_to_oklab(base)
     if mode == 'accent':
         # Accent k = A + t (B - A) + dL: t is its place on the pattern colour (0) -> base (1) line, which
@@ -225,6 +232,8 @@ def derive_params(mode, base, colors):
 
 def apply_params(mode, base, color, params, contrast=1.0):
     """Python twin of derivePattern() in index.html; used to report how faithful the derivation is."""
+    if mode == 'regions':
+        return []
     B = hex_to_oklab(base)
     if mode == 'accent':
         A = hex_to_oklab(color)
@@ -445,7 +454,7 @@ def main():
         e = entries[mask_id]
         # Re-derive the default palette from the user-facing colours and report the worst channel error.
         mode, params = e['palette']['mode'], e['palette']['derive']
-        want = e['colors'][1:] if mode == 'accent' else e['colors']
+        want = e['colors'][1:] if mode == 'accent' else [] if mode == 'regions' else e['colors']
         got = apply_params(mode, e['base'], e['colors'][0], params)
         err = max((abs(int(g[i:i + 2], 16) - int(w[i:i + 2], 16)) for g, w in zip(got, want) for i in (1, 3, 5)), default=0)
         print(f'{mask_id}: {e["role"]}/{mode}, {e["accents"]} accent(s), floor {e["bake"]["floor"]}, {e["status"]}, '
