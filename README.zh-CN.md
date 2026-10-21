@@ -137,6 +137,8 @@ node cli/record-mockup.mjs init -o output/spec.json
 4. 用代码排版曲目等文字。
 5. 出图检查，并在 `meta.assets` 里登记每张素材的来源。
 
+Hype sticker 一般不用做图：用 `sticker.template` 选一个内置模板（可选值见 `schema`），`sticker.lines` 写每一行文字，`sticker.color` 选配色。模板里没有的样式，可以写一个 1024 × 1024 的 HTML 页面排版，再用 `node tools/typeset-sticker.mjs sticker.html` 截成 PNG，作为 `images.sticker`。
+
 这条链路不会生成真实发行的封面；生成的配套素材都会标注为示意设计。
 
 ## 浏览器页面与网络依赖

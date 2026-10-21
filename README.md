@@ -131,6 +131,8 @@ Exit codes: `0` done, `1` error, `2` warnings under `--strict`.
 
 When only a front cover is available, [`AGENTS.md`](AGENTS.md) describes how an agent completes the rest. It inventories slots with `slots`, extracts a style card from the cover, generates text-free backgrounds with an image model using [`prompts/image-prompts.md`](prompts/image-prompts.md), typesets text such as tracklists in code, renders, reviews and records every asset's source in `meta.assets`.
 
+Hype stickers rarely need artwork: `sticker.template` picks one of the built-in templates (`schema` lists them), `sticker.lines` sets each line of text and `sticker.color` the colours. For a sticker the templates don't cover, lay it out as a 1024 × 1024 HTML page and turn it into a PNG for `images.sticker` with `node tools/typeset-sticker.mjs sticker.html`.
+
 Record Mockup never generates a real release's front cover, and generated companion artwork is labelled as illustrative.
 
 ## Browser editor and network use
