@@ -328,14 +328,15 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
                 <div class="picker" id="pattern-pick" role="radiogroup" aria-label="第 1 张纹路" data-look="pattern"></div>
                 <p class="note" id="pattern-hint" data-look="pattern"></p>
                 <div class="row"><span class="lbl" id="vinyl-color-lbl">颜色</span><span class="row"><button class="chip icon" id="pattern-cover" type="button" title="从封面取色" aria-label="从封面取色"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M11.2 1.6a1.9 1.9 0 0 1 2.7 2.7l-1.6 1.6.7.7-1 1-.7-.7-5.6 5.6H3.6l-.9.9-1-1 .9-.9v-2.1l5.6-5.6-.7-.7 1-1 .7.7zM8.5 6.1 4.8 9.8v1.4h1.4l3.7-3.7z"/></svg></button><input type="color" id="vinyl-color" value="#c8392b" aria-label="第 1 张胶色"></span></div>
+                <div class="slider"><label for="vinyl-clear" id="vinyl-clear-lbl">透明度</label><input type="range" id="vinyl-clear" min="0" max="80" value="0"><output id="vinyl-clear-v">0%</output></div>
                 <div class="row" id="pattern-colors" data-look="pattern"><span class="lbl" id="pattern-colors-lbl">纹路色</span>
                   <div class="row" style="justify-content:flex-end">
                     <input type="color" id="pattern-color" aria-label="第 1 张纹路色">
                     <input type="color" id="pattern-alt" aria-label="第 1 张第三块颜色">
                   </div>
                 </div>
+                <div class="slider" id="pattern-clear-row" data-look="pattern"><label for="pattern-clear">纹路透明度</label><input type="range" id="pattern-clear" min="0" max="80" value="0"><output id="pattern-clear-v">0%</output></div>
                 <div class="slider" id="pattern-contrast-row" data-look="pattern"><label for="pattern-contrast">反差</label><input type="range" id="pattern-contrast" min="0" max="200" value="100"><output id="pattern-contrast-v">100%</output></div>
-                <div class="slider"><label for="vinyl-clear">透明度</label><input type="range" id="vinyl-clear" min="0" max="80" value="0"><output id="vinyl-clear-v">0%</output></div>
                 <div class="slider" data-look="pattern"><label for="pattern-rot">纹路角度</label><input type="range" id="pattern-rot" min="-180" max="180" value="0"><output id="pattern-rot-v">0°</output></div>
               </div>
               <div class="slider"><label for="sleeve-x">内袋抽出</label><input type="range" id="sleeve-x" min="0" max="100" value="35"><output id="sleeve-x-v">35%</output></div>
@@ -362,14 +363,15 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
                   <div class="picker" id="pattern2-pick" role="radiogroup" aria-label="第 2 张纹路" data-look="pattern"></div>
                   <p class="note" id="pattern2-hint" data-look="pattern"></p>
                   <div class="row"><span class="lbl" id="vinyl2-color-lbl">颜色</span><span class="row"><button class="chip icon" id="pattern2-cover" type="button" title="从封面取色" aria-label="从封面取色"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M11.2 1.6a1.9 1.9 0 0 1 2.7 2.7l-1.6 1.6.7.7-1 1-.7-.7-5.6 5.6H3.6l-.9.9-1-1 .9-.9v-2.1l5.6-5.6-.7-.7 1-1 .7.7zM8.5 6.1 4.8 9.8v1.4h1.4l3.7-3.7z"/></svg></button><input type="color" id="vinyl2-color" value="#d9a441" aria-label="第 2 张胶色"></span></div>
+                  <div class="slider"><label for="vinyl2-clear" id="vinyl2-clear-lbl">透明度</label><input type="range" id="vinyl2-clear" min="0" max="80" value="0"><output id="vinyl2-clear-v">0%</output></div>
                   <div class="row" id="pattern2-colors" data-look="pattern"><span class="lbl" id="pattern2-colors-lbl">纹路色</span>
                     <div class="row" style="justify-content:flex-end">
                       <input type="color" id="pattern2-color" aria-label="第 2 张纹路色">
                       <input type="color" id="pattern2-alt" aria-label="第 2 张第三块颜色">
                     </div>
                   </div>
+                  <div class="slider" id="pattern2-clear-row" data-look="pattern"><label for="pattern2-clear">纹路透明度</label><input type="range" id="pattern2-clear" min="0" max="80" value="0"><output id="pattern2-clear-v">0%</output></div>
                   <div class="slider" id="pattern2-contrast-row" data-look="pattern"><label for="pattern2-contrast">反差</label><input type="range" id="pattern2-contrast" min="0" max="200" value="100"><output id="pattern2-contrast-v">100%</output></div>
-                  <div class="slider"><label for="vinyl2-clear">透明度</label><input type="range" id="vinyl2-clear" min="0" max="80" value="0"><output id="vinyl2-clear-v">0%</output></div>
                   <div class="slider" data-look="pattern"><label for="pattern2-rot">纹路角度</label><input type="range" id="pattern2-rot" min="-180" max="180" value="0"><output id="pattern2-rot-v">0°</output></div>
                 </div>
               </div>
@@ -578,7 +580,7 @@ const EN={
   '第 2 张':'Disc 2','C / D 面 · 放在第 1 张后面':'Sides C / D · behind disc 1','上传 C 面标签':'Upload side C label','上传 D 面标签':'Upload side D label',
   'C 面标签':'Side C label','D 面标签':'Side D label','第 2 张胶色':'Disc 2 vinyl colour',
   '纹路':'Pattern','第 1 张纹路':'Disc 1 pattern','第 2 张纹路':'Disc 2 pattern','纹路色':'Pattern colour','第 1 张纹路色':'Disc 1 pattern colour','第 2 张纹路色':'Disc 2 pattern colour',
-  '第 1 张第三块颜色':'Disc 1 third region colour','胶色和纹路与第 1 张相同':'Same vinyl and pattern as disc 1','样式':'Style','纯色':'Solid','颜色':'Colour','透明度':'Transparency','第 2 张第三块颜色':'Disc 2 third region colour','反差':'Contrast','纹路角度':'Pattern angle','从封面取色':'Colours from cover','换一款同类纹路，颜色不变':'Shuffle: another pattern of the same kind, same colours',
+  '第 1 张第三块颜色':'Disc 1 third region colour','胶色和纹路与第 1 张相同':'Same vinyl and pattern as disc 1','样式':'Style','纯色':'Solid','颜色':'Colour','透明度':'Transparency','纹路透明度':'Pattern transparency','第 2 张第三块颜色':'Disc 2 third region colour','反差':'Contrast','纹路角度':'Pattern angle','从封面取色':'Colours from cover','换一款同类纹路，颜色不变':'Shuffle: another pattern of the same kind, same colours',
   '内袋抽出：内袋连同唱片一起从封套开口拉出。唱片抽出：唱片再从内袋里往外拉。':'Sleeve out pulls the inner sleeve, record inside, out of the jacket. Record out then slides the record out of the sleeve.',
   'Insert 插页':'Insert','304 × 304 mm · 双面':'304 × 304 mm · double-sided','放入插页':'Include insert','上传插页正面':'Upload insert front','上传插页背面':'Upload insert back',
   '抽出':'Out','插页在内袋后面，抽得比内袋多才看得到。':'The insert sits behind the inner sleeve; pull it out further than the sleeve to see it.',
@@ -614,8 +616,8 @@ translateStatic();
 const state = {
   finish:'satin', sleeveOn:false, sleeveColor:'#f3f1ea', sleeveX:.35, recordX:.40, recordRot:0,
   vinyl:'black', vinylColor:'#c8392b', vinyl2:'black', vinyl2Color:'#d9a441', wrapOn:true, wrinkle:1, gloss:1,
-  pattern:'none', patternColor:'#1b1b1b', patternAlt:'#2a6f4e', patternContrast:1, patternRot:0, patternFromCover:false,
-  pattern2:'none', pattern2Color:'#1b1b1b', pattern2Alt:'#2a6f4e', pattern2Contrast:1, pattern2Rot:0, pattern2FromCover:false, vinylSame:true,
+  pattern:'none', patternColor:'#1b1b1b', patternAlt:'#2a6f4e', patternContrast:1, patternClear:0, patternRot:0, patternFromCover:false,
+  pattern2:'none', pattern2Color:'#1b1b1b', pattern2Alt:'#2a6f4e', pattern2Contrast:1, pattern2Clear:0, pattern2Rot:0, pattern2FromCover:false, vinylSame:true,
   vinylClear:0, vinyl2Clear:0, tracks:6, tracks2:6,
   stickerOn:true, stickerShape:'circle', stickerSize:7.6, stickerX:8.8, stickerY:9.2, stickerRot:0,
   numOn:true, numCur:123, numTotal:1000, numPrefix:'No.', numFormat:'slash', numFont:'auto', numPlace:'back', numFinish:'stamp', numColor:'#25336f',
@@ -971,8 +973,10 @@ function applyCover(i,{advance=true,keep={}}={}){const s=i===1?'':'2',m=maskById
 const VINYL_BLACK='#0b0b0c';
 // Composite base + accents in sRGB bytes (what the bake preview shows). Transparent vinyl (clear > 0) also
 // gets an alpha map: the base is see-through and accents turn opaque where they cover it, like splatter
-// pressed into clear vinyl.
-function compositePattern(img,base,colors,rotDeg,clear=0,N=img.width){
+// pressed into clear vinyl. pclear makes the accents themselves translucent: their coverage shrinks, so on an
+// opaque base they fade into it, and on a clear base they stay see-through too (the colour is then laid over
+// the base by its share of the alpha, so a faint base does not wash the pattern out).
+function compositePattern(img,base,colors,rotDeg,clear=0,pclear=0,N=img.width){
   const c=canvas(N,N),g=c.getContext('2d',{willReadFrequently:true});
   g.translate(N/2,N/2);g.rotate(-THREE.MathUtils.degToRad(rotDeg));g.drawImage(img,-N/2,-N/2,N,N);
   const d=g.getImageData(0,0,N,N),px=d.data;
@@ -980,32 +984,35 @@ function compositePattern(img,base,colors,rotDeg,clear=0,N=img.width){
   const toBytes=h=>{const v=new THREE.Color(h).convertLinearToSRGB();return[v.r,v.g,v.b].map(x=>Math.round(x*255))};
   const b=toBytes(base),acc=colors.map(toBytes),ac=clear>0?canvas(N,N):null,ad=ac?.getContext('2d').createImageData(N,N);
   for(let i=0;i<px.length;i+=4){let r=b[0],gg=b[1],bb=b[2],cover=0;
-    for(let k=0;k<acc.length;k++){const a=px[i+k]/255;if(!a)continue;r+=(acc[k][0]-r)*a;gg+=(acc[k][1]-gg)*a;bb+=(acc[k][2]-bb)*a;cover=Math.max(cover,a)}
+    for(let k=0;k<acc.length;k++){const a=px[i+k]/255*(1-pclear);if(!a)continue;r+=(acc[k][0]-r)*a;gg+=(acc[k][1]-gg)*a;bb+=(acc[k][2]-bb)*a;cover=Math.max(cover,a)}
+    const alpha=1-clear*(1-cover);
+    if(pclear&&ad){r=b[0]+(r-b[0])/alpha;gg=b[1]+(gg-b[1])/alpha;bb=b[2]+(bb-b[2])/alpha}
     px[i]=r;px[i+1]=gg;px[i+2]=bb;px[i+3]=255;
-    if(ad){const v=(1-clear*(1-cover))*255;ad.data[i]=ad.data[i+1]=ad.data[i+2]=v;ad.data[i+3]=255}}
+    if(ad){const v=alpha*255;ad.data[i]=ad.data[i+1]=ad.data[i+2]=v;ad.data[i+3]=255}}
   g.setTransform(1,0,0,1,0,0);g.putImageData(d,0,0);if(ad)ac.getContext('2d').putImageData(ad,0,0);
   return{color:c,alpha:ac}}
-function patternTextures(img,base,colors,rotDeg,clear){
-  const{color,alpha}=compositePattern(img,base,colors,rotDeg,clear);
+function patternTextures(img,base,colors,rotDeg,clear,pclear){
+  const{color,alpha}=compositePattern(img,base,colors,rotDeg,clear,pclear);
   let at=null;if(alpha){at=new THREE.CanvasTexture(alpha);at.colorSpace=THREE.NoColorSpace;at.anisotropy=maxAniso}
   return{map:colorTex(color),alpha:at}}
 const patternToken=[0,0];
 // Which disc's vinyl/pattern settings a disc uses: a 2LP shares disc 1's until "same as disc 1" is turned off.
 // The keys differ only by this suffix: vinyl/vinyl2, vinylColor/vinyl2Color, pattern/pattern2, ...
 const styleSfx=i=>i===2&&!state.vinylSame?'2':'';
-const STYLE_KEYS=['vinyl#','vinyl#Color','vinyl#Clear','pattern#','pattern#Color','pattern#Alt','pattern#Contrast','pattern#Rot'];
+const STYLE_KEYS=['vinyl#','vinyl#Color','vinyl#Clear','pattern#','pattern#Color','pattern#Alt','pattern#Contrast','pattern#Clear','pattern#Rot'];
 // A disc's look: black is plain black (no pattern, opaque); colour is a solid colour or a pattern on that
-// colour as its base, either one optionally see-through.
-function discLook(i){const s=styleSfx(i),black=state['vinyl'+s]==='black';
-  return{s,black,base:black?VINYL_BLACK:state[`vinyl${s}Color`],clear:black?0:state[`vinyl${s}Clear`],mask:black?null:maskById(state['pattern'+s])}}
+// colour as its base, either one optionally see-through. Only main + accent patterns have a pattern
+// transparency (pclear): split regions and tonal shades are all part of the base.
+function discLook(i){const s=styleSfx(i),black=state['vinyl'+s]==='black',mask=black?null:maskById(state['pattern'+s]);
+  return{s,black,base:black?VINYL_BLACK:state[`vinyl${s}Color`],clear:black?0:state[`vinyl${s}Clear`],mask,pclear:mask?.palette.mode==='accent'?state[`pattern${s}Clear`]:0}}
 async function applyPatternTo(i,mats){
-  const{s,base,clear,mask:m}=discLook(i),token=++patternToken[i-1];
+  const{s,base,clear,pclear,mask:m}=discLook(i),token=++patternToken[i-1];
   const drop=()=>{for(const t of[mats.face.map,mats.face.alphaMap])t?.dispose();mats.face.map=mats.face.alphaMap=null;mats.face.needsUpdate=true};
   // Until the mask lands (or if it never does) the face keeps the plain colour and opacity set by applyVinylTo.
   if(!m){drop();return}
   const img=await loadMask(m.id);if(token!==patternToken[i-1])return;
   const colors=derivePattern(m,base,state[`pattern${s}Color`],state[`pattern${s}Alt`],state[`pattern${s}Contrast`]);
-  const t=patternTextures(img,base,colors,state[`pattern${s}Rot`],clear);
+  const t=patternTextures(img,base,colors,state[`pattern${s}Rot`],clear,pclear);
   drop();mats.face.map=t.map;mats.face.alphaMap=t.alpha;mats.face.color.set(0xffffff);if(t.alpha)mats.face.opacity=1;mats.face.needsUpdate=true}
 function applyVinylTo(i,mats){
   const{black,base,clear,mask}=discLook(i),see=clear>0;
@@ -1810,7 +1817,7 @@ const MODE_NAME={regions:['分色','Split'],accent:['主次','Main + accent'],to
 const patternLabel=m=>m?`${tr(...(FAMILY[m.family]??[m.family,m.family]))} · ${m.id} · ${tr(...MODE_NAME[m.palette.mode])}`:tr('纯色','Solid');
 const splitThumbs=new Map();
 function thumbUrl(m){if(m.thumb)return'vinyl-masks/'+m.thumb;
-  if(!splitThumbs.has(m.id))splitThumbs.set(m.id,compositePattern(splitMask(m.id,160),m.base,derivePattern(m,m.base,m.colors[0],m.colors[1],1),0,false).color.toDataURL('image/jpeg',.82));
+  if(!splitThumbs.has(m.id))splitThumbs.set(m.id,compositePattern(splitMask(m.id,160),m.base,derivePattern(m,m.base,m.colors[0],m.colors[1],1),0).color.toDataURL('image/jpeg',.82));
   return splitThumbs.get(m.id)}
 function buildPicker(s){const root=$(`pattern${s}-pick`);root.textContent='';
   for(const m of MASKS){const b=document.createElement('button');b.type='button';b.setAttribute('role','radio');b.dataset.id=m.id;
@@ -1827,10 +1834,12 @@ function syncPatterns(){for(const i of[1,2]){const s=i===1?'':'2',black=state['v
   for(const b of $(`vinyl${s}-look`).children)b.setAttribute('aria-pressed',String(b.dataset.v===(m?'pattern':'solid')));
   for(const el of $(`vinyl${s}-colored`).querySelectorAll('[data-look="pattern"]'))el.hidden=!m;
   $(`vinyl${s}-color-lbl`).textContent=!m?tr('颜色','Colour'):mode==='regions'?tr('第一块','First region'):tr('底色','Base');
+  // Two transparencies only when there are two layers to tell apart: base and pattern.
+  $(`vinyl${s}-clear-lbl`).textContent=mode==='accent'?tr('底色透明度','Base transparency'):tr('透明度','Transparency');
   for(const b of $(`pattern${s}-pick`).children)b.setAttribute('aria-checked',String(b.dataset.id===m?.id));
   if(!m)continue;
   $(`pattern${s}-name`).textContent=patternLabel(m);
-  $(`pattern${s}-colors`).hidden=mode==='tonal';$(`pattern${s}-alt`).hidden=!(mode==='regions'&&m.accents===2);$(`pattern${s}-contrast-row`).hidden=mode!=='tonal';
+  $(`pattern${s}-colors`).hidden=mode==='tonal';$(`pattern${s}-alt`).hidden=!(mode==='regions'&&m.accents===2);$(`pattern${s}-contrast-row`).hidden=mode!=='tonal';$(`pattern${s}-clear-row`).hidden=mode!=='accent';
   $(`pattern${s}-colors-lbl`).textContent=mode==='regions'?tr('其余几块','Other regions'):tr('纹路色','Pattern colour');
   $(`pattern${s}-hint`).textContent=mode==='regions'?tr('第一块用上面的底色，下面选其余几块。','The first region uses the base colour; pick the others below.')
     :mode==='accent'?tr('选好底色和纹路色，其余色层自动搭配。','Pick the base and pattern colours; the other layers follow them.')
@@ -1861,6 +1870,7 @@ for(const i of[1,2]){const s=i===1?'':'2';buildPicker(s);
   $(`vinyl${s}-look`).addEventListener('click',e=>{const b=e.target.closest('button');if(b)setLook(i,b.dataset.v)});
   slider(`vinyl${s}-clear`,`vinyl${s}Clear`,'pct',queueVinyl);
   slider(`pattern${s}-contrast`,`pattern${s}Contrast`,'pct',queueVinyl);
+  slider(`pattern${s}-clear`,`pattern${s}Clear`,'pct',queueVinyl);
   slider(`pattern${s}-rot`,`pattern${s}Rot`,'deg',queueVinyl);
   $(`pattern${s}-shuffle`).addEventListener('click',()=>shufflePattern(i));
   $(`pattern${s}-cover`).addEventListener('click',()=>{if(applyCover(i)){colorSet[i-1]=true;applyVinyl();syncUI()}else alertNote(tr('封面颜色太单一，没取到可用的配色。','The cover has too few distinct colours to suggest a palette.'))})}
@@ -1957,13 +1967,14 @@ const SPEC_FIELDS=[
   colorF('records.sleeve.color','sleeveColor','内袋纸色，未提供 images.sleeve 时生效'),
   ...[1,2].flatMap(i=>{const s=i===1?'':'2',note=i===2?'（仅 records.count=2 时生效）':'';return[
     enumF(`records.disc${i}.vinyl`,`vinyl${s}`,['black','color'],`第 ${i} 张胶色：black 纯黑胶（不叠纹路、不透明）；color 彩胶，用 color 和 transparency，可再加 pattern。旧值 clear 仍可用，等于 color + transparency 38${note}`),
-    numF(`records.disc${i}.transparency`,`vinyl${s}Clear`,0,80,.01,`第 ${i} 张彩胶的透明度（%），0 为不透明。有纹路时只有底色变透明，纹路本身不透明；black 不使用${note}`),
+    numF(`records.disc${i}.transparency`,`vinyl${s}Clear`,0,80,.01,`第 ${i} 张彩胶的透明度（%），0 为不透明。有纹路时是底色的透明度：主次类纹路的透明度另用 pattern.transparency；分色类只有第一块变透明，同色系的深浅纹路不透明；black 不使用${note}`),
     colorF(`records.disc${i}.color`,`vinyl${s}Color`,`第 ${i} 张彩胶颜色；有纹路时是底色（分色类的第一块）${note}`),
     numF(`records.disc${i}.sleeveOut`,`sleeve${s}X`,0,100,.01,`第 ${i} 张内袋连同唱片从封套开口抽出的比例（%）${note}${i===2?'。双开且 records.layout=split 时从左扇的开口抽出：合上时朝右，打开后朝左':''}`),
     numF(`records.disc${i}.recordOut`,`record${s}X`,0,100,.01,`第 ${i} 张唱片再从内袋里抽出的比例（%）${note}`),
     numF(`records.disc${i}.tracks`,`tracks${s}`,1,20,1,`第 ${i} 张每面的音轨数，盘面按等宽分成这么多圈，相邻音轨之间有一道亮环；两面相同${note}`,true),
     enumF(`records.disc${i}.pattern.id`,`pattern${s}`,['none',...MASKS.map(m=>m.id)],`第 ${i} 张彩胶纹路，none 或不写为纯色，只在 vinyl=color 时生效。按配色方式分三类——分色（底色是第一块，pattern.color 第二块，split-tri 再用 pattern.color2 第三块；split-quad 对角同色）：${patternIds('regions')}；主次（底色 + pattern.color，其余色层自动推算）：${patternIds('accent')}；同色系（只用底色，纹路是它的深浅变化，pattern.contrast 调反差）：${patternIds('tonal')}。底色是 color；写了 color 而没写 pattern.color / pattern.color2 时，纹路色按底色推算；color 也没写时，用这款纹路的默认配色${note}`),
     colorF(`records.disc${i}.pattern.color`,`pattern${s}Color`,`第 ${i} 张纹路色：主次类为纹路颜色，分色类为第二块颜色；同色系不使用${note}`),
+    numF(`records.disc${i}.pattern.transparency`,`pattern${s}Clear`,0,80,.01,`第 ${i} 张纹路的透明度（%），默认 0 为不透明；纹路色和由它推算的色层一起变透明。底色不透明时纹路会透出底色、变淡；底色也透明时（transparency）纹路同样透光。仅主次类（${patternIds('accent')}）使用，分色类和同色系忽略并给出警告${note}`),
     colorF(`records.disc${i}.pattern.color2`,`pattern${s}Alt`,`第 ${i} 张分色第三块颜色，仅 split-tri 使用${note}`),
     numF(`records.disc${i}.pattern.contrast`,`pattern${s}Contrast`,0,200,.01,`第 ${i} 张同色系纹路的反差（%），100 为这款纹路的原始深浅差；仅同色系使用${note}`),
     numF(`records.disc${i}.pattern.rotation`,`pattern${s}Rot`,-180,180,1,`第 ${i} 张纹路相对标签的旋转角度（度，逆时针为正）${note}`),
@@ -2038,7 +2049,8 @@ function specFromState(){
   // Plain black has no colour, transparency or pattern; solid colour has no pattern.
   for(const i of[1,2]){const d=s.records[`disc${i}`],sx=i===1?'':'2';if(!('vinyl' in d))continue;
     if(state['vinyl'+sx]==='black')for(const k of['color','transparency','pattern'])delete d[k];
-    else if(!maskById(state['pattern'+sx]))delete d.pattern}
+    else if(!maskById(state['pattern'+sx]))delete d.pattern;
+    else if(maskById(state['pattern'+sx]).palette.mode!=='accent')delete d.pattern.transparency}
   s.camera={view:state.view,zoom:state.camZoom,azimuth:state.camAz,elevation:state.camEl,panX:state.camPanX,panY:state.camPanY};
   s.output={background:state.bg==='transparent'?'transparent':state.bgColor,width:state.outW,height:state.outH};
   s.animation={preset:state.animPreset,duration:state.animDuration,direction:state.animDir,aspect:state.animAspect};
@@ -2122,6 +2134,7 @@ async function applySpec(spec){
       if(!has(`${pre}.color`)&&m.base)state[`vinyl${s}Color`]=m.base}
     if(has(`${pre}.pattern.color`)&&mode==='tonal')warnings.push(`${pre}.pattern.color 无效：${m.id} 是同色系纹路，只用底色 ${pre}.color`);
     if(has(`${pre}.pattern.color2`)&&!tri)warnings.push(`${pre}.pattern.color2 无效：只有 split-tri 使用第三块颜色`);
+    if(has(`${pre}.pattern.transparency`)&&mode!=='accent')warnings.push(`${pre}.pattern.transparency 无效：只有主次类纹路（${patternIds('accent')}）有单独的纹路透明度；${m.id} 是${mode==='regions'?'分色':'同色系'}纹路，透明度只用 ${pre}.transparency`);
     if(has(`${pre}.pattern.contrast`)&&mode!=='tonal')warnings.push(`${pre}.pattern.contrast 无效：只有同色系纹路（${patternIds('tonal')}）使用反差`);
     if(i===2&&state.lpCount!==2&&has(`${pre}.pattern.id`))warnings.push(`${pre}.pattern 仅在 records.count=2 时可见`)}
   const bg=getPath(spec,'output.background');
