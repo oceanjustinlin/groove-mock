@@ -1075,9 +1075,16 @@ const scene=new THREE.Scene();
 // Two environments: a soft room for paper, and a dark studio with bright softbox strips that the
 // film and the vinyl reflect as crisp glare streaks.
 let studioEnv;
-{const pm=new THREE.PMREMGenerator(renderer),room=new RoomEnvironment();scene.environment=pm.fromScene(room,.03).texture;scene.environmentIntensity=.48;room.dispose();
+{const pm=new THREE.PMREMGenerator(renderer),room=new RoomEnvironment();
+  // The lighting rig is the same after a half turn about the vertical axis, so whatever faces the camera from
+  // behind (back cover, side B) is lit like the front. RoomEnvironment has a bright +z panel and a small -z one:
+  // centre the room box and add each wall light's half-turned twin (the ceiling light is its own twin).
+  const walls=room.children.find(o=>o.isMesh&&o.material.side===THREE.BackSide);walls.position.set(0,walls.position.y,0);walls.scale.x=walls.scale.z=34;
+  for(const l of room.children.filter(o=>o.isMesh&&o.material.isMeshBasicMaterial&&(o.position.x||o.position.z))){const t=l.clone();t.position.set(-l.position.x,l.position.y,-l.position.z);room.add(t)}
+  scene.environment=pm.fromScene(room,.03).texture;scene.environmentIntensity=.48;room.dispose();
   const studio=new THREE.Scene(),box=new THREE.Mesh(new THREE.BoxGeometry(200,200,200),new THREE.MeshBasicMaterial({color:0x0c0d0c,side:THREE.BackSide}));studio.add(box);
-  const panel=(w,h,pos,look,power)=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({color:new THREE.Color(1,1,1).multiplyScalar(power),side:THREE.DoubleSide}));m.position.set(...pos);m.lookAt(...look);studio.add(m)};
+  const lamps=new THREE.Group();studio.add(lamps);
+  const panel=(w,h,pos,look,power)=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({color:new THREE.Color(1,1,1).multiplyScalar(power),side:THREE.DoubleSide}));m.position.set(...pos);m.lookAt(...look);lamps.add(m)};
   // Film reflects ~4-8% at normal incidence, so the lamps must be far brighter than 1.0 to read as glare.
   panel(70,26,[-40,60,70],[0,0,0],24);   // key softbox, upper left front
   panel(10,90,[85,10,40],[0,0,0],14);    // tall strip, right
@@ -1085,8 +1092,9 @@ let studioEnv;
   panel(120,20,[0,-30,90],[0,0,0],2);    // low card bounce
   // Diagonal sheets placed where the front face mirrors the default "front" and "quarter" cameras.
   const sheet=(deg,elev,width,power)=>{const a=THREE.MathUtils.degToRad(deg),e=THREE.MathUtils.degToRad(elev),m=new THREE.Mesh(new THREE.PlaneGeometry(width,220),new THREE.MeshBasicMaterial({color:new THREE.Color(1,1,1).multiplyScalar(power),side:THREE.DoubleSide}));
-    m.position.set(100*Math.sin(a),100*Math.sin(e),100*Math.cos(a));m.lookAt(0,0,0);m.rotateZ(.5);studio.add(m)};
+    m.position.set(100*Math.sin(a),100*Math.sin(e),100*Math.cos(a));m.lookAt(0,0,0);m.rotateZ(.5);lamps.add(m)};
   sheet(-7,5,13,3);sheet(19,-2,16,3);
+  const twins=lamps.clone();twins.rotation.y=Math.PI;studio.add(twins);   // side B reflects the same studio as side A
   studioEnv=pm.fromScene(studio,.012).texture;studio.traverse(o=>{o.geometry?.dispose();o.material?.dispose()});pm.dispose()}
 const camera=new THREE.PerspectiveCamera(26,1,1,600);
 const controls=new OrbitControls(camera,renderer.domElement);
@@ -1097,9 +1105,10 @@ const key=new THREE.DirectionalLight(0xfff3e4,1.32);key.position.set(-34,42,52);
 key.shadow.mapSize.set(2048,2048);Object.assign(key.shadow.camera,{left:-50,right:60,top:45,bottom:-45,near:1,far:200});key.shadow.radius=5;key.shadow.bias=-.0004;key.shadow.normalBias=.02;
 scene.add(key);
 const fill=new THREE.DirectionalLight(0xe6edff,.4);fill.position.set(44,12,30);scene.add(fill);
-const rim=new THREE.DirectionalLight(0xffffff,1.1);rim.position.set(12,24,-44);scene.add(rim);
-// The key's mirror image behind the jacket, so a back cover shot is lit like the front one.
-const backKey=new THREE.DirectionalLight(0xfff3e4,1.9);backKey.position.set(34,42,-52);scene.add(backKey);
+const rim=new THREE.DirectionalLight(0xffffff,1.1);rim.position.set(12,40,0);scene.add(rim);   // overhead: top edges only, neither face
+// Key and fill turned half a turn, so a back cover or side B shot is lit like the front one.
+const backKey=new THREE.DirectionalLight(0xfff3e4,1.32);backKey.position.set(34,42,-52);scene.add(backKey);
+const backFill=new THREE.DirectionalLight(0xe6edff,.4);backFill.position.set(-44,12,-30);scene.add(backFill);
 const ground=new THREE.Mesh(new THREE.PlaneGeometry(400,400),new THREE.ShadowMaterial({color:0x1e221f,opacity:.2,depthWrite:false}));
 ground.rotation.x=-Math.PI/2;ground.position.y=GROUND_Y;ground.receiveShadow=true;scene.add(ground);
 
