@@ -4,11 +4,12 @@
   python3 tools/vinyl-gen.py new marble-p132 --ref refs/p132.jpg --url https://www.pinterest.com/pin/... [--accents 2] [--role layout]
   python3 tools/vinyl-gen.py gen marble-p132 [more ids] [-j 2]     # Codex: ref.jpg + prompt.txt -> gen.png
   python3 tools/vinyl-gen.py post marble-p132 [more ids]           # extract, bake into the review library, 3D, review sheet
+  python3 tools/vinyl-gen.py promote marble-p132 marble-02         # accepted: library master + CURATED entry + live bake
 
 Each candidate is a folder under output/texture-gen/masters/<id> (ignored) holding ref.jpg, prompt.txt, job.json and,
 once generated, gen.png. job.json carries what used to be guessed from the id: the reference URL, how many pattern
 colours to unmix, and the role. `gen` skips folders that already have gen.png; move the old one into attempts/ first
-to regenerate. Nothing here touches the live vinyl-masks library: promote accepted masks with bake-vinyl-masks.py.
+to regenerate. Only `promote` touches the live vinyl-masks library, and only after a person has accepted the mask.
 """
 import argparse, json, shutil, subprocess, sys
 from concurrent.futures import ThreadPoolExecutor
@@ -163,6 +164,33 @@ def cmd_post(a):
                           'flags': out['flags'], 'sheet': str(sheet(mid, d, ex, out).relative_to(ROOT))}, ensure_ascii=False))
 
 
+def cmd_promote(a):
+    """Accepted candidate -> library master + CURATED entry in bake-vinyl-masks.py -> baked into vinyl-masks/."""
+    import hashlib
+    d, j = job(a.id)
+    ex = json.loads((d / 'extract.json').read_text())
+    baker = ROOT / 'tools/bake-vinyl-masks.py'
+    text = baker.read_text()
+    if f"\n    '{a.new_id}':" in text:
+        sys.exit(f'{a.new_id} is already in CURATED')
+    lib = G / 'library' / a.new_id
+    lib.mkdir(parents=True, exist_ok=True)
+    for f in [*ex['layers'], 'ref.jpg', 'gen.png', 'prompt.txt', 'extract.json', 'job.json']:
+        shutil.copy(d / f, lib / f)
+    sha = lambda p: hashlib.sha256(p.read_bytes()).hexdigest()
+    entry = (f"    '{a.new_id}': {{'role': '{j.get('role', 'layout')}', 'palette': '{j.get('palette', 'tonal')}', "
+             f"'layers': {ex['layers']!r}, 'base': '{ex['base']}', 'colors': {ex['patterns']!r},\n"
+             f"{' ' * (len(a.new_id) + 8)}'source': {{'kind': '{a.kind}', 'operation': 'photo variant + colour extraction', "
+             f"'date': '{a.date}',\n"
+             f"{' ' * (len(a.new_id) + 19)}'master': 'output/texture-gen/library/{a.new_id}', 'reference': '{j.get('reference')}',\n"
+             f"{' ' * (len(a.new_id) + 19)}'referenceSha256': '{sha(d / 'ref.jpg')}',\n"
+             f"{' ' * (len(a.new_id) + 19)}'generatedSha256': '{sha(d / 'gen.png')}'}}}},\n")
+    start = text.index('CURATED = {')
+    end = text.index('\n}\n', start) + 1
+    baker.write_text(text[:end] + entry + text[end:])
+    print(run(['python3', 'tools/bake-vinyl-masks.py', '--src', str(G / 'library'), a.new_id]).strip())
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest='cmd', required=True)
@@ -178,8 +206,13 @@ def main():
     g.add_argument('-j', type=int, default=1, help='parallel Codex runs (default 1)')
     p = sub.add_parser('post', help='extract, bake for review, render, write the review sheet')
     p.add_argument('ids', nargs='+')
+    pr = sub.add_parser('promote', help='add an accepted candidate to the live library')
+    pr.add_argument('id')
+    pr.add_argument('new_id', help='library id, e.g. marble-02')
+    pr.add_argument('--kind', default='unlicensed-reference', help='source.kind (docs section 3)')
+    pr.add_argument('--date', default=__import__('datetime').date.today().isoformat())
     a = ap.parse_args()
-    {'new': cmd_new, 'gen': cmd_gen, 'post': cmd_post}[a.cmd](a)
+    {'new': cmd_new, 'gen': cmd_gen, 'post': cmd_post, 'promote': cmd_promote}[a.cmd](a)
 
 
 if __name__ == '__main__':

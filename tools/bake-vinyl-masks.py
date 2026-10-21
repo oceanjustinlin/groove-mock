@@ -79,6 +79,11 @@ CURATED = {
                              'master': 'output/texture-gen/library/marble-01', 'reference': 'https://www.pinterest.com/pin/648377677607525707/',
                              'referenceSha256': '9fb279c49e0226f1dbd862e856af6c8e015c0da8e06f472dd235eb2381dc31fa',
                              'generatedSha256': '2972051cf3d632871ba41e36dd4583dce3f48f9855e2e8dbe087fd8da4f8a9d1'}},
+    'marble-02': {'role': 'layout', 'palette': 'tonal', 'layers': ['layer1.png'], 'base': '#bfbfbe', 'colors': ['#4e4d4e'],
+                 'source': {'kind': 'unlicensed-reference', 'operation': 'photo variant + colour extraction', 'date': '2026-10-21',
+                            'master': 'output/texture-gen/library/marble-02', 'reference': 'https://www.pinterest.com/pin/706150416610423251/',
+                            'referenceSha256': 'f3769adad97ac5de717c94bc96a569181d5b0e5240d299d14a29a876368ae054',
+                            'generatedSha256': 'a415441391dd4ac80105ead105da4c20f7d0c5498455db3f1adcc6a61bb3854d'}},
 }
 
 # meta.disc_frac is the disc diameter as a fraction of the master's width. The masters extend the
