@@ -33,7 +33,7 @@ Typical uses: pre-order announcements, store and Bandcamp listings, label catalo
 
 ## Two ways to use it
 
-**Browser editor.** `index.html` is a single-page editor: upload artwork, switch formats, pull records out, orbit the camera and export a PNG, or play an animation on the stage (turntable, swing, record spin, gatefold opening, pull-out) and export it as an MP4 or GIF in 16:9, 1:1 or 9:16. Images are processed locally in the browser and are not uploaded anywhere. Below 860 px wide the editor fits one phone screen, with the settings pages on bottom tabs.
+**Browser editor.** `index.html` is a single-page editor: upload artwork, switch formats, pull records out, orbit the camera and export a PNG, or play an animation on the stage (turntable, swing, record spin, gatefold opening, pull-out) and export it as an MP4 or GIF in 16:9, 1:1 or 9:16. Images are processed locally in the browser and are not uploaded anywhere. The scene, including uploaded artwork and font, is saved in this browser (localStorage for settings, IndexedDB for files) and comes back after a reload; **New** clears it. Below 860 px wide the editor fits one phone screen, with the settings pages on bottom tabs.
 
 **CLI and agents.** `cli/record-mockup.mjs` opens the same page in headless Chrome and drives it through `window.recordMockup`, so the CLI output matches the editor exactly. Every option is a field in a JSON scene spec with a published JSON Schema, which makes the tool easy for AI agents such as Codex or Claude Code to operate: write a spec, render, look at the PNG, adjust, render again.
 

@@ -313,6 +313,7 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
       <button class="chip" data-play-reset hidden>复位</button>
     </div>
     <a class="chip gh" href="https://github.com/oceanjustinlin/record-mockup" target="_blank" rel="noopener" title="源码、命令行和 Agent 用法" aria-label="源码、命令行和 Agent 用法（GitHub）"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
+    <button class="chip" id="new-btn" title="清空当前场景，从默认开始">新建</button>
     <button class="chip" id="lang-btn" lang="en" aria-label="Switch language">EN</button>
     <button class="primary" id="export-btn" data-export-png aria-label="导出 PNG"><svg class="i-export" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5v8M4.5 6.5 8 10l3.5-3.5M2.5 11v3h11v-3"/></svg><span>导出 PNG</span></button>
   </header>
@@ -741,7 +742,8 @@ const EN={
   '图片和视频只在你的浏览器里处理，不会上传。顶栏的导出按钮和 ⌘/Ctrl+E 按这里的设置直接导出 PNG。':'Images and video are processed in your browser and never uploaded. The export button in the top bar and ⌘/Ctrl+E export a PNG with these settings.',
   'PNG 已生成':'PNG ready','导出的模型图':'Exported mockup','如果点"下载"没有反应，请右键（手机长按）图片另存。':'If Download does nothing, right-click (long-press on phones) the image and save it.',
   '下载':'Download','关闭':'Close',
-  '复位':'Reset','动画':'Animation','画幅':'Aspect','格式':'Format','尺寸':'Size','自动':'Auto','导出视频':'Export video','导出':'Export',
+  '复位':'Reset','新建':'New','清空当前场景，从默认开始':'Clear this scene and start from the defaults',
+  '清空当前场景（设置和上传的图片、字体），从默认开始？':'Clear this scene (settings, uploaded images and font) and start from the defaults?','动画':'Animation','画幅':'Aspect','格式':'Format','尺寸':'Size','自动':'Auto','导出视频':'Export video','导出':'Export',
   '如果点"下载"没有反应，请右键（手机长按）视频另存。':'If Download does nothing, right-click (long-press on a phone) the video and save it.','手机上只预览第一帧，以免播放大 GIF 时页面崩溃。点"下载"保存完整 GIF。':'Phones preview only the first frame, since playing a large GIF can crash the page. Press Download to save the full GIF.','动作':'Motion','转台':'Turntable','选择动画':'Choose animation','摆动':'Swing','自转':'Spin','展开':'Open','抽出':'Pull out','方向':'Direction','向左':'Left','向右':'Right','时长':'Duration','摆幅':'Swing angle',
   '尺寸指短边像素，自动时 MP4 为 1080，GIF 为 600。点视角旁的 ▶ 在工作台预览，导出视频用同一段动画。转台会转到背面，没有背面图时用摆动；展开和抽出会停在当前设置的角度和位置，都为 0 时用常见值。':'Size is the short side in pixels; Auto is 1080 for MP4 and 600 for GIF. Press ▶ next to the views to preview on the stage; video export uses the same animation. Turntable shows the back, so use Swing without back artwork. Open and Pull out stop at the angle and positions set in the panel, or typical ones when those are 0.',
   '源码、命令行和 Agent 用法':'Source, CLI and agent usage','源码、命令行和 Agent 用法（GitHub）':'Source, CLI and agent usage (GitHub)'};
@@ -1613,15 +1615,16 @@ for(const slot of['front','back','spine','labelA','labelB','labelC','labelD','st
 // One loader for every artwork slot, shared by the upload tiles and the agent API.
 // slotOrigin remembers who filled each slot, so a library pick leaves the viewer's own uploads alone.
 const slotOrigin={},assetLog={};
-async function setSlotImage(slot,img,thumbUrl,origin='user'){
+async function setSlotImage(slot,img,thumbUrl,origin='user',src){
   if(slot==='sticker'){userSticker.img=img;stickerTexture()}
   else if(slot==='obi'){userObi.img=img;obiTexture()}
   else{const s=SLOTS[slot];setTex(slot,colorTex(fitImage(img,s.w,s.h,{rotateIfWide:s.rotateIfWide})),...s.mats());if(slot==='sleeve')sleeveMat.color.set('#ffffff')}
   thumb(slot,thumbUrl);markFilled(slot);slotOrigin[slot]=origin;if(origin!=='fetched')delete assetLog[slot];
-  if(origin==='fetched'){const el=document.querySelector(`[data-slot="${slot}"] .thumb`),t=document.createElement('span');t.className='tag lib';t.textContent=tr('曲库','Library');el.append(t)}}
+  if(origin==='fetched'){const el=document.querySelector(`[data-slot="${slot}"] .thumb`),t=document.createElement('span');t.className='tag lib';t.textContent=tr('曲库','Library');el.append(t)}
+  saveSlot(slot,img,src)}
 for(const slot of Object.keys(SLOTS)){
   $('up-'+slot).addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;
-    try{await setSlotImage(slot,await createImageBitmap(file),URL.createObjectURL(file))}
+    try{await setSlotImage(slot,await createImageBitmap(file),URL.createObjectURL(file),'user',file)}
     catch(err){alertNote(tr(`没能读取这张图片（${file.name}）。请换成 PNG、JPG 或 WebP 再试。`,`Couldn’t read this image (${file.name}). Try a PNG, JPG or WebP.`))}
     e.target.value='';});
 }
@@ -2276,7 +2279,7 @@ async function setNumberFont(buffer,name){
   const face=new FontFace('GM User Font',buffer);await face.load();
   if(userFontFace)document.fonts.delete(userFontFace);document.fonts.add(face);userFontFace=face;
   const opt=$('num-font-custom');opt.disabled=false;opt.textContent=tr('自定义 · ','Custom · ')+name.replace(/\.[^.]+$/,'').slice(0,16);
-  state.numFont='custom';$('num-font').value='custom'}
+  state.numFont='custom';$('num-font').value='custom';saveFont(buffer,name)}
 $('up-font').addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;
   try{await setNumberFont(await file.arrayBuffer(),file.name);numTexture()}
   catch(err){alertNote(tr(`没能读取这个字体文件（${file.name}）。请换成 TTF、OTF、WOFF 或 WOFF2 再试。`,`Couldn’t read this font file (${file.name}). Try a TTF, OTF, WOFF or WOFF2.`))}
@@ -2575,7 +2578,7 @@ async function applySpec(spec){
   for(const [slot,src] of Object.entries(spec.images||{})){
     if(!(slot in IMAGE_SLOTS))continue;
     if(typeof src!=='string'){warnings.push(`images.${slot} 需要字符串，已忽略`);continue}
-    try{const blob=await (await fetch(src)).blob();await setSlotImage(slot,await createImageBitmap(blob),URL.createObjectURL(blob))}
+    try{const blob=await (await fetch(src)).blob();await setSlotImage(slot,await createImageBitmap(blob),URL.createObjectURL(blob),'user',blob)}
     catch(e){warnings.push(`images.${slot} 读取失败：${e.message}`)}}
   const fontFile=getPath(spec,'number.fontFile');
   if(fontFile!==undefined){
@@ -2897,19 +2900,69 @@ $('lang-btn').addEventListener('click',()=>{setPlaying(preview.playing);syncExpo
 const nextFrame=()=>new Promise(r=>requestAnimationFrame(()=>r()));
 const ready=fontsSettled.then(nextFrame).then(nextFrame);
 const toDataUrl=blob=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>rej(r.error);r.readAsDataURL(blob)});
+// ---------- Saved scene ----------
+// The scene survives a reload: settings go to localStorage as a spec (small, written whole on every change),
+// artwork and the custom font go to IndexedDB as blobs (too big for localStorage). Both stay in this browser.
+// A driven browser (the CLI, tests) neither restores nor saves, so a render only ever shows its own spec.
+const persistOn=!navigator.webdriver,SCENE_KEY='gm-scene';
+const idb=(()=>{let db;
+  const open=()=>db??=new Promise((res,rej)=>{const r=indexedDB.open('groove-mock',1);
+    r.onupgradeneeded=()=>r.result.createObjectStore('files');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
+  const run=(mode,f)=>open().then(d=>new Promise((res,rej)=>{const t=d.transaction('files',mode),q=f(t.objectStore('files'));
+    t.oncomplete=()=>res(q?.result);t.onerror=t.onabort=()=>rej(t.error)}));
+  return{get:k=>run('readonly',s=>s.get(k)),set:(k,v)=>run('readwrite',s=>s.put(v,k)),clear:()=>run('readwrite',s=>s.clear())}})();
+let persistReady=false,saveTimer=0,lastSaved='';
+function saveScene(){clearTimeout(saveTimer);if(!persistOn||!persistReady)return;
+  try{const rec=JSON.stringify({v:1,ts:Date.now(),spec:specFromState(),origins:slotOrigin});
+    // ts changes every time; compare without it so an unchanged scene isn't rewritten.
+    const body=rec.replace(/"ts":\d+,/,'');if(body===lastSaved)return;localStorage.setItem(SCENE_KEY,rec);lastSaved=body}
+  catch(e){console.warn('scene not saved',e)}}
+const queueSave=()=>{if(!persistOn||!persistReady)return;clearTimeout(saveTimer);saveTimer=setTimeout(saveScene,300)};
+for(const ev of['input','change','click','pointerup','keyup'])document.addEventListener(ev,queueSave,true);
+addEventListener('pagehide',saveScene);document.addEventListener('visibilitychange',()=>{if(document.hidden)saveScene()});
+// Canvases (label crops) and bitmaps (library picks) have no file behind them, so they are encoded once here.
+async function blobOf(img){if(img instanceof Blob)return img;
+  const c=document.createElement('canvas');c.width=img.width;c.height=img.height;c.getContext('2d').drawImage(img,0,0);
+  return new Promise((res,rej)=>c.toBlob(b=>b?res(b):rej(new Error('encode failed')),'image/webp',.95))}
+let askedPersist=false;
+function keepStorage(){if(askedPersist)return;askedPersist=true;navigator.storage?.persist?.().catch(()=>{})}
+function saveSlot(slot,img,src){if(!persistOn||!persistReady)return;keepStorage();
+  blobOf(src||img).then(b=>idb.set('slot:'+slot,b)).then(queueSave).catch(e=>console.warn(`${slot} not saved`,e))}
+function saveFont(buffer,name){if(!persistOn||!persistReady)return;keepStorage();
+  idb.set('font',{buffer,name}).then(queueSave).catch(e=>console.warn('font not saved',e))}
+// Artwork and font go back first, so the spec's custom font and cover-picked colours find them.
+async function restoreScene(){if(!persistOn)return;
+  try{const rec=JSON.parse(localStorage.getItem(SCENE_KEY)||'null');
+    if(rec?.v===1&&rec.spec){
+      for(const [slot,origin] of Object.entries(rec.origins||{})){if(!(slot in SLOTS))continue;
+        try{const b=await idb.get('slot:'+slot);if(b)await setSlotImage(slot,await createImageBitmap(b),URL.createObjectURL(b),origin)}
+        catch(e){console.warn(`${slot} not restored`,e)}}
+      if(rec.spec.number?.font==='custom')try{const f=await idb.get('font');if(f)await setNumberFont(f.buffer,f.name)}catch(e){console.warn('font not restored',e)}
+      const{warnings}=await applySpec(rec.spec);if(warnings.length)console.warn('restored scene:',warnings);
+      // A restored slot counts as the viewer's again, but a library pick keeps its source note.
+      Object.assign(assetLog,rec.spec.meta?.assets||{});setView(state.view)}}
+  catch(e){console.warn('saved scene not restored',e)}
+  finally{persistReady=true;lastSaved=JSON.stringify({v:1,spec:specFromState(),origins:slotOrigin})}}
+const restored=ready.then(restoreScene);
+$('new-btn').addEventListener('click',async()=>{
+  if(!confirm(tr('清空当前场景（设置和上传的图片、字体），从默认开始？','Clear this scene (settings, uploaded images and font) and start from the defaults?')))return;
+  persistReady=false;clearTimeout(saveTimer);
+  try{localStorage.removeItem(SCENE_KEY)}catch(e){}
+  try{await idb.clear()}catch(e){}
+  location.reload()});
 window.recordMockup={
-  version:1,ready,
+  version:1,ready:restored,
   schema:buildSchema,
   slots:slotGuide,
   getSpec:specFromState,
-  async apply(spec){await ready;return applySpec(spec)},
-  async render(opts={}){await ready;
+  async apply(spec){await restored;const r=await applySpec(spec);queueSave();return r},
+  async render(opts={}){await restored;
     const size=(v,d)=>Math.min(4096,Math.max(64,Math.round(v||d)));
     const w=size(opts.width,state.outW),h=size(opts.height,state.outH),blob=await renderToBlob(w,h);
     return{width:w,height:h,bytes:blob.size,dataUrl:await toDataUrl(blob)}},
   // Renders spec.animation as an MP4 or GIF. onProgress(done, total) is called after each frame;
   // encoder (MP4 only) is auto | software | hardware.
-  async renderVideo(opts={}){await ready;
+  async renderVideo(opts={}){await restored;
     const{blob,...rest}=await renderAnimation(opts.format||'mp4',{onProgress:opts.onProgress,encoder:opts.encoder});
     return{...rest,bytes:blob.size,dataUrl:await toDataUrl(blob)}}
 };
