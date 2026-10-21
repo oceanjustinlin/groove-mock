@@ -1176,17 +1176,25 @@ function derivePattern(m,base,color,alt,contrast){
     const C=Cb<.02?Cb:Math.max(0,Cb+p.dC*contrast);return oklabToHex([L,C*Math.cos(hb),C*Math.sin(hb)])})}
 // Pattern colours for a base the user already has: the pattern's default palette relation (lightness gap,
 // chroma shift, hue turn) moved onto that base, so picking a pattern changes the look, not the disc colour.
-// The lightness gap is kept within limits (a near-white default base would otherwise push a mid colour to black),
-// goes the other way when the base has no room, and chroma is cut back to stay inside sRGB.
+// Splits keep their lightness gap within limits and go the other way when the base has no room. Accents keep the
+// default's own gap (black splatter on cream stays black on a light or a red base). When that lands outside
+// 0.15..0.97 (below 0.15 dark colours stop telling apart) the pattern goes the other way only if that side keeps
+// clearly more contrast once clamped, so black splatter on navy turns light rather than sinking into it, while
+// white petals on red stay white. A pair told apart by hue (blue in orange) keeps its small gap while the new
+// base has the colour to carry it; a pair told apart by lightness alone, or one moved onto a much greyer base,
+// keeps at least 0.22. Chroma is cut back to stay inside sRGB.
 // Returns [pattern colour, third region]; tonal patterns use neither.
 function patternColorsFor(m,base){
   const lch=h=>{const[L,a,b]=hexToOklab(h);return[L,Math.hypot(a,b),Math.atan2(b,a)]},regions=m.palette.mode==='regions';
   const inGamut=lab=>{const[L,a,b]=lab,l=(L+.3963377774*a+.2158037573*b)**3,mm=(L-.1055613458*a-.0638541728*b)**3,s=(L-.0894841775*a-1.2914855480*b)**3;
     return[4.0767416621*l-3.3077115913*mm+.2309699292*s,-1.2684380046*l+2.6097574011*mm-.3413193965*s,-.0041960863*l-.7034186147*mm+1.7076147010*s].every(c=>c>=-1e-4&&c<=1.0001)};
-  const[Lb,Cb,hb]=lch(base),[L0,C0,h0]=lch(m.base),[lo,hi]=regions?[.05,.15]:[.22,.35];
-  return m.colors.map(c=>{const[L1,C1,h1]=lch(c);
-    const gap=Math.min(hi,Math.max(lo,Math.abs(L1-L0))),dir=L1<L0?-1:1,fits=L=>L>=.28&&L<=.94;
-    let L=fits(Lb+dir*gap)?Lb+dir*gap:fits(Lb-dir*gap)?Lb-dir*gap:Lb>.58?Lb-gap:Lb+gap;L=Math.min(.94,Math.max(.28,L));
+  const[Lb,Cb,hb]=lch(base),[L0,C0,h0]=lch(m.base),[lo,hi]=regions?[.05,.15]:[.22,.35],B0=hexToOklab(m.base);
+  return m.colors.map(c=>{const[L1,C1,h1]=lch(c),dir=L1<L0?-1:1;let L;
+    if(regions){const gap=Math.min(hi,Math.max(lo,Math.abs(L1-L0))),fits=L=>L>=.28&&L<=.94;
+      L=fits(Lb+dir*gap)?Lb+dir*gap:fits(Lb-dir*gap)?Lb-dir*gap:Lb>.58?Lb-gap:Lb+gap;L=Math.min(.94,Math.max(.28,L))}
+    else{const A1=hexToOklab(c),byHue=Math.hypot(A1[1]-B0[1],A1[2]-B0[2])>=.08&&Cb>=.6*C0,gap=byHue?Math.abs(L1-L0):Math.max(lo,Math.abs(L1-L0));
+      const clamp=L=>Math.min(.97,Math.max(.15,L)),want=Lb+dir*gap,back=clamp(Lb-dir*gap),f=Math.abs(clamp(want)-Lb),k=Math.abs(back-Lb);
+      L=want>=.15&&want<=.97?want:k>f+.08||f<.16&&k>f?back:clamp(want)}
     // A neutral base (black, white, grey) has no hue to carry: the pattern colour keeps the default's hue and
     // chroma. A neutral default base has no hue to turn from: splits take the opposite hue, accents the base's.
     const h=Cb<.03?h1:hb+(C0>.04&&C1>.04?h1-h0:regions?Math.PI:0);
