@@ -884,7 +884,13 @@ function stackLines(g,items,cx,cy,boxW,boxH,maxPx){
   const base=baseFor(items);
   const px=items.map(x=>{set(x,base*x.size);return base*x.size*Math.min(1,boxW/g.measureText(x.s).width)});
   let y=cy-px.reduce((a,p)=>a+p*1.2,0)/2;
-  items.forEach((x,i)=>{set(x,px[i]);y+=px[i]*.6;g.fillText(x.s,cx,y);if(x.bold){g.lineWidth=x.bold*px[i];g.lineJoin='round';g.strokeText(x.s,cx,y)}y+=px[i]*.6});
+  // Centre on the inked glyphs, not the advance box: letter spacing pads the end of the last glyph, and
+  // digits sit off the em box's middle. A single line is centred vertically on its glyphs too.
+  g.textBaseline=items.length===1?'alphabetic':'middle';
+  items.forEach((x,i)=>{set(x,px[i]);y+=px[i]*.6;const m=g.measureText(x.s),dx=(m.actualBoundingBoxLeft-m.actualBoundingBoxRight)/2,
+      dy=items.length===1?(m.actualBoundingBoxAscent-m.actualBoundingBoxDescent)/2:0;
+    g.fillText(x.s,cx+dx,y+dy);if(x.bold){g.lineWidth=x.bold*px[i];g.lineJoin='round';g.strokeText(x.s,cx+dx,y+dy)}y+=px[i]*.6});
+  g.textBaseline='middle';
   g.letterSpacing='0px'}
 // Panel and library state. The sticker comes from a template or from an image; leaving templates for an upload
 // keeps the template's text and colour, so switching back restores it.
