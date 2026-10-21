@@ -433,7 +433,7 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
             <div class="sub" id="sticker-sub">
               <div class="row">
                 <div class="tiles" style="flex:1"><label class="tile" data-slot="sticker"><span class="thumb"><span class="tag">示例</span></span><input id="up-sticker" type="file" accept="image/*" aria-label="上传贴纸">贴纸图</label></div>
-                <div class="seg" id="sticker-shape"><button data-v="circle" aria-pressed="true">圆形</button><button data-v="rect" aria-pressed="false">长方形</button></div>
+                <div class="seg" id="sticker-shape"><button data-v="circle" aria-pressed="true">圆形</button><button data-v="rect" aria-pressed="false">长方形</button><button data-v="square" aria-pressed="false">方形</button></div>
               </div>
               <div class="slider"><label for="sticker-size">尺寸</label><input type="range" id="sticker-size" min="40" max="140" value="76"><output id="sticker-size-v">76 mm</output></div>
               <div class="slider"><label for="sticker-x">水平</label><input type="range" id="sticker-x" min="-120" max="120" value="88"><output id="sticker-x-v">88 mm</output></div>
@@ -602,7 +602,7 @@ const EN={
   'Insert 插页':'Insert','304 × 304 mm · 双面':'304 × 304 mm · double-sided','放入插页':'Include insert','上传插页正面':'Upload insert front','上传插页背面':'Upload insert back',
   '抽出':'Out','插页在内袋后面，抽得比内袋多才看得到。':'The insert sits behind the inner sleeve; pull it out further than the sleeve to see it.',
   '塑封膜':'Shrink wrap','套上塑封膜':'Shrink-wrapped','褶皱':'Wrinkles','反光':'Sheen','唱片抽出时，开口一侧的膜会被视为已拆开。':'When a record is pulled out, the wrap on the open edge counts as torn.',
-  '贴在塑封膜上':'Sits on the shrink wrap','显示贴纸':'Show sticker','上传贴纸':'Upload sticker','贴纸图':'Sticker art','圆形':'Circle','长方形':'Rectangle','尺寸':'Size',
+  '贴在塑封膜上':'Sits on the shrink wrap','显示贴纸':'Show sticker','上传贴纸':'Upload sticker','贴纸图':'Sticker art','圆形':'Circle','长方形':'Rectangle','方形':'Square','尺寸':'Size',
   '输出':'Output','背景':'Background','透明':'Transparent','纯色':'Solid','背景颜色':'Background colour','分辨率':'Resolution',
   '图片和视频只在你的浏览器里处理，不会上传。顶栏的导出按钮和 ⌘/Ctrl+E 按这里的设置直接导出 PNG。':'Images and video are processed in your browser and never uploaded. The export button in the top bar and ⌘/Ctrl+E export a PNG with these settings.',
   'PNG 已生成':'PNG ready','导出的模型图':'Exported mockup','如果点"下载"没有反应，请右键（手机长按）图片另存。':'If Download does nothing, right-click (long-press on phones) the image and save it.',
@@ -701,7 +701,7 @@ function sampleLabel(side){const s=1024,c=canvas(s,s),g=c.getContext('2d'),m=s/2
   return c}
 function sampleSticker(shape){const w=1024,h=shape==='rect'?640:1024,c=canvas(w,h),g=c.getContext('2d');
   g.fillStyle='#f7cf1d';g.beginPath();
-  if(shape==='rect')g.roundRect(6,6,w-12,h-12,40);else g.arc(w/2,h/2,w/2-6,0,Math.PI*2);
+  if(shape!=='circle')g.roundRect(6,6,w-12,h-12,40);else g.arc(w/2,h/2,w/2-6,0,Math.PI*2);
   g.fill();g.strokeStyle='rgba(120,92,10,.35)';g.lineWidth=6;g.stroke();
   g.fillStyle='#1a1e1b';g.textAlign='center';g.textBaseline='middle';
   const k=shape==='rect'?.8:1;
@@ -2036,7 +2036,7 @@ const SPEC_FIELDS=[
   numF('wrap.wrinkle','wrinkle',0,200,.01,'塑封褶皱强度（%），100 为默认'),
   numF('wrap.gloss','gloss',0,200,.01,'塑封反光强度（%），100 为默认'),
   boolF('sticker.on','stickerOn','是否显示 hype sticker（贴在塑封膜上）'),
-  enumF('sticker.shape','stickerShape',['circle','rect'],'贴纸形状：circle 圆形，rect 圆角长方形（宽高比 1.6:1）'),
+  enumF('sticker.shape','stickerShape',['circle','rect','square'],'贴纸形状：circle 圆形，rect 圆角长方形（宽高比 1.6:1），square 圆角正方形'),
   numF('sticker.size','stickerSize',40,140,.1,'贴纸尺寸（mm）：圆形为直径，长方形为高度'),
   numF('sticker.x','stickerX',-120,120,.1,'贴纸中心相对封套中心的水平位置（mm，向右为正）'),
   numF('sticker.y','stickerY',-120,120,.1,'贴纸中心相对封套中心的垂直位置（mm，向上为正）'),
@@ -2084,7 +2084,7 @@ function slotGuide(){
     square('insertFront','插页正面',304,'composite',{used:state.insertOn,notes:'歌词、制作名单用排版'}),
     square('insertBack','插页背面',304,'composite',{used:state.insertOn}),
     {slot:'sticker',label:'Hype sticker',px:state.stickerShape==='rect'?[1024,640]:[1024,1024],mm:state.stickerShape==='rect'?[mm(state.stickerSize*1.6),mm(state.stickerSize)]:[mm(state.stickerSize),mm(state.stickerSize)],
-      visible:state.stickerShape==='rect'?'整张可见，圆角':'只显示内切圆',covered:num('sticker'),recommend:'typeset',used:state.stickerOn,notes:'文字为主，不建议生图'},
+      visible:state.stickerShape==='circle'?'只显示内切圆':'整张可见，圆角',covered:num('sticker'),recommend:'typeset',used:state.stickerOn,notes:'文字为主，不建议生图'},
   ]}
 const getPath=(o,p)=>p.split('.').reduce((a,k)=>a==null?undefined:a[k],o);
 const setPath=(o,p,v)=>{const ks=p.split('.');let a=o;for(const k of ks.slice(0,-1))a=a[k]??={};a[ks.at(-1)]=v};
