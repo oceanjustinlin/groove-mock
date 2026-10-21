@@ -1064,7 +1064,7 @@ const gpuName=()=>{try{const gl=renderer.getContext(),x=gl.getExtension('WEBGL_d
 maxAniso=Math.min(8,renderer.capabilities.getMaxAnisotropy());
 renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
 renderer.setClearColor(0x000000,0);
-renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1;
+renderer.toneMapping=THREE.NeutralToneMapping;renderer.toneMappingExposure=1;
 renderer.outputColorSpace=THREE.SRGBColorSpace;
 renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;
 stage.prepend(renderer.domElement);
@@ -1073,7 +1073,7 @@ const scene=new THREE.Scene();
 // Two environments: a soft room for paper, and a dark studio with bright softbox strips that the
 // film and the vinyl reflect as crisp glare streaks.
 let studioEnv;
-{const pm=new THREE.PMREMGenerator(renderer),room=new RoomEnvironment();scene.environment=pm.fromScene(room,.03).texture;scene.environmentIntensity=.85;room.dispose();
+{const pm=new THREE.PMREMGenerator(renderer),room=new RoomEnvironment();scene.environment=pm.fromScene(room,.03).texture;scene.environmentIntensity=.48;room.dispose();
   const studio=new THREE.Scene(),box=new THREE.Mesh(new THREE.BoxGeometry(200,200,200),new THREE.MeshBasicMaterial({color:0x0c0d0c,side:THREE.BackSide}));studio.add(box);
   const panel=(w,h,pos,look,power)=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({color:new THREE.Color(1,1,1).multiplyScalar(power),side:THREE.DoubleSide}));m.position.set(...pos);m.lookAt(...look);studio.add(m)};
   // Film reflects ~4-8% at normal incidence, so the lamps must be far brighter than 1.0 to read as glare.
@@ -1090,12 +1090,14 @@ const camera=new THREE.PerspectiveCamera(26,1,1,600);
 const controls=new OrbitControls(camera,renderer.domElement);
 controls.enableDamping=true;controls.dampingFactor=.1;controls.minDistance=18;controls.maxDistance=260;
 
-scene.add(new THREE.HemisphereLight(0xf6f6f0,0x80867d,.55));
-const key=new THREE.DirectionalLight(0xfff3e4,2.3);key.position.set(-34,42,52);key.castShadow=true;
+scene.add(new THREE.HemisphereLight(0xf6f6f0,0x80867d,.32));
+const key=new THREE.DirectionalLight(0xfff3e4,1.32);key.position.set(-34,42,52);key.castShadow=true;
 key.shadow.mapSize.set(2048,2048);Object.assign(key.shadow.camera,{left:-50,right:60,top:45,bottom:-45,near:1,far:200});key.shadow.radius=5;key.shadow.bias=-.0004;key.shadow.normalBias=.02;
 scene.add(key);
-const fill=new THREE.DirectionalLight(0xe6edff,.7);fill.position.set(44,12,30);scene.add(fill);
+const fill=new THREE.DirectionalLight(0xe6edff,.4);fill.position.set(44,12,30);scene.add(fill);
 const rim=new THREE.DirectionalLight(0xffffff,1.1);rim.position.set(12,24,-44);scene.add(rim);
+// The key's mirror image behind the jacket, so a back cover shot is lit like the front one.
+const backKey=new THREE.DirectionalLight(0xfff3e4,1.9);backKey.position.set(34,42,-52);scene.add(backKey);
 const ground=new THREE.Mesh(new THREE.PlaneGeometry(400,400),new THREE.ShadowMaterial({color:0x1e221f,opacity:.2,depthWrite:false}));
 ground.rotation.x=-Math.PI/2;ground.position.y=GROUND_Y;ground.receiveShadow=true;scene.add(ground);
 
@@ -1228,6 +1230,9 @@ function applyCover(i,{advance=true,keep={}}={}){const s=i===1?'':'2',m=maskById
   if(alt&&!keep.alt)state[`pattern${s}Alt`]=alt;
   return true}
 const VINYL_BLACK='#0b0b0c';
+// The lights are set so a front-facing paper surface shows its artwork at true colour; a disc sits at an
+// angle and its rough grooves catch less of that, so its colour is lifted to land near the picked swatch.
+const VINYL_LIFT=1.7;
 // Composite base + accents in sRGB bytes (what the bake preview shows). Transparent vinyl (clear > 0) also
 // gets an alpha map: the base is see-through and accents turn opaque where they cover it, like splatter
 // pressed into clear vinyl. pclear makes the accents themselves translucent: their coverage shrinks, so on an
@@ -1270,10 +1275,10 @@ async function applyPatternTo(i,mats){
   const img=await loadMask(m.id);if(token!==patternToken[i-1])return;
   const colors=derivePattern(m,base,state[`pattern${s}Color`],state[`pattern${s}Alt`],state[`pattern${s}Contrast`]);
   const t=patternTextures(img,base,colors,state[`pattern${s}Rot`],clear,pclear);
-  drop();mats.face.map=t.map;mats.face.alphaMap=t.alpha;mats.face.color.set(0xffffff);if(t.alpha)mats.face.opacity=1;mats.face.needsUpdate=true}
+  drop();mats.face.map=t.map;mats.face.alphaMap=t.alpha;mats.face.color.setScalar(VINYL_LIFT);if(t.alpha)mats.face.opacity=1;mats.face.needsUpdate=true}
 function applyVinylTo(i,mats){
   const{black,base,clear,mask}=discLook(i),see=clear>0;
-  for(const m of[mats.face,mats.edge]){m.color.set(base);m.transparent=see;m.opacity=1-clear;m.depthWrite=!see;m.needsUpdate=true}
+  for(const m of[mats.face,mats.edge]){m.color.set(base).multiplyScalar(VINYL_LIFT);m.transparent=see;m.opacity=1-clear;m.depthWrite=!see;m.needsUpdate=true}
   mats.face.envMapIntensity=black?.32:.22;
   const g=grooveMaps(state[i===2?'tracks2':'tracks']);
   if(mats.face.roughnessMap!==g.rough){mats.face.roughnessMap=g.rough;mats.face.anisotropyMap=g.aniso;mats.face.needsUpdate=true}
