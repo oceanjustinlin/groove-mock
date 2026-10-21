@@ -447,7 +447,6 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
             <div class="row pkg-only" id="lp-layout-row" hidden><span class="lbl">分装</span>
               <div class="seg" id="lp-layout"><button data-v="split" aria-pressed="true">左右各一张</button><button data-v="stacked" aria-pressed="false">同一口袋</button></div>
             </div>
-            <div class="slider"><label for="record-rot">标签角度</label><input type="range" id="record-rot" min="-180" max="180" value="0"><output id="record-rot-v">0°</output></div>
             <div class="row pkg-only">
               <label class="switch"><input type="checkbox" id="sleeve-on">显示内袋</label>
               <div class="row" style="justify-content:flex-end">
@@ -458,10 +457,6 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
 
             <div class="disc">
               <h3>第 1 张 <small>A / B 面</small></h3>
-              <div class="tiles two">
-                <label class="tile" data-slot="labelA"><span class="thumb"><span class="tag">示例</span></span><input id="up-labelA" type="file" accept="image/*" aria-label="上传 A 面标签">A 面标签</label>
-                <label class="tile" data-slot="labelB"><span class="thumb"><span class="tag">示例</span></span><input id="up-labelB" type="file" accept="image/*" aria-label="上传 B 面标签">B 面标签</label>
-              </div>
               <div class="row"><span class="lbl">胶色</span>
                 <div class="seg" id="vinyl-style"><button data-v="black" aria-pressed="true">黑胶</button><button data-v="color" aria-pressed="false">彩胶</button></div>
               </div>
@@ -484,17 +479,17 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
                 <div class="slider" id="pattern-contrast-row" data-look="pattern"><label for="pattern-contrast">反差</label><input type="range" id="pattern-contrast" min="0" max="200" value="100"><output id="pattern-contrast-v">100%</output></div>
                 <div class="slider" data-look="pattern"><label for="pattern-rot">纹路角度</label><input type="range" id="pattern-rot" min="-180" max="180" value="0"><output id="pattern-rot-v">0°</output></div>
               </div>
+              <div class="slider"><label for="tracks">每面音轨</label><input type="range" id="tracks" min="1" max="20" value="6"><output id="tracks-v">6</output></div>
+              <div class="tiles two">
+                <label class="tile" data-slot="labelA"><span class="thumb"><span class="tag">示例</span></span><input id="up-labelA" type="file" accept="image/*" aria-label="上传 A 面标签">A 面标签</label>
+                <label class="tile" data-slot="labelB"><span class="thumb"><span class="tag">示例</span></span><input id="up-labelB" type="file" accept="image/*" aria-label="上传 B 面标签">B 面标签</label>
+              </div>
               <div class="slider pkg-only" hidden><label for="sleeve-x">内袋抽出</label><input type="range" id="sleeve-x" min="0" max="100" value="0"><output id="sleeve-x-v">0%</output></div>
               <div class="slider pkg-only"><label for="record-x">唱片抽出</label><input type="range" id="record-x" min="0" max="100" value="60"><output id="record-x-v">60%</output></div>
-              <div class="slider"><label for="tracks">每面音轨</label><input type="range" id="tracks" min="1" max="20" value="6"><output id="tracks-v">6</output></div>
             </div>
 
             <div class="disc" id="lp2-sub" hidden>
               <h3>第 2 张 <small id="lp2-where">C / D 面 · 放在第 1 张后面</small></h3>
-              <div class="tiles two">
-                <label class="tile" data-slot="labelC"><span class="thumb"><span class="tag">示例</span></span><input id="up-labelC" type="file" accept="image/*" aria-label="上传 C 面标签">C 面标签</label>
-                <label class="tile" data-slot="labelD"><span class="thumb"><span class="tag">示例</span></span><input id="up-labelD" type="file" accept="image/*" aria-label="上传 D 面标签">D 面标签</label>
-              </div>
               <label class="switch"><input type="checkbox" id="vinyl-same" checked>胶色和纹路与第 1 张相同</label>
               <div class="sub" id="vinyl2-own" hidden>
                 <div class="row"><span class="lbl">胶色</span>
@@ -520,10 +515,15 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
                   <div class="slider" data-look="pattern"><label for="pattern2-rot">纹路角度</label><input type="range" id="pattern2-rot" min="-180" max="180" value="0"><output id="pattern2-rot-v">0°</output></div>
                 </div>
               </div>
+              <div class="slider"><label for="tracks2">每面音轨</label><input type="range" id="tracks2" min="1" max="20" value="6"><output id="tracks2-v">6</output></div>
+              <div class="tiles two">
+                <label class="tile" data-slot="labelC"><span class="thumb"><span class="tag">示例</span></span><input id="up-labelC" type="file" accept="image/*" aria-label="上传 C 面标签">C 面标签</label>
+                <label class="tile" data-slot="labelD"><span class="thumb"><span class="tag">示例</span></span><input id="up-labelD" type="file" accept="image/*" aria-label="上传 D 面标签">D 面标签</label>
+              </div>
               <div class="slider pkg-only" hidden><label for="sleeve2-x">内袋抽出</label><input type="range" id="sleeve2-x" min="0" max="100" value="0"><output id="sleeve2-x-v">0%</output></div>
               <div class="slider pkg-only"><label for="record2-x">唱片抽出</label><input type="range" id="record2-x" min="0" max="100" value="70"><output id="record2-x-v">70%</output></div>
-              <div class="slider"><label for="tracks2">每面音轨</label><input type="range" id="tracks2" min="1" max="20" value="6"><output id="tracks2-v">6</output></div>
             </div>
+            <div class="slider"><label for="record-rot">标签角度</label><input type="range" id="record-rot" min="-180" max="180" value="0"><output id="record-rot-v">0°</output></div>
             <p class="note" id="out-note-sleeve" data-pkg hidden>内袋抽出：内袋连同唱片一起从封套开口拉出。唱片抽出：唱片再从内袋里往外拉。</p>
             <p class="note" id="out-note-bare" data-pkg>唱片抽出：唱片从封套开口拉出的比例，100% 时完全抽出。</p>
           </section>
