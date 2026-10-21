@@ -220,7 +220,7 @@ def main():
     n.add_argument('--url', help='where the reference came from (pin, licence page)')
     n.add_argument('--accents', type=int, choices=[1, 2], default=1)
     n.add_argument('--role', choices=['layout', 'effect'])
-    n.add_argument('--palette', choices=['tonal', 'accent'], default='tonal')
+    n.add_argument('--palette', choices=['tonal', 'accent', 'regions'], default='tonal')
     g = sub.add_parser('gen', help='generate gen.png with Codex')
     g.add_argument('ids', nargs='+')
     g.add_argument('-j', type=int, default=1, help='parallel Codex runs (default 1)')

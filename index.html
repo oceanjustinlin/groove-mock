@@ -2216,7 +2216,7 @@ $('bg-color').addEventListener('input',e=>{state.bgColor=e.target.value;state.bg
 $('sleeve-color').addEventListener('input',e=>{state.sleeveColor=e.target.value;sleeveMat.color.set(tex.sleeve?'#ffffff':e.target.value)});
 field('vinyl-color','vinylColor');field('vinyl2-color','vinyl2Color');field('bg-color','bgColor');field('sleeve-color','sleeveColor');
 // Pattern panel: a thumbnail picker per disc, then only the controls the pattern's palette mode uses.
-const FAMILY={split:['分色','Split'],splatter:['泼溅','Splatter'],starburst:['爆发','Starburst'],blob:['色块','Blob'],pinwheel:['风车','Pinwheel'],ripple:['波纹','Ripple'],swirl:['旋涡','Swirl'],smoke:['烟雾','Smoke'],marble:['大理石','Marble']};
+const FAMILY={split:['分色','Split'],splatter:['泼溅','Splatter'],starburst:['爆发','Starburst'],blob:['色块','Blob'],pinwheel:['风车','Pinwheel'],ripple:['波纹','Ripple'],swirl:['旋涡','Swirl'],smoke:['烟雾','Smoke'],marble:['大理石','Marble'],tiedye:['扎染','Tie-dye'],ghostly:['云雾','Ghostly']};
 // The palette mode (split / main + accent / tonal) stays internal: the controls below already follow it.
 const patternLabel=m=>m?`${tr(...(FAMILY[m.family]??[m.family,m.family]))} · ${m.id}`:tr('纯色','Solid');
 const splitThumbs=new Map();
@@ -2468,10 +2468,10 @@ const SPEC_FIELDS=[
     numF(`records.disc${i}.sleeveOut`,`sleeve${s}X`,0,100,.01,`第 ${i} 张内袋连同唱片从封套开口抽出的比例（%），只在 records.sleeve.on=true 时生效，内袋不显示时写了会被忽略并给出警告${note}${i===2?'。双开且 records.layout=split 时从左扇的开口抽出：合上时朝右，打开后朝左':''}`),
     numF(`records.disc${i}.recordOut`,`record${s}X`,0,100,.01,`第 ${i} 张唱片抽出的比例（%）。显示内袋时是唱片再从内袋里抽出的比例；不显示内袋时是唱片直接抽出封套的比例，100 为完全抽出、落在地面${note}`),
     numF(`records.disc${i}.tracks`,`tracks${s}`,1,20,1,`第 ${i} 张每面的音轨数，盘面按等宽分成这么多圈，相邻音轨之间有一道亮环；两面相同${note}`,true),
-    enumF(`records.disc${i}.pattern.id`,`pattern${s}`,['none',...MASKS.map(m=>m.id)],`第 ${i} 张彩胶纹路，none 或不写为纯色，只在 vinyl=color 时生效。按配色方式分三类——分色（底色是第一块，pattern.color 第二块，split-tri 再用 pattern.color2 第三块；split-quad 对角同色）：${patternIds('regions')}；主次（底色 + pattern.color，其余色层自动推算）：${patternIds('accent')}；同色系（只用底色，纹路是它的深浅变化，pattern.contrast 调反差）：${patternIds('tonal')}。底色是 color；写了 color 而没写 pattern.color / pattern.color2 时，纹路色按底色推算；color 也没写时，用这款纹路的默认配色${note}`),
+    enumF(`records.disc${i}.pattern.id`,`pattern${s}`,['none',...MASKS.map(m=>m.id)],`第 ${i} 张彩胶纹路，none 或不写为纯色，只在 vinyl=color 时生效。按配色方式分三类——分色（底色是第一块，pattern.color 第二块，三块的纹路（split-tri、tiedye-*）再用 pattern.color2 第三块；split-quad 对角同色）：${patternIds('regions')}；主次（底色 + pattern.color，其余色层自动推算）：${patternIds('accent')}；同色系（只用底色，纹路是它的深浅变化，pattern.contrast 调反差）：${patternIds('tonal')}。底色是 color；写了 color 而没写 pattern.color / pattern.color2 时，纹路色按底色推算；color 也没写时，用这款纹路的默认配色${note}`),
     colorF(`records.disc${i}.pattern.color`,`pattern${s}Color`,`第 ${i} 张纹路色：主次类为纹路颜色，分色类为第二块颜色；同色系不使用${note}`),
     numF(`records.disc${i}.pattern.transparency`,`pattern${s}Clear`,0,80,.01,`第 ${i} 张纹路的透明度（%），默认 0 为不透明；纹路色和由它推算的色层一起变透明。底色不透明时纹路会透出底色、变淡；底色也透明时（transparency）纹路同样透光。仅主次类（${patternIds('accent')}）使用，分色类和同色系忽略并给出警告${note}`),
-    colorF(`records.disc${i}.pattern.color2`,`pattern${s}Alt`,`第 ${i} 张分色第三块颜色，仅 split-tri 使用${note}`),
+    colorF(`records.disc${i}.pattern.color2`,`pattern${s}Alt`,`第 ${i} 张分色第三块颜色，仅三块的分色纹路（split-tri、tiedye-*）使用${note}`),
     numF(`records.disc${i}.pattern.contrast`,`pattern${s}Contrast`,0,200,.01,`第 ${i} 张同色系纹路的反差（%），100 为这款纹路的原始深浅差；仅同色系使用${note}`),
     numF(`records.disc${i}.pattern.rotation`,`pattern${s}Rot`,-180,180,1,`第 ${i} 张纹路相对标签的旋转角度（度，逆时针为正）${note}`),
     ...(i===2?[boolF('records.disc2.sameAsDisc1','vinylSame','第 2 张的胶色和纹路与第 1 张相同（默认）。设为 false 后 disc2 的 vinyl、color、pattern 才生效；没写这个字段、但写了这些字段时，视为 false（仅 records.count=2 时生效）')]:[]),
@@ -2661,7 +2661,7 @@ async function applySpec(spec){
       if(!has(`${pre}.pattern.contrast`))state[`pattern${s}Contrast`]=1;
       if(!has(`${pre}.color`)&&m.base)state[`vinyl${s}Color`]=m.base}
     if(has(`${pre}.pattern.color`)&&mode==='tonal')warnings.push(`${pre}.pattern.color 无效：${m.id} 是同色系纹路，只用底色 ${pre}.color`);
-    if(has(`${pre}.pattern.color2`)&&!tri)warnings.push(`${pre}.pattern.color2 无效：只有 split-tri 使用第三块颜色`);
+    if(has(`${pre}.pattern.color2`)&&!tri)warnings.push(`${pre}.pattern.color2 无效：只有三块的分色纹路（split-tri、tiedye-*）使用第三块颜色`);
     if(has(`${pre}.pattern.transparency`)&&mode!=='accent')warnings.push(`${pre}.pattern.transparency 无效：只有主次类纹路（${patternIds('accent')}）有单独的纹路透明度；${m.id} 是${mode==='regions'?'分色':'同色系'}纹路，透明度只用 ${pre}.transparency`);
     if(has(`${pre}.pattern.contrast`)&&mode!=='tonal')warnings.push(`${pre}.pattern.contrast 无效：只有同色系纹路（${patternIds('tonal')}）使用反差`);
     if(i===2&&state.lpCount!==2&&has(`${pre}.pattern.id`))warnings.push(`${pre}.pattern 仅在 records.count=2 时可见`)}
