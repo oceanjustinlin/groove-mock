@@ -11,7 +11,7 @@
 <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/environments/RoomEnvironment.js" crossorigin>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=IBM+Plex+Mono:wght@400;500;600&family=Caveat:wght@600&family=Noto+Serif+SC:wght@600&family=Special+Elite&family=Noto+Sans+SC:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=IBM+Plex+Mono:wght@400;500;600&family=Caveat:wght@600&family=Noto+Serif+SC:wght@600&family=Libre+Baskerville:wght@700&family=Jost:wght@700&family=Special+Elite&family=Noto+Sans+SC:wght@400;500;700&display=swap">
 <style>
 /* Layout: one-screen workbench. Live 3D stage on the left, a job-ticket style control column on the right; stacks on phones. */
 :root{
@@ -194,6 +194,50 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
 .sheet img{border-radius:8px;background-image:conic-gradient(var(--check) 25%,transparent 0 50%,var(--check) 0 75%,transparent 0);background-size:16px 16px;max-height:60vh;justify-self:center}
 .sheet .row{flex-wrap:wrap}
 
+/* Hype sticker templates: the panel entry, and the library dialog (categories | cards | detail; on phones a
+   bottom sheet that steps from the cards to the detail). */
+.tpl-open{display:grid;gap:2px;justify-items:center;min-height:72px;border:1px dashed var(--muted);border-radius:10px;background:var(--bg);cursor:pointer;padding:12px;font-size:13px}
+.tpl-open small{font-size:11px;color:var(--muted)}
+.tpl-current{display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:10px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:8px}
+.tpl-cur-thumb{width:48px;height:48px;background:var(--stage) center/86% no-repeat;border-radius:6px}
+.tpl-cur-text{display:grid;min-width:0}
+.tpl-cur-text strong{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tpl-cur-text small,.tpl-cat-name{font-size:11px;color:var(--muted)}
+.tpl-fields{display:grid;gap:6px}
+.tpl-fields:empty{display:none}
+.tpl-fields label{display:grid;gap:2px;font-size:12px;color:var(--muted)}
+.tpl-fields .field{width:100%;font-family:var(--font-body);color:var(--ink)}
+.tpl-sheet{width:min(1040px,100%);height:min(680px,100%);max-width:none;padding:0;gap:0;grid-template-rows:auto minmax(0,1fr);overflow:hidden}
+.tpl-head{display:flex;align-items:center;gap:12px;padding:10px 10px 10px 16px;border-bottom:1px solid var(--line)}
+.tpl-head strong{font-family:var(--font-display);font-stretch:85%;font-size:16px;white-space:nowrap}
+.tpl-search{width:auto;flex:0 1 300px;min-width:0;font-family:var(--font-body);padding:5px 10px}
+.tpl-x{margin-left:auto;width:40px;height:40px;border:0;border-radius:8px;background:transparent;cursor:pointer;display:grid;place-items:center}
+.tpl-x:hover{background:var(--bg)}
+.tpl-body{display:grid;grid-template-columns:150px minmax(0,1fr) 300px;min-height:0}
+.tpl-cats{display:grid;align-content:start;gap:2px;padding:10px 8px;border-right:1px solid var(--line);overflow:auto}
+.tpl-cats button{display:flex;justify-content:space-between;align-items:baseline;gap:8px;border:0;border-radius:8px;background:transparent;padding:7px 10px;cursor:pointer;font-size:13px;text-align:left}
+.tpl-cats button:hover{background:var(--bg)}
+.tpl-cats button[aria-pressed="true"]{background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--accent);font-weight:700}
+.tpl-cats small{color:var(--muted);font-family:var(--font-mono);font-size:11px;font-weight:400}
+.tpl-list{overflow:auto;padding:14px;min-height:0}
+.tpl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.tpl-card{display:grid;gap:4px;border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:8px;cursor:pointer;text-align:left}
+.tpl-card:hover{border-color:var(--muted)}
+.tpl-card[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.tpl-art{display:block;aspect-ratio:1;border-radius:8px;background:var(--stage) center/80% no-repeat;margin-bottom:4px}
+.tpl-card strong{font-size:13px}
+.tpl-card small{font-size:11px;color:var(--muted)}
+.tpl-card small.on{color:var(--accent)}
+.tpl-empty{display:grid;justify-items:center;gap:8px;padding:48px 0;color:var(--muted);font-size:13px}
+.tpl-detail{border-left:1px solid var(--line);padding:14px;overflow:auto;display:grid;align-content:start;gap:10px;background:var(--bg);min-height:0}
+.tpl-back{display:none;justify-self:start}
+.tpl-edit{display:grid;gap:10px}
+.tpl-preview{width:100%;max-width:272px;justify-self:center;aspect-ratio:1;border-radius:10px;background:var(--stage)}
+.tpl-colors button{display:inline-flex;align-items:center;gap:6px}
+.tpl-colors i{width:12px;height:12px;border-radius:50%;border:1px solid color-mix(in srgb,var(--ink) 30%,transparent);flex:none}
+.tpl-actions{display:flex;gap:8px;position:sticky;bottom:-14px;margin-bottom:-14px;padding:10px 0 14px;background:var(--bg)}
+.tpl-actions .primary{flex:1}
+
 /* Phones and narrow tablets: one screen, no page scroll. The stage keeps the top ~42% so the model stays
    in view, the current settings page scrolls under it, and the page tabs sit at the bottom within thumb reach.
    The asset picker opens as a bottom sheet over everything. */
@@ -220,6 +264,21 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
   .assets[data-open="true"] .picker-toggle::before{content:"";position:absolute;top:7px;left:50%;width:36px;height:4px;margin-left:-18px;border-radius:2px;background:var(--line)}
   .sheet-backdrop{display:block;position:fixed;inset:0;z-index:19;background:color-mix(in srgb,var(--ink) 40%,transparent)}
   .assets .lib-gallery{grid-template-columns:repeat(auto-fill,minmax(96px,1fr))}
+  .tpl-modal{place-items:end stretch;padding:0}
+  .tpl-sheet{width:100%;height:min(86dvh,720px);border-radius:16px 16px 0 0;padding-bottom:env(safe-area-inset-bottom,0px)}
+  .tpl-head{flex-wrap:wrap;padding-top:14px;position:relative}
+  .tpl-head::before{content:"";position:absolute;top:5px;left:50%;width:36px;height:4px;margin-left:-18px;border-radius:2px;background:var(--line)}
+  .tpl-search{order:3;flex:1 1 100%;font-size:16px}
+  .tpl-body{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}
+  .tpl-cats{display:flex;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line);padding:8px 12px;gap:6px}
+  .tpl-cats button{flex:none;border:1px solid var(--line);border-radius:999px;white-space:nowrap;min-height:36px;align-items:center}
+  .tpl-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .tpl-detail{border-left:0;grid-row:1 / -1}
+  .tpl-back{display:inline-block;min-height:36px}
+  .tpl-sheet[data-step="grid"] .tpl-detail{display:none}
+  .tpl-sheet[data-step="detail"] .tpl-cats,.tpl-sheet[data-step="detail"] .tpl-list,.tpl-sheet[data-step="detail"] .tpl-search{display:none}
+  .tpl-fields .field{font-size:16px;padding:8px 10px}
+  .tpl-actions .chip,.tpl-actions .primary{min-height:44px}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -431,7 +490,17 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
             <h2>Hype sticker <small>贴在塑封膜上</small></h2>
             <label class="switch"><input type="checkbox" id="sticker-on" checked>显示贴纸</label>
             <div class="sub" id="sticker-sub">
-              <div class="row">
+              <div class="seg" id="sticker-source" role="group" aria-label="贴纸来源"><button data-v="template" aria-pressed="false">模板库</button><button data-v="upload" aria-pressed="true">上传图片</button></div>
+              <div class="sub" id="sticker-tpl-sub" hidden>
+                <button class="tpl-open" id="tpl-open" type="button"><span>打开模板库，选一个样式</span><small id="tpl-open-count"></small></button>
+                <div class="tpl-current" id="tpl-current" hidden>
+                  <span class="tpl-cur-thumb" id="tpl-cur-thumb"></span>
+                  <span class="tpl-cur-text"><strong id="tpl-cur-name"></strong><small id="tpl-cur-meta"></small></span>
+                  <button class="chip" id="tpl-change" type="button">更换</button>
+                </div>
+                <div class="tpl-fields" id="tpl-cur-fields"></div>
+              </div>
+              <div class="row" id="sticker-upload-sub">
                 <div class="tiles one" style="flex:0 0 72px"><label class="tile" data-slot="sticker"><span class="thumb"><span class="tag">示例</span></span><input id="up-sticker" type="file" accept="image/*" aria-label="上传贴纸">贴纸图</label></div>
                 <div class="seg" id="sticker-shape" style="flex:1 1 auto"><button data-v="circle" aria-pressed="true">圆形</button><button data-v="rect" aria-pressed="false">长方形</button><button data-v="square" aria-pressed="false">方形</button></div>
               </div>
@@ -547,6 +616,36 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
   </div>
 </div>
 
+<div class="modal tpl-modal" id="tpl-lib" hidden>
+  <div class="sheet tpl-sheet" id="tpl-sheet" role="dialog" aria-modal="true" aria-labelledby="tpl-title" data-step="grid">
+    <div class="tpl-head">
+      <strong id="tpl-title">Hype sticker 模板库</strong>
+      <input class="field tpl-search" id="tpl-q" type="search" placeholder="搜索模板，如 限量、签名" aria-label="搜索模板">
+      <button class="tpl-x" id="tpl-close" type="button" aria-label="关闭模板库"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" fill="none"/></svg></button>
+    </div>
+    <div class="tpl-body">
+      <div class="tpl-cats" id="tpl-cats" role="group" aria-label="模板分类"></div>
+      <div class="tpl-list">
+        <div class="tpl-grid" id="tpl-grid"></div>
+        <div class="tpl-empty" id="tpl-empty" hidden><span>没有匹配的模板</span><button class="chip" id="tpl-clear" type="button">清除筛选</button></div>
+      </div>
+      <div class="tpl-detail">
+        <button class="chip tpl-back" id="tpl-back" type="button">‹ 全部模板</button>
+        <p class="note" id="tpl-hint">选一个模板，在这里预览和改文字。</p>
+        <div class="tpl-edit" id="tpl-edit" hidden>
+          <canvas class="tpl-preview" id="tpl-preview" width="544" height="544" role="img" aria-label="贴纸预览"></canvas>
+          <div><strong id="tpl-name"></strong> <small class="tpl-cat-name" id="tpl-cat"></small></div>
+          <p class="note">方括号里是占位文字，换成实际内容。清空一行就不显示这一行。</p>
+          <div class="tpl-fields" id="tpl-fields"></div>
+          <span class="lbl">配色</span>
+          <div class="seg" id="tpl-colors" role="group" aria-label="配色"></div>
+          <div class="tpl-actions"><button class="chip" id="tpl-cancel" type="button">取消</button><button class="primary" id="tpl-apply" type="button">使用此模板</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script type="module">
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
@@ -603,6 +702,12 @@ const EN={
   '抽出':'Out','插页在内袋后面，抽得比内袋多才看得到。':'The insert sits behind the inner sleeve; pull it out further than the sleeve to see it.',
   '塑封膜':'Shrink wrap','套上塑封膜':'Shrink-wrapped','褶皱':'Wrinkles','反光':'Sheen','唱片抽出时，开口一侧的膜会被视为已拆开。':'When a record is pulled out, the wrap on the open edge counts as torn.',
   '贴在塑封膜上':'Sits on the shrink wrap','显示贴纸':'Show sticker','上传贴纸':'Upload sticker','贴纸图':'Sticker art','圆形':'Circle','长方形':'Rectangle','方形':'Square','尺寸':'Size',
+  '贴纸来源':'Sticker source','模板库':'Templates','上传图片':'Upload image','打开模板库，选一个样式':'Open the template library and pick a style','更换':'Change',
+  'Hype sticker 模板库':'Hype sticker templates','搜索模板，如 限量、签名':'Search templates, e.g. limited, signed','搜索模板':'Search templates','关闭模板库':'Close template library',
+  '模板分类':'Template categories','没有匹配的模板':'No templates match','清除筛选':'Clear filters','‹ 全部模板':'‹ All templates',
+  '选一个模板，在这里预览和改文字。':'Pick a template to preview it and edit its text here.','贴纸预览':'Sticker preview',
+  '方括号里是占位文字，换成实际内容。清空一行就不显示这一行。':'Bracketed words are placeholders; replace them with the real details. Clear a line to drop it.',
+  '配色':'Colours','取消':'Cancel','使用此模板':'Use this template',
   '输出':'Output','背景':'Background','透明':'Transparent','纯色':'Solid','背景颜色':'Background colour','分辨率':'Resolution',
   '图片和视频只在你的浏览器里处理，不会上传。顶栏的导出按钮和 ⌘/Ctrl+E 按这里的设置直接导出 PNG。':'Images and video are processed in your browser and never uploaded. The export button in the top bar and ⌘/Ctrl+E export a PNG with these settings.',
   'PNG 已生成':'PNG ready','导出的模型图':'Exported mockup','如果点"下载"没有反应，请右键（手机长按）图片另存。':'If Download does nothing, right-click (long-press on phones) the image and save it.',
@@ -636,7 +741,7 @@ const state = {
   pattern:'none', patternColor:'#1b1b1b', patternAlt:'#2a6f4e', patternContrast:1, patternClear:0, patternRot:0, patternFromCover:false,
   pattern2:'none', pattern2Color:'#1b1b1b', pattern2Alt:'#2a6f4e', pattern2Contrast:1, pattern2Clear:0, pattern2Rot:0, pattern2FromCover:false, vinylSame:true,
   vinylClear:0, vinyl2Clear:0, tracks:6, tracks2:6,
-  stickerOn:true, stickerShape:'circle', stickerSize:7.6, stickerX:8.8, stickerY:9.2, stickerRot:0,
+  stickerOn:true, stickerShape:'circle', stickerTemplate:'none', stickerLines:null, stickerColor:'yellow', stickerSize:7.6, stickerX:8.8, stickerY:9.2, stickerRot:0,
   numOn:true, numCur:123, numTotal:1000, numPrefix:'No.', numFormat:'slash', numFont:'auto', numPlace:'back', numFinish:'stamp', numColor:'#25336f',
   numX:10.5, numY:-13.6, numSize:.5, numRot:0,
   jacketType:'single', gateOpen:0, lpCount:1, lpLayout:'split', sleeve2X:0, record2X:.7, obiOn:true, obiWidth:3.2, insertOn:true, insertX:0,
@@ -708,6 +813,92 @@ function sampleSticker(shape){const w=1024,h=shape==='rect'?640:1024,c=canvas(w,
   g.font=`700 ${150*k}px ${BODY}`;g.fillText(tr('首版限定','1ST PRESS'),w/2,h*.36);
   g.font=`700 ${80*k}px ${DISPLAY}`;g.fillText('180g VINYL',w/2,h*.58);
   g.font=`500 ${58*k}px ${BODY}`;g.fillText(tr('附歌词插页','LYRIC INSERT'),w/2,h*.74);
+  return c}
+
+// ---------- Hype sticker templates ----------
+// A template is drawn on a canvas from its text lines, so the type stays sharp and every line can be edited.
+// The template fixes the outline: circle, 1.6:1 rectangle, rounded square or a die-cut burst. Default lines
+// keep the details a release has to supply in [brackets].
+const SERIF='"Libre Baskerville","Noto Serif SC",Georgia,serif',GEOMETRIC='"Jost","Futura",'+DISPLAY;
+// Template faces no page text uses, so they load on demand; the boot waits for them before drawing.
+const TPL_FONTS_READY=Promise.all(['700 64px "Libre Baskerville"','600 64px "Noto Serif SC"','700 64px "Jost"'].map(f=>document.fonts?.load(f).catch(()=>{})));
+const STICKER_COLORS={
+  yellow:{zh:'黄',en:'Yellow',bg:'#f7cf1d',ink:'#1a1e1b'},
+  red:{zh:'红',en:'Red',bg:'#c8322a',ink:'#ffffff'},
+  black:{zh:'黑',en:'Black',bg:'#1a1e1b',ink:'#f4f1e8'},
+  white:{zh:'白',en:'White',bg:'#ffffff',ink:'#c8322a'},
+  cover:{zh:'从封面取色',en:'From cover'}};
+const STICKER_CATS=[['press','首版 / 再版','Pressing'],['spec','规格','Format'],['limited','限量','Limited'],['bonus','赠品','Extras'],
+  ['tracks','曲目','Tracks'],['signed','签名','Signed'],['review','媒体评价','Reviews'],['award','奖项','Awards'],['retail','渠道','Retail']];
+// lines: [zh, en] defaults, top to bottom. size: each line's height relative to the others. font: b body, d display, s serif.
+const STICKER_TEMPLATES=[
+  {id:'first-press',cat:'press',name:['首版限定','First pressing'],shape:'circle',color:'yellow',deco:'ring',
+    lines:[['首版限定','1ST PRESS'],['180g VINYL','180g VINYL'],['附歌词插页','LYRIC INSERT']],size:[1,.55,.42],font:['b','d','b']},
+  {id:'reissue',cat:'press',name:['重制再版','Remastered reissue'],shape:'circle',color:'black',deco:'ring',
+    lines:[['[年份] REMASTER','[YEAR] REMASTER'],['首次黑胶化','FIRST TIME ON VINYL']],size:[1,.6],font:['d','b']},
+  {id:'colour-vinyl',cat:'spec',name:['彩胶规格','Coloured vinyl'],shape:'circle',color:'red',deco:'none',
+    lines:[['COLOURED VINYL','COLOURED VINYL'],['[颜色名]','[COLOUR NAME]'],['180g','180g']],size:[.7,1,.5],font:['d','b','d']},
+  {id:'limited',cat:'limited',name:['限量编号','Numbered edition'],shape:'circle',color:'black',deco:'ring',
+    lines:[['LIMITED EDITION','LIMITED EDITION'],['No. [编号] / [总数]','No. [#] / [TOTAL]']],size:[.75,1],font:['d','d']},
+  {id:'includes',cat:'bonus',name:['套装内容','What’s inside'],shape:'rect',color:'white',deco:'border',
+    lines:[['INCLUDES','INCLUDES'],['海报 · 插页 · 下载码','POSTER · INSERT · DOWNLOAD']],size:[1,.62],font:['d','b']},
+  {id:'singles',cat:'tracks',name:['收录单曲','Featured singles'],shape:'rect',color:'yellow',deco:'none',
+    lines:[['收录单曲','FEATURING'],['“[单曲名]”','“[SINGLE]”'],['“[单曲名]”','“[SINGLE]”']],size:[.6,1,1],font:['b','b','b']},
+  {id:'signed',cat:'signed',name:['亲笔签名','Signed copy'],shape:'burst',color:'red',deco:'none',
+    lines:[['亲笔签名','HAND'],['SIGNED','SIGNED']],size:[.8,1],font:['b','d']},
+  {id:'press-score',cat:'review',name:['媒体评分','Review score'],shape:'square',color:'white',deco:'score',
+    lines:[['[媒体名称]','[PUBLICATION]'],['[评分]','[SCORE]']],size:[1,1],font:['s','g']},
+  {id:'award',cat:'award',name:['获奖提名','Award nominee'],shape:'rect',color:'black',deco:'border',
+    lines:[['[奖项名称]','[AWARD NAME]'],['年度专辑 提名','ALBUM OF THE YEAR · NOMINEE']],size:[1,.5],font:['s','b']},
+  {id:'exclusive',cat:'retail',name:['店铺独占','Store exclusive'],shape:'square',color:'yellow',deco:'border',
+    lines:[['[店铺名]','[STORE]'],['EXCLUSIVE','EXCLUSIVE'],['限量 [总数] 张','LIMITED TO [TOTAL]']],size:[.7,1,.6],font:['b','d','b']}];
+const TPL_FONTS={b:['700',BODY],d:['800',DISPLAY],s:['700',SERIF],g:['700',GEOMETRIC]};
+const tplById=id=>STICKER_TEMPLATES.find(t=>t.id===id);
+const tplName=t=>tr(...t.name);
+const tplCatName=id=>{const c=STICKER_CATS.find(c=>c[0]===id);return c?tr(c[1],c[2]):tr('全部','All')};
+const tplLines=(t,lines)=>t.lines.map((l,i)=>lines?.[i]??tr(...l));
+const stickerColorName=k=>tr(STICKER_COLORS[k].zh,STICKER_COLORS[k].en);
+// "cover" takes the cover's most colourful sizeable colour, with dark or light ink to suit.
+function stickerPalette(key){
+  if(key!=='cover')return STICKER_COLORS[key]??STICKER_COLORS.yellow;
+  try{const cl=coverClusters().filter(c=>c.share>.04),score=c=>Math.hypot(c.lab[1],c.lab[2])*Math.sqrt(c.share),pick=cl.reduce((a,c)=>score(c)>score(a)?c:a);
+    return{bg:pick.hex,ink:pick.lab[0]>.7?'#1a1e1b':'#ffffff'}}catch(e){return STICKER_COLORS.yellow}}
+function stickerOutline(g,shape,w,h,inset){g.beginPath();
+  if(shape==='circle')g.arc(w/2,h/2,w/2-inset,0,Math.PI*2);
+  else if(shape==='burst'){const n=20,r=w/2-inset;for(let i=0;i<n*2;i++){const a=Math.PI*i/n-Math.PI/2,rr=i%2?r*.86:r;g.lineTo(w/2+rr*Math.cos(a),h/2+rr*Math.sin(a))}g.closePath()}
+  else g.roundRect(inset,inset,w-2*inset,h-2*inset,(shape==='square'?56:40)*w/1024)}
+// Lines in one centred stack, each as large as its share of the box allows and shrunk to fit the width.
+function stackLines(g,items,cx,cy,boxW,boxH,maxPx){
+  if(!items.length)return;
+  const base=Math.min(maxPx,boxH/items.reduce((a,x)=>a+x.size*1.2,0));
+  // track: letter spacing in ems; bold: an outline in ems that thickens a face with no heavier weight.
+  const set=(x,p)=>{g.font=`${x.f[0]} ${p}px ${x.f[1]}`;g.letterSpacing=`${(x.track??0)*p}px`};
+  const px=items.map(x=>{set(x,base*x.size);return base*x.size*Math.min(1,boxW/g.measureText(x.s).width)});
+  let y=cy-px.reduce((a,p)=>a+p*1.2,0)/2;
+  items.forEach((x,i)=>{set(x,px[i]);y+=px[i]*.6;g.fillText(x.s,cx,y);if(x.bold){g.lineWidth=x.bold*px[i];g.lineJoin='round';g.strokeText(x.s,cx,y)}y+=px[i]*.6});
+  g.letterSpacing='0px'}
+// Panel and library state. The sticker comes from a template or from an image; leaving templates for an upload
+// keeps the template's text and colour, so switching back restores it.
+let tplSource=state.stickerTemplate!=='none'?'template':'upload',tplKept=null,tplCat='all',tplSel=null,tplDraft=[],tplDraftColor='yellow',tplOpener=null;
+const tplThumbs=new Map();
+function drawStickerTemplate(t,lines,colorKey,W=1024){
+  const rect=t.shape==='rect',w=W,h=rect?Math.round(W/1.6):W,k=W/1024,c=canvas(w,h),g=c.getContext('2d'),{bg,ink}=stickerPalette(colorKey);
+  stickerOutline(g,t.shape,w,h,6*k);g.fillStyle=bg;g.fill();
+  g.strokeStyle='rgba(0,0,0,.16)';g.lineWidth=5*k;g.stroke();   // the die-cut edge, so a white sticker still reads on a pale cover
+  g.strokeStyle=ink;g.fillStyle=ink;g.lineWidth=10*k;
+  if(t.deco==='ring'){g.beginPath();g.arc(w/2,h/2,w/2-46*k,0,Math.PI*2);g.stroke()}
+  if(t.deco==='border'){g.beginPath();g.roundRect(36*k,36*k,w-72*k,h-72*k,(t.shape==='square'?30:24)*k);g.stroke()}
+  g.textAlign='center';g.textBaseline='middle';
+  const items=tplLines(t,lines).map((s,i)=>({s:s.trim(),size:t.size[i]??.6,f:TPL_FONTS[t.font[i]]??TPL_FONTS.b})).filter(x=>x.s);
+  if(t.deco==='score'){
+    // Publication name on top, the score large inside a ring below it.
+    const[title,score]=tplLines(t,lines).map(s=>s.trim()),r=w*.293,cy=h*.607;
+    if(title)stackLines(g,[{s:title,size:1,f:TPL_FONTS[t.font[0]],track:-.025,bold:.03}],w/2,h*.215,w*.76,h*.13,104*k);
+    g.lineWidth=54*k;g.beginPath();g.arc(w/2,cy,r-27*k,0,Math.PI*2);g.stroke();
+    if(score)stackLines(g,[{s:score,size:1,f:TPL_FONTS[t.font[1]],track:-.055}],w/2,cy,r*1.3,r*1.1,r*.86);
+    return c}
+  const box=rect?[w*.8,h*.6]:t.shape==='square'?[w*.74,h*.62]:[w*.64,h*.54];
+  stackLines(g,items,w/2,h/2,box[0],box[1],(rect?150:170)*k);
   return c}
 
 function textLines(g,x,y,w,rows,lh,color,seed){const r=rng(seed);g.fillStyle=color;for(let i=0;i<rows;i++){if(r()<.12)continue;g.fillRect(x,y+i*lh,w*(.55+r()*.45),lh*.38)}}
@@ -1168,7 +1359,8 @@ function buildWrap(strength){
 // Hype sticker sits on the film's front face.
 const sticker=new THREE.Mesh(undefined,stickerMat);sticker.castShadow=false;scene.add(sticker);
 const stickerShadow=new THREE.Mesh(undefined,stickerShadowMat);stickerShadow.renderOrder=3;sticker.add(stickerShadow);
-const stickerDims=()=>state.stickerShape==='rect'?[1.6,1]:[1,1];
+const stickerTpl=()=>state.stickerTemplate==='none'?null:tplById(state.stickerTemplate)??null;
+const stickerDims=()=>(stickerTpl()?.shape??state.stickerShape)==='rect'?[1.6,1]:[1,1];
 function buildSticker(){
   const [w,h]=stickerDims(),g=new THREE.PlaneGeometry(w,h,32,32);g.userData.base=g.attributes.position.array.slice();
   if(sticker.geometry)sticker.geometry.dispose();sticker.geometry=g;
@@ -1190,8 +1382,8 @@ function stickerShadowTexture(src){
   g.globalCompositeOperation='source-in';g.fillStyle='#000';g.fillRect(0,0,W,H);
   const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t}
 function stickerTexture(){
-  const shape=state.stickerShape,c=userSticker.img?fitImage(userSticker.img,1024,shape==='rect'?640:1024):sampleSticker(shape);
-  if(userSticker.img){const g=c.getContext('2d');g.globalCompositeOperation='destination-in';g.beginPath();
+  const t=stickerTpl(),shape=state.stickerShape,c=t?drawStickerTemplate(t,state.stickerLines,state.stickerColor):userSticker.img?fitImage(userSticker.img,1024,shape==='rect'?640:1024):sampleSticker(shape);
+  if(!t&&userSticker.img){const g=c.getContext('2d');g.globalCompositeOperation='destination-in';g.beginPath();
     if(shape==='circle')g.arc(512,512,506,0,Math.PI*2);else g.roundRect(0,0,c.width,c.height,48);g.fill()}
   setTex('sticker',colorTex(c),stickerMat);
   const old=stickerShadowMat.map;stickerShadowMat.map=stickerShadowTexture(c);stickerShadowMat.needsUpdate=true;old?.dispose();
@@ -1815,7 +2007,7 @@ function syncUI(){
   $('out-note-sleeve').hidden=!state.sleeveOn;$('out-note-bare').hidden=state.sleeveOn;
   $('lp2-sub').hidden=state.lpCount!==2;$('vinyl-same').checked=state.vinylSame;$('vinyl2-own').hidden=state.vinylSame;$('gate-sub').hidden=!isGate();$('jacket-spec').textContent=specText();syncAnimPanel();syncExportSummary();
   for(const b of document.querySelectorAll('[data-view]'))b.setAttribute('aria-pressed',b.dataset.view===state.view);
-  syncPatterns()}
+  syncPatterns();syncStickerPanel()}
 
 seg('finish','finish',applyFinish);
 // Switching to a single jacket in the panel drops an opening clip back to turntable.
@@ -1831,7 +2023,7 @@ function coverOnColour(i){const s=i===1?'':'2';if(state['vinyl'+s]!=='color'||co
   syncUI()}
 seg('vinyl-style','vinyl',()=>{coverOnColour(1);applyVinyl();syncPatterns()});
 seg('vinyl2-style','vinyl2',()=>{coverOnColour(2);applyVinyl();syncPatterns()});
-seg('sticker-shape','stickerShape',()=>{buildSticker();stickerTexture();if(!userSticker.img)thumb('sticker',tex.sticker.image.toDataURL('image/jpeg',.6));pose()});
+seg('sticker-shape','stickerShape',()=>{buildSticker();stickerTexture();if(!userSticker.img)thumb('sticker',sampleSticker(state.stickerShape).toDataURL('image/jpeg',.6));pose()});
 seg('bg-mode','bg',()=>{applyBg();syncAnimPanel();syncExportSummary()});
 seg('export-scale','scale',()=>syncExportSummary());
 // Picking a colour while on black switches that disc to coloured vinyl.
@@ -1912,6 +2104,72 @@ toggle('wrap-on','wrapOn','wrap-sub');
 toggle('obi-on','obiOn','obi-sub');
 toggle('insert-on','insertOn','insert-sub');
 toggle('sticker-on','stickerOn','sticker-sub');
+const tplThumb=t=>{const key=t.id+'|'+lang;if(!tplThumbs.has(key))tplThumbs.set(key,drawStickerTemplate(t,null,t.color,320).toDataURL());return tplThumbs.get(key)};
+const refreshSticker=()=>{buildSticker();stickerTexture();pose()};
+function lineInputs(root,values,onInput){root.textContent='';
+  values.forEach((v,i)=>{const l=document.createElement('label'),inp=document.createElement('input');inp.className='field';inp.value=v;inp.maxLength=40;
+    inp.addEventListener('input',()=>onInput(i,inp.value));l.append(tr(`第 ${i+1} 行`,`Line ${i+1}`),inp);root.append(l)})}
+const curThumb=t=>{$('tpl-cur-thumb').style.backgroundImage=`url("${drawStickerTemplate(t,state.stickerLines,state.stickerColor,192).toDataURL()}")`};
+function syncStickerPanel(){
+  const t=stickerTpl();if(t)tplSource='template';
+  for(const b of $('sticker-source').children)b.setAttribute('aria-pressed',b.dataset.v===tplSource);
+  $('sticker-tpl-sub').hidden=tplSource!=='template';$('sticker-upload-sub').hidden=tplSource==='template';
+  $('tpl-open').hidden=!!t;$('tpl-current').hidden=!t;
+  $('tpl-open-count').textContent=tr(`${STICKER_TEMPLATES.length} 个预设 · 文字可改`,`${STICKER_TEMPLATES.length} presets · editable text`);
+  if(!t){$('tpl-cur-fields').textContent='';return}
+  $('tpl-cur-name').textContent=tplName(t);$('tpl-cur-meta').textContent=`${tplCatName(t.cat)} · ${stickerColorName(state.stickerColor)}`;curThumb(t);
+  lineInputs($('tpl-cur-fields'),tplLines(t,state.stickerLines),(i,v)=>{const ls=tplLines(t,state.stickerLines);ls[i]=v;state.stickerLines=ls;stickerTexture();curThumb(t)})}
+$('sticker-source').addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.dataset.v===tplSource)return;tplSource=b.dataset.v;
+  const t=stickerTpl();
+  if(tplSource==='upload'&&t){tplKept={id:t.id,lines:state.stickerLines,color:state.stickerColor};state.stickerTemplate='none';refreshSticker()}
+  else if(tplSource==='template'&&tplKept){Object.assign(state,{stickerTemplate:tplKept.id,stickerLines:tplKept.lines,stickerColor:tplKept.color});refreshSticker()}
+  syncStickerPanel()});
+// An uploaded sticker image replaces the template.
+$('up-sticker').addEventListener('change',()=>{const t=stickerTpl();if(t){tplKept={id:t.id,lines:state.stickerLines,color:state.stickerColor};state.stickerTemplate='none';buildSticker()}
+  tplSource='upload';syncStickerPanel()});
+
+function tplMatches(t){const q=$('tpl-q').value.trim().toLowerCase();if(!q)return true;
+  return[...t.name,tplCatName(t.cat),...STICKER_CATS.find(c=>c[0]===t.cat).slice(1),...t.lines.flat(),t.id].join(' ').toLowerCase().includes(q)}
+function renderTplLib(){
+  const found=STICKER_TEMPLATES.filter(tplMatches),inCat=t=>tplCat==='all'||t.cat===tplCat,list=found.filter(inCat),cur=stickerTpl();
+  $('tpl-cats').replaceChildren(...[['all'],...STICKER_CATS].map(([id])=>{const b=document.createElement('button'),n=document.createElement('small');
+    b.type='button';b.setAttribute('aria-pressed',id===tplCat);n.textContent=found.filter(t=>id==='all'||t.cat===id).length;
+    b.append(tplCatName(id),n);b.addEventListener('click',()=>{tplCat=id;renderTplLib()});return b}));
+  $('tpl-grid').replaceChildren(...list.map(t=>{const b=document.createElement('button'),art=document.createElement('span'),name=document.createElement('strong'),meta=document.createElement('small');
+    b.type='button';b.className='tpl-card';b.setAttribute('aria-pressed',t.id===tplSel);art.className='tpl-art';art.style.backgroundImage=`url("${tplThumb(t)}")`;
+    name.textContent=tplName(t);meta.textContent=cur?.id===t.id?tr('● 当前使用中','● In use'):tplCatName(t.cat);meta.classList.toggle('on',cur?.id===t.id);
+    b.append(art,name,meta);b.addEventListener('click',()=>selectTpl(t.id));return b}));
+  $('tpl-empty').hidden=list.length>0;
+  renderTplDetail()}
+function selectTpl(id){const t=tplById(id),cur=stickerTpl();tplSel=id;
+  tplDraft=tplLines(t,cur?.id===id?state.stickerLines:null);tplDraftColor=cur?.id===id?state.stickerColor:t.color;
+  $('tpl-sheet').dataset.step='detail';renderTplLib();if(phone.matches)$('tpl-back').focus()}
+function drawTplPreview(){const t=tplById(tplSel),cv=$('tpl-preview'),g=cv.getContext('2d'),art=drawStickerTemplate(t,tplDraft,tplDraftColor,512),pad=16,s=cv.width-2*pad,h=s*art.height/art.width;
+  g.clearRect(0,0,cv.width,cv.height);g.drawImage(art,pad,(cv.height-h)/2,s,h)}
+function renderTplDetail(){const t=tplSel&&tplById(tplSel);$('tpl-hint').hidden=!!t;$('tpl-edit').hidden=!t;if(!t)return;
+  $('tpl-name').textContent=tplName(t);$('tpl-cat').textContent=tplCatName(t.cat);
+  lineInputs($('tpl-fields'),tplDraft,(i,v)=>{tplDraft[i]=v;drawTplPreview()});
+  $('tpl-colors').replaceChildren(...Object.keys(STICKER_COLORS).map(k=>{const b=document.createElement('button'),dot=document.createElement('i');b.type='button';
+    b.setAttribute('aria-pressed',k===tplDraftColor);dot.style.background=stickerPalette(k).bg;b.append(dot,stickerColorName(k));
+    b.addEventListener('click',()=>{tplDraftColor=k;for(const x of $('tpl-colors').children)x.setAttribute('aria-pressed',x===b);drawTplPreview()});return b}));
+  drawTplPreview()}
+function openTplLib(e){tplOpener=e?.currentTarget??null;const cur=stickerTpl();tplCat='all';$('tpl-q').value='';tplSel=null;
+  if(cur){tplSel=cur.id;tplDraft=tplLines(cur,state.stickerLines);tplDraftColor=state.stickerColor}
+  $('tpl-sheet').dataset.step='grid';renderTplLib();$('tpl-lib').hidden=false;(phone.matches?$('tpl-close'):$('tpl-q')).focus()}
+function closeTplLib(){$('tpl-lib').hidden=true;tplOpener?.focus()}
+function applyTpl(){const t=tplById(tplSel);if(!t)return;
+  const defaults=tplLines(t,null);
+  Object.assign(state,{stickerTemplate:t.id,stickerLines:tplDraft.every((v,i)=>v===defaults[i])?null:tplDraft.slice(),stickerColor:tplDraftColor,stickerOn:true});
+  tplKept=null;tplSource='template';$('sticker-on').checked=true;$('sticker-sub').hidden=false;
+  refreshSticker();syncStickerPanel();closeTplLib();tplOpener=$('tpl-change');tplOpener.focus()}
+$('tpl-open').addEventListener('click',openTplLib);$('tpl-change').addEventListener('click',openTplLib);
+$('tpl-close').addEventListener('click',closeTplLib);$('tpl-cancel').addEventListener('click',closeTplLib);$('tpl-apply').addEventListener('click',applyTpl);
+$('tpl-back').addEventListener('click',()=>{$('tpl-sheet').dataset.step='grid'});
+$('tpl-q').addEventListener('input',renderTplLib);
+$('tpl-clear').addEventListener('click',()=>{$('tpl-q').value='';tplCat='all';renderTplLib()});
+$('tpl-lib').addEventListener('click',e=>{if(e.target===$('tpl-lib'))closeTplLib()});
+addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('tpl-lib').hidden)closeTplLib()});
+syncStickerPanel();
 toggle('num-on','numOn','num-sub',placeNumber);
 slider('sleeve-x','sleeveX','pct');
 slider('record-x','recordX','pct');
@@ -2037,6 +2295,8 @@ const SPEC_FIELDS=[
   numF('wrap.gloss','gloss',0,200,.01,'塑封反光强度（%），100 为默认'),
   boolF('sticker.on','stickerOn','是否显示 hype sticker（贴在塑封膜上）'),
   enumF('sticker.shape','stickerShape',['circle','rect','square'],'贴纸形状：circle 圆形，rect 圆角长方形（宽高比 1.6:1），square 圆角正方形'),
+  enumF('sticker.template','stickerTemplate',['none',...STICKER_TEMPLATES.map(t=>t.id)],'贴纸模板。none 不用模板，贴纸用 images.sticker（没给时用示例图）。用模板时形状由模板决定，sticker.shape 不生效；文字写在 sticker.lines，配色写在 sticker.color。可选：'+STICKER_TEMPLATES.map(t=>`${t.id} ${t.name[0]}（${{circle:'圆形',rect:'长方形',square:'方形',burst:'异形星爆'}[t.shape]}）`).join('，')),
+  enumF('sticker.color','stickerColor',Object.keys(STICKER_COLORS),'模板配色：yellow 黄底黑字，red 红底白字，black 黑底浅色字，white 白底红字，cover 从封面取主色。只在用模板时生效；只写 template 时用该模板的默认配色'),
   numF('sticker.size','stickerSize',40,140,.1,'贴纸尺寸（mm）：圆形为直径，长方形为高度'),
   numF('sticker.x','stickerX',-120,120,.1,'贴纸中心相对封套中心的水平位置（mm，向右为正）'),
   numF('sticker.y','stickerY',-120,120,.1,'贴纸中心相对封套中心的垂直位置（mm，向上为正）'),
@@ -2084,7 +2344,7 @@ function slotGuide(){
     square('insertFront','插页正面',304,'composite',{used:state.insertOn,notes:'歌词、制作名单用排版'}),
     square('insertBack','插页背面',304,'composite',{used:state.insertOn}),
     {slot:'sticker',label:'Hype sticker',px:state.stickerShape==='rect'?[1024,640]:[1024,1024],mm:state.stickerShape==='rect'?[mm(state.stickerSize*1.6),mm(state.stickerSize)]:[mm(state.stickerSize),mm(state.stickerSize)],
-      visible:state.stickerShape==='circle'?'只显示内切圆':'整张可见，圆角',covered:num('sticker'),recommend:'typeset',used:state.stickerOn,notes:'文字为主，不建议生图'},
+      visible:stickerTpl()?'模板自带外形，不用贴图':state.stickerShape==='circle'?'只显示内切圆':'整张可见，圆角',covered:num('sticker'),recommend:'typeset',used:state.stickerOn&&!stickerTpl(),notes:stickerTpl()?`正在用模板 ${state.stickerTemplate}，文字用 sticker.lines 改，不需要贴图`:'文字为主，不建议生图；常见文案可以直接用 sticker.template 选模板'},
   ]}
 const getPath=(o,p)=>p.split('.').reduce((a,k)=>a==null?undefined:a[k],o);
 const setPath=(o,p,v)=>{const ks=p.split('.');let a=o;for(const k of ks.slice(0,-1))a=a[k]??={};a[ks.at(-1)]=v};
@@ -2100,6 +2360,7 @@ function specFromState(){
     if(state['vinyl'+sx]==='black')for(const k of['color','transparency','pattern'])delete d[k];
     else if(!maskById(state['pattern'+sx]))delete d.pattern;
     else if(maskById(state['pattern'+sx]).palette.mode!=='accent')delete d.pattern.transparency}
+  {const t=stickerTpl();if(t){delete s.sticker.shape;s.sticker.lines=tplLines(t,state.stickerLines)}else delete s.sticker.color}
   s.camera={view:state.view,zoom:state.camZoom,azimuth:state.camAz,elevation:state.camEl,panX:state.camPanX,panY:state.camPanY};
   s.output={background:state.bg==='transparent'?'transparent':state.bgColor,width:state.outW,height:state.outH};
   s.animation={preset:state.animPreset,duration:state.animDuration,direction:state.animDir,aspect:state.animAspect};
@@ -2116,6 +2377,7 @@ function buildSchema(){
   for(const f of SPEC_FIELDS){
     const s=f.type==='enum'?{enum:f.values}:f.type==='number'?{type:f.integer?'integer':'number',minimum:f.min,maximum:f.max}:f.type==='boolean'?{type:'boolean'}:f.type==='color'?{type:'string',pattern:'^#[0-9a-fA-F]{6}$'}:{type:'string',maxLength:f.maxLength};
     Object.assign(s,{description:f.desc,default:toSpecValue(f,DEFAULT_STATE[f.key])});parent(f.path).properties[f.path.split('.').at(-1)]=s}
+  parent('sticker.lines').properties.lines={type:'array',maxItems:3,items:{type:'string',maxLength:40},description:'模板从上到下每一行的文字。不写的行用模板默认文字（方括号是占位，要换成实际内容），写空字符串去掉这一行。只在用模板时生效'};
   parent('number.fontFile').properties.fontFile={type:'string',description:'自定义字体文件（TTF/OTF/WOFF/WOFF2）。CLI 中写相对 spec 文件的路径；提供后 number.font 默认变为 custom'};
   root.properties.images={type:'object',additionalProperties:false,description:'各部件贴图。CLI 中写相对 spec 文件的本地路径或 http(s) 地址；页面 API 接受 data URL 或 URL。未提供的部件使用示例图',
     properties:Object.fromEntries(Object.entries(IMAGE_SLOTS).map(([k,d])=>[k,{type:'string',description:d}]))};
@@ -2146,7 +2408,7 @@ function buildSchema(){
     size:{type:'integer',minimum:240,maximum:2160,description:'短边像素。不写时 MP4 为 1080（16:9 即 1920 × 1080），GIF 为 600'}}};
   return root}
 
-const SPEC_EXTRA=['version','meta','number.fontFile','output.background','output.width','output.height','camera.view','camera.zoom','camera.azimuth','camera.elevation','camera.panX','camera.panY',...['preset','duration','fps','direction','angle','aspect','size'].map(k=>'animation.'+k),...Object.keys(IMAGE_SLOTS).map(k=>'images.'+k)];
+const SPEC_EXTRA=['version','meta','number.fontFile','output.background','output.width','output.height','camera.view','camera.zoom','camera.azimuth','camera.elevation','camera.panX','camera.panY',...['preset','duration','fps','direction','angle','aspect','size'].map(k=>'animation.'+k),...Object.keys(IMAGE_SLOTS).map(k=>'images.'+k),'sticker.lines'];
 async function applySpec(spec){
   if(!spec||typeof spec!=='object'||Array.isArray(spec))throw new Error('spec 必须是 JSON 对象');
   // Legacy "clear" was colour vinyl at a fixed 62% opacity; keep old specs rendering the same.
@@ -2174,6 +2436,16 @@ async function applySpec(spec){
   // Same conveniences as the panel: a new place brings its own default position, a new finish its default ink.
   if(has('number.place')){const d=NUM_DEFAULTS[state.numPlace];if(!has('number.x'))state.numX=d.x;if(!has('number.y'))state.numY=d.y;if(!has('number.size'))state.numSize=d.size;if(!has('number.rotation'))state.numRot=d.rot}
   if(has('number.finish')&&!has('number.color'))state.numColor=NUM_INK[state.numFinish];
+  // A template brings its own colour and default text unless the spec writes them.
+  if(has('sticker.template')){const t=stickerTpl();if(!has('sticker.lines'))state.stickerLines=null;if(t&&!has('sticker.color'))state.stickerColor=t.color}
+  if(has('sticker.lines')){const ls=getPath(spec,'sticker.lines');
+    if(!Array.isArray(ls)||ls.some(l=>typeof l!=='string'))warnings.push('sticker.lines 需要字符串数组，已忽略');
+    else{const t=stickerTpl();state.stickerLines=ls.slice(0,3).map(l=>l.slice(0,40));
+      if(t&&ls.length>t.lines.length)warnings.push(`sticker.template=${t.id} 只有 ${t.lines.length} 行，sticker.lines 多出的行已忽略`)}}
+  {const t=stickerTpl();
+    if(t&&has('sticker.shape'))warnings.push(`sticker.template=${t.id} 的形状由模板决定，sticker.shape 已忽略`);
+    if(t&&has('images.sticker'))warnings.push(`用了 sticker.template=${t.id}，images.sticker 不会显示`);
+    if(!t&&(has('sticker.lines')||has('sticker.color')))warnings.push('sticker.lines 和 sticker.color 只在 sticker.template 不为 none 时生效')}
   // A disc whose spec gives a colour keeps it when the panel later switches black -> colour.
   for(const i of[1,2])colorSet[i-1]=['color','pattern.color','pattern.color2','pattern.fromCover'].some(k=>has(`records.disc${i}.${k}`));
   // Older specs set disc 2's vinyl without the switch: writing its style fields means "set separately".
@@ -2480,14 +2752,15 @@ function redrawSamples(){
   for(const[slot,fn]of Object.entries(redo)){const el=document.querySelector(`[data-slot="${slot}"]`);if(el.classList.contains('filled'))continue;setTex(slot,colorTex(fn()),...SLOTS[slot].mats());thumb(slot,tex[slot].image.toDataURL('image/jpeg',.6))}
   if(!userObi.img)obiTexture();
   numTexture();
-  if(!userSticker.img){stickerTexture();thumb('sticker',tex.sticker.image.toDataURL('image/jpeg',.6))}
+  if(!userSticker.img||stickerTpl())stickerTexture();
+  if(!userSticker.img)thumb('sticker',sampleSticker(state.stickerShape).toDataURL('image/jpeg',.6));
 }
-const fontsSettled=(document.fonts?.ready??Promise.resolve()).then(redrawSamples);
+const fontsSettled=Promise.all([document.fonts?.ready,TPL_FONTS_READY]).then(redrawSamples);
 $('lang-btn').addEventListener('click',()=>{lang=lang==='en'?'zh':'en';try{localStorage.setItem('gm-lang',lang)}catch(e){}
   translateStatic();$('jacket-spec').textContent=specText();lp2Where();if(!userFontFace)$('num-font-custom').textContent=tr('自定义（未上传）','Custom (none uploaded)');
   else $('num-font-custom').textContent=$('num-font-custom').textContent.replace(/^(自定义|Custom) · /,tr('自定义 · ','Custom · '));redrawSamples();
   for(const s of['','2'])buildPicker(s);syncPatterns();
-  for(const t of document.querySelectorAll('.tag.lib'))t.textContent=tr('曲库','Library');if($('lib-view').innerHTML)libView?.()});
+  for(const t of document.querySelectorAll('.tag.lib'))t.textContent=tr('曲库','Library');syncStickerPanel();if(!$('tpl-lib').hidden)renderTplLib();if($('lib-view').innerHTML)libView?.()});
 // The play button's label follows its state, so it is relabelled after translateStatic, not by it.
 $('lang-btn').addEventListener('click',()=>{setPlaying(preview.playing);syncExportSummary();if(!pngBusy)setPngLabel(tr('导出 PNG','Export PNG'))});
 const nextFrame=()=>new Promise(r=>requestAnimationFrame(()=>r()));
