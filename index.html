@@ -1277,15 +1277,23 @@ function applyJacketType(){
 // ---------- Views ----------
 // Each view frames a box of the given size (scene units) so it fits any stage aspect ratio.
 const VIEWS={quarter:{t:[9,-.5,0],dir:[-.36,.1,1],fit:[62,35]},front:{t:[9,0,0],dir:[0,0,1],fit:[64,35]},side:{t:[5,-1,0],dir:[-.86,.12,.5],fit:[56,36]}};
-// How far the cover's contents reach from the hinge: the board, or disc 2 and its sleeve pulled past it.
-function coverReach(){if(!isSplit())return J.w;const x=state.sleeve2X*24,rx=x+state.record2X*27;
-  return Math.max(J.w,J.w/2+Math.max(state.sleeveOn?x+SLV.s/2:0,rx+LP.r))}
-function setView(name){userMoved=false;const v=VIEWS[name],half=Math.tan(THREE.MathUtils.degToRad(camera.fov/2));
-  // An opening gatefold cover reaches left of the jacket, and on a split 2LP so does disc 2 pulled from it;
-  // widen the frame by that reach.
-  const reach=isGate()?Math.max(0,-coverReach()*Math.cos(THREE.MathUtils.degToRad(state.gateOpen))):0,t=[v.t[0]-reach/2,v.t[1],v.t[2]];
-  const dist=Math.max(v.fit[1]/(2*half),(v.fit[0]+reach)/(2*half*camera.aspect)),dir=new THREE.Vector3(...v.dir).normalize().multiplyScalar(dist);
-  controls.target.set(...t);camera.position.set(t[0]+dir.x,t[1]+dir.y,t[2]+dir.z);controls.update();state.view=name;
+// Side looks in from the left, along the spine. Once a gatefold opens, the cover swings into that line of
+// sight, so side looks in from the right instead, across the mouth onto the inner pages.
+const viewDir=name=>{const d=VIEWS[name].dir;return name==='side'&&gateOpened()?[-d[0],d[1],d[2]]:d};
+function setView(name){userMoved=false;const v=VIEWS[name],half=Math.tan(THREE.MathUtils.degToRad(camera.fov/2)),margin=1.06;
+  const d=new THREE.Vector3(...viewDir(name)).normalize(),r=new THREE.Vector3().crossVectors(d.clone().negate(),camera.up).normalize(),u=new THREE.Vector3().crossVectors(r,d.clone().negate());
+  // The preset frames a v.fit box about v.t. An open gatefold's cover (and on a split 2LP, disc 2 pulled from
+  // it) swings out of that box, toward the camera below 90°: frame the box together with the open jacket's
+  // real bounds, moving the target to their centre and backing off until every corner fits, nearer ones included.
+  const t=new THREE.Vector3(...v.t),pts=[];let x0=-v.fit[0]/2,x1=-x0,y0=-v.fit[1]/2,y1=-y0;
+  if(gateOpened()){const b=productBox(productParts());
+    for(const x of[b.min.x,b.max.x])for(const y of[b.min.y,b.max.y])for(const z of[b.min.z,b.max.z]){
+      const q=new THREE.Vector3(x,y,z);pts.push(q);q.sub(t);
+      x0=Math.min(x0,q.dot(r));x1=Math.max(x1,q.dot(r));y0=Math.min(y0,q.dot(u));y1=Math.max(y1,q.dot(u))}}
+  const c=t.clone().addScaledVector(r,(x0+x1)/2).addScaledVector(u,(y0+y1)/2);
+  let dist=Math.max((y1-y0)/(2*half),(x1-x0)/(2*half*camera.aspect));
+  for(const p of pts){const q=p.sub(c),z=q.dot(d);dist=Math.max(dist,z+margin*Math.abs(q.dot(r))/(half*camera.aspect),z+margin*Math.abs(q.dot(u))/half)}
+  controls.target.copy(c);camera.position.copy(c).addScaledVector(d,dist);controls.update();state.view=name;
   for(const b of document.querySelectorAll('[data-view]'))b.setAttribute('aria-pressed',b.dataset.view===name);
   if(previewActive())fitPreview()}
 
@@ -2233,8 +2241,8 @@ function fitClipCamera(){
   const n=ANIM_PRESETS.indexOf(state.animPreset)<2?72:24,frames=Array.from({length:n},(_,i)=>animFrame(i/n));
   const rest=productBox(productParts()),pivot=rest.getCenter(new THREE.Vector3()),boxes=frames.map(f=>f.set?withPose(f.set,()=>productBox(productParts())):rest),all=new THREE.Box3();
   for(const b of boxes)all.union(b);
-  const c=all.getCenter(new THREE.Vector3()),v=VIEWS[state.view],half=Math.tan(THREE.MathUtils.degToRad(camera.fov/2)),margin=1.08;
-  const sph=new THREE.Spherical().setFromVector3(new THREE.Vector3(...v.dir));
+  const c=all.getCenter(new THREE.Vector3()),half=Math.tan(THREE.MathUtils.degToRad(camera.fov/2)),margin=1.08;
+  const sph=new THREE.Spherical().setFromVector3(new THREE.Vector3(...viewDir(state.view)));
   sph.theta+=THREE.MathUtils.degToRad(state.camAz);sph.phi=THREE.MathUtils.clamp(sph.phi-THREE.MathUtils.degToRad(state.camEl),.05,Math.PI-.05);sph.radius=1;
   const d=new THREE.Vector3().setFromSpherical(sph),r=new THREE.Vector3().crossVectors(d.clone().negate(),camera.up).normalize(),u=new THREE.Vector3().crossVectors(r,d.clone().negate());
   const axis=new THREE.Vector3(0,1,0),q=new THREE.Vector3();let dist=0,reach=0;
