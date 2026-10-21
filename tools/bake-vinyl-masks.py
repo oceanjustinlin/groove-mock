@@ -148,6 +148,11 @@ CURATED = {
                             'master': 'output/texture-gen/library/ripple-01', 'reference': 'https://www.pinterest.com/pin/884464814351029201/',
                             'referenceSha256': '3da1a351d89f770250bcfbdaf64ba3f5140da731a0fc8e0687f4fd3fbfa8dc73',
                             'generatedSha256': '8d1c40fd180b4b5b222e598c75049c12c40760df5c079294992a1d6b06cc11e7'}},
+    'ripple-02': {'role': 'layout', 'palette': 'accent', 'layers': ['layer1.png', 'layer2.png'], 'base': '#42d9ea', 'colors': ['#000104', '#4bfcff'],
+                 'source': {'kind': 'unlicensed-reference', 'operation': 'photo variant + colour extraction', 'date': '2026-10-22',
+                            'master': 'output/texture-gen/library/ripple-02', 'reference': 'https://www.pinterest.com/pin/388717011610002399/',
+                            'referenceSha256': '4bac173d278d3f1010213034294b3bcfc4257f5d478d76ad0b753a1b171c181f',
+                            'generatedSha256': '805efa6673cc81446b995906133e3f64184e11267981bc596dc520088f6bb905'}},
 }
 
 # meta.disc_frac is the disc diameter as a fraction of the master's width. The masters extend the

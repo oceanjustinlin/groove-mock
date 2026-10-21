@@ -494,6 +494,53 @@
       }
     },
     {
+      "id": "ripple-02",
+      "family": "ripple",
+      "role": "layout",
+      "file": "ripple-02.webp",
+      "thumb": "thumbs/ripple-02.jpg",
+      "size": 1024,
+      "accents": 2,
+      "base": "#42d9ea",
+      "colors": [
+        "#000104",
+        "#4bfcff"
+      ],
+      "palette": {
+        "mode": "accent",
+        "derive": [
+          {
+            "t": 1.1221,
+            "dL": -0.0003
+          }
+        ]
+      },
+      "labelRadius": null,
+      "source": {
+        "kind": "unlicensed-reference",
+        "master": "output/texture-gen/library/ripple-02",
+        "file": [
+          "layer1.png",
+          "layer2.png"
+        ],
+        "operation": "photo variant + colour extraction",
+        "date": "2026-10-22",
+        "reference": "https://www.pinterest.com/pin/388717011610002399/",
+        "referenceSha256": "4bac173d278d3f1010213034294b3bcfc4257f5d478d76ad0b753a1b171c181f",
+        "generatedSha256": "805efa6673cc81446b995906133e3f64184e11267981bc596dc520088f6bb905",
+        "prompt": "附图是一张彩胶唱片照片。\n\n请生成一张新的产品照片：和附图同一批次压出来的另一张唱片。材料、颜色和压片工艺完全相同，纹路的样子和附图一致，只是具体排布不同。\n\n拍摄要求：\n- 严格正俯拍，相机正对中心孔，无透视，唱片是正圆，居中，直径约占画面边长的 92%。\n- 背景是均匀的纯中灰色。\n- 光线均匀漫射，没有高光、反光条和暗角；看不到沟槽。\n- 中心标签是完全空白的浅色哑光纸，没有文字或图案。\n- 没有手、封套、道具、文字或水印。"
+      },
+      "status": "draft",
+      "bake": {
+        "crop": 1.0,
+        "floor": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    {
       "id": "smoke-01",
       "family": "smoke",
       "role": "effect",
