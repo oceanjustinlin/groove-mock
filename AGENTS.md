@@ -22,6 +22,17 @@ cd cli && npm install
 
 结果是单行 JSON：`{"ok":true,"out":…,"width":…,"height":…,"warnings":[…],"ms":…}`。退出码：0 成功；1 出错（看 `error`）；2 在 `--strict` 下有警告。
 
+## 用户要做某张已发行专辑时：曲库链路
+
+用户给的是艺人和专辑名，没有给图时，先从曲库（MusicBrainz + Cover Art Archive）取真实发行素材，再补缺的部分。需要联网。
+
+1. **搜专辑**：`node cli/record-mockup.mjs library search --artist "Radiohead" --album "OK Computer" --json`，取 `groups[].id`。英文名查不到中日文艺人时，会按别名返回 `artists`，用 `--artist-id <id>` 再搜一次。
+2. **选版本**：`node cli/record-mockup.mjs library releases <group-id> --json`，黑胶版本排在前面（`vinyl: true`），优先选图多、有正面和背面的。只有非黑胶版本时也能用它的图，但不会改唱片参数。
+3. **看分配方案**：`node cli/record-mockup.mjs library pick <release-id> spec.json --dry-run`。列出每张图的图号、类型和要填的贴图位：正面优先用数字版原图，盘面照片按 A–D 面分给标签，唱片张数、单开/双开、每面音轨数也从这一版读出。要调整就加 `--use <贴图位>=<图号>` 或 `--use <贴图位>=none`。
+4. **写入**：去掉 `--dry-run` 再跑一次。图片下载到 `<spec 名>-library/`，标签按中孔自动裁切成方图，spec 里填好 `images`、`meta.assets`（`fetched`）、`meta.artist` / `album` 和唱片参数；只要图片、不改唱片参数时加 `--images-only`。spec 里已有、但不是 `fetched` 的图默认保留，只有 `--use` 点名的贴图位才会被替换。
+5. **检查标签**：打开 `labelA.png` 等看中孔是否居中。结果有"没找到中孔"的警告时，用 `--crop labelA=dx:…,dy:…`（原图像素）、`zoom:`（0.6–1.4）、`rot:`（度）微调后重跑。
+6. **补缺**：曲库没有的贴图位（内页、内袋、Obi 等）按下一节补，或关掉对应部件。最终回复里说明哪些图是曲库取得的真实发行素材，版权归原权利方，仅供预览。
+
 ## 素材不全时：生图 + 排版链路
 
 用户只给了部分素材（比如只有封面）时，按这个顺序补齐。提示词模板在 `prompts/image-prompts.md`。
@@ -31,7 +42,7 @@ cd cli && npm install
 3. **生成底图**：只给建议为"生图"或"生图底 + 排版"的贴图位生成，**底图不能有任何文字**，尺寸按 `slots` 的输出来。
 4. **排版文字**：曲目、标题、面号、歌词、Obi、贴纸文案用代码排版（Python 或 HTML 截图都可以），叠到底图上。文字内容来自用户给的信息；用户没给的，用明显的占位文字，不要编造曲目。
 5. **出图检查**：`render` 后看图，重点看三件事：重点内容有没有被 Obi、贴纸或编号挡住；文字在 3D 里是否清楚；整套颜色是否协调。
-6. **登记来源**：在 spec 的 `meta.assets` 里登记每张图的来源（`user` / `generated` / `typeset` / `composite`；网页曲库搜索取到的图为 `fetched`），生图的写上提示词。最终回复里要说明哪些是示意设计、不是官方素材。
+6. **登记来源**：在 spec 的 `meta.assets` 里登记每张图的来源（`user` / `generated` / `typeset` / `composite`；网页曲库或 `library pick` 取到的图为 `fetched`，`pick` 会自动登记），生图的写上提示词。最终回复里要说明哪些是示意设计、不是官方素材。
 
 不要生成真实发行的封面。
 
@@ -56,6 +67,7 @@ cd cli && npm install
 | 构图 | `camera.view`：quarter / front / side，再用 `zoom`、`azimuth`、`elevation` 微调，用 `panX` / `panY`（mm）平移画面中心；拍背面用 `view: front` + `azimuth: 180` + `panX: -90` |
 | 输出 | `output.width` / `height`（px，最大 4096），`output.background`：`"transparent"` 或 `#rrggbb` |
 | 视频 / 动图 | `animation.preset`：`turntable` 转一整圈 / `swing` 左右摆 `angle` 度（不露背面）/ `spin` 唱片自转（标签要露出来）/ `gatefold` 双开封面打开再合上（开到 `jacket.gateOpen`，为 0 时 160°）/ `pull` 内袋和唱片抽出再推回（抽到 `sleeveOut` / `recordOut`，都为 0 时用常见值）；`direction` 只用于 turntable 和 swing，`duration`（秒），`aspect`：`16:9` / `1:1` / `9:16`，`size` 短边 px。用 `video spec.json -o x.mp4`（或 `.gif`）出片，构图沿用 `camera.*`，镜头自动拉远到整段不出画。网页工作台的 ▶ 播放同一段动画 |
+| 曲库取图 | `library search` → `library releases` → `library pick <release-id> spec.json`，见上面的曲库链路 |
 | 素材来源 | `meta.assets.<贴图位>.source`，渲染器不读，`render` 会在结果的 `assets` 里汇总 |
 | 标题信息 | `meta.title` / `meta.artist` / `meta.album`，渲染器不画进图里。网页在手机上大屏查看时，顶部标题第一行显示 `title`（默认 Record Mockup），第二行显示「artist – album」，都没写就显示唱片规格。从曲库套用素材时会自动填写 artist 和 album |
 

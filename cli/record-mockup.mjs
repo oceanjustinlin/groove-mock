@@ -10,6 +10,7 @@ import path from 'node:path';
 import {parseArgs} from 'node:util';
 import {fileURLToPath} from 'node:url';
 import {createRequire} from 'node:module';
+import * as library from './library.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const DEFAULT_PAGE = path.resolve(HERE, '..', 'index.html');
@@ -33,11 +34,25 @@ const HELP = `record-mockup — 用 JSON 场景描述渲染黑胶 3D 模型图
                                                 按号段批量渲染限量编号图
   record-mockup video  <spec.json> [-o out.mp4]   按 spec.animation 渲染旋转视频（.mp4）或动图（.gif）
 
+曲库（MusicBrainz + Cover Art Archive，需联网）
+  record-mockup library search --artist <名字> [--album <专辑>] [--artist-id <id>]
+                                                搜专辑，列出 release group id
+  record-mockup library releases <group-id>       列出这张专辑的各个版本（黑胶在前），列出 release id
+  record-mockup library pick <release-id> [spec.json] [--dry-run]
+                                                下载这一版的图，填进 spec 的 images（标签按中孔自动裁切），
+                                                并写入唱片张数、单开/双开、每面音轨数和 meta.assets 来源
+
 选项
-  -o, --out <path>       输出文件（render 默认写到 spec 同目录、同名 .png；video 默认同名 .mp4，扩展名决定格式）
+  -o, --out <path>       输出文件（render 默认写到 spec 同目录、同名 .png；video 默认同名 .mp4，扩展名决定格式；
+                         library pick 为要写入的 spec，默认 ./spec.json，不存在就新建）
   --width, --height <px> 覆盖 spec 里的 output.width / output.height（video 不用，改 animation.aspect / size）
   --set <path=value>     临时覆盖 spec 字段，可重复，如 --set number.current=88 --set jacket.type=gatefold
-  --dir <dir>            numbers 的输出目录（默认 spec 同目录下的 <spec 名>-numbers/）
+  --dir <dir>            numbers 的输出目录（默认 spec 同目录下的 <spec 名>-numbers/）；
+                         library pick 的图片目录（默认 spec 同目录下的 <spec 名>-library/）
+  --use <slot=n>         pick 时指定贴图位用第 n 张图（图号见 --dry-run），slot=none 不填这个贴图位，可重复
+  --crop <slot=k:v,…>    pick 时微调标签裁切，如 --crop labelA=zoom:1.1,rot:15,dx:0,dy:-8（dx/dy 为原图像素）
+  --images-only          pick 时只填图片，不改唱片张数、封套类型和音轨数
+  --dry-run              pick 时只列出图片和分配方案，不下载、不写文件
   --encoder <name>       video 的 MP4 编码器：software（默认，立即开始）| hardware（每帧更快，但首次启动可能卡十几秒）| auto
   --json                 以一行 JSON 输出结果，便于程序读取
   --strict               spec 有任何警告（未知字段、越界值）就不渲染，退出码 2
@@ -59,6 +74,8 @@ function parse() {
       out: {type: 'string', short: 'o'}, width: {type: 'string'}, height: {type: 'string'},
       set: {type: 'string', multiple: true}, dir: {type: 'string'}, from: {type: 'string'}, to: {type: 'string'},
       encoder: {type: 'string', default: 'software'}, json: {type: 'boolean'}, strict: {type: 'boolean'}, browser: {type: 'string', default: 'chrome'},
+      artist: {type: 'string'}, album: {type: 'string'}, 'artist-id': {type: 'string'}, use: {type: 'string', multiple: true},
+      crop: {type: 'string', multiple: true}, 'images-only': {type: 'boolean'}, 'dry-run': {type: 'boolean'},
       page: {type: 'string'}, verbose: {type: 'boolean'}, software: {type: 'boolean'}, help: {type: 'boolean', short: 'h'},
     },
   });
@@ -328,6 +345,176 @@ async function cmdVideo(args, opts) {
   } finally { await s.close(); }
 }
 
+// ---------- record library ----------
+const IMAGE_SLOT_NAMES = ['front', 'back', 'spine', 'innerLeft', 'innerRight', 'obi', 'sleeve', 'labelA', 'labelB', 'labelC', 'labelD', 'insertFront', 'insertBack', 'sticker'];
+const MBID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const EXT = {'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp', 'image/gif': '.gif'};
+
+async function cmdLibrary(args, opts) {
+  const [sub, ...rest] = args;
+  if (sub === 'search') return librarySearch(opts);
+  if (sub === 'releases') return libraryReleases(rest, opts);
+  if (sub === 'pick') return libraryPick(rest, opts);
+  throw new CliError('library 的子命令：search | releases | pick，见 record-mockup --help');
+}
+
+async function librarySearch(opts) {
+  const r = await library.search({artist: opts.artist, album: opts.album, artistId: opts['artist-id']});
+  const lines = [];
+  if (r.artist) lines.push(`艺人：${r.artist.name}（${r.artist.id}）`);
+  if (r.note) lines.push(r.note);
+  for (const a of r.artists || []) lines.push(`${a.id}  ${a.name}${[a.disambiguation, a.type, a.country, a.begin].filter(Boolean).map(x => ' · ' + x).join('')}`);
+  for (const g of r.groups) lines.push(`${g.id}  ${g.title} — ${g.artist}${g.year ? ' · ' + g.year : ''}${g.type ? ' · ' + g.type : ''}`);
+  if (!r.groups.length && !r.artists?.length) lines.push('没有找到。换个写法，或用 --artist 单独搜艺人。');
+  else if (r.groups.length) lines.push('', `下一步：record-mockup library releases <group-id>`);
+  else lines.push('', `下一步：record-mockup library search --artist-id <id>${opts.album ? ` --album "${opts.album}"` : ''}`);
+  log(opts, {ok: true, ...r}, lines.join('\n'));
+}
+
+async function libraryReleases(args, opts) {
+  if (!MBID.test(args[0] || '')) throw new CliError('library releases 需要 release group id（来自 library search 的 UUID）');
+  const r = await library.releases(args[0]);
+  const row = x => `${x.id}  ${[x.title !== r.group.title && x.title, x.date?.slice(0, 4), x.country, x.catalog, x.format, x.packaging].filter(Boolean).join(' · ')}` +
+    `  [图 ${x.art.count}${x.art.front ? ' · 正面' : ''}${x.art.back ? ' · 背面' : ''}]`;
+  const lines = [`${r.group.title} — ${r.group.artist}`];
+  if (r.vinylCount) lines.push('', `黑胶版本 · ${r.vinylCount}`, ...r.releases.slice(0, r.vinylCount).map(row));
+  else lines.push('', '曲库里还没有 12″ 黑胶版本，可以先用其他版本的图。');
+  if (r.releases.length > r.vinylCount) lines.push('', `其他版本 · ${r.releases.length - r.vinylCount} · 只用图片，不改唱片参数`, ...r.releases.slice(r.vinylCount).map(row));
+  if (r.total > r.read) lines.push('', `共 ${r.total} 个版本，只读了前 ${r.read} 个`);
+  if (r.releases.length) lines.push('', '下一步：record-mockup library pick <release-id> spec.json --dry-run');
+  log(opts, {ok: true, ...r}, lines.join('\n'));
+}
+
+function parseUse(list, images) {
+  const use = {};
+  for (const pair of list || []) {
+    const [slot, v] = pair.split('=');
+    if (!IMAGE_SLOT_NAMES.includes(slot)) throw new CliError(`--use 的贴图位不对：${slot}（可选 ${IMAGE_SLOT_NAMES.join(', ')}）`);
+    if (v === 'none') { use[slot] = null; continue; }
+    const n = Number(v);
+    if (!Number.isInteger(n) || !images[n]) throw new CliError(`--use ${pair}：没有第 ${v} 张图（这一版共 ${images.length} 张，从 0 开始）`);
+    use[slot] = n;
+  }
+  return use;
+}
+function parseCrop(list) {
+  const crop = {};
+  for (const pair of list || []) {
+    const i = pair.indexOf('='), slot = pair.slice(0, i);
+    if (!library.isLabelSlot(slot)) throw new CliError(`--crop 只用于标签贴图位（${library.LABEL_SLOTS.join(', ')}）：${pair}`);
+    crop[slot] = {};
+    for (const kv of pair.slice(i + 1).split(',')) {
+      const [k, v] = kv.split(':');
+      if (!['zoom', 'rot', 'dx', 'dy'].includes(k) || !Number.isFinite(Number(v))) throw new CliError(`--crop 的写法是 slot=zoom:1.1,rot:15,dx:0,dy:0：${pair}`);
+      crop[slot][k] = Number(v);
+    }
+    const z = crop[slot].zoom;
+    if (z != null && (z < .6 || z > 1.4)) throw new CliError(`--crop zoom 范围 0.6–1.4：${pair}`);
+  }
+  return crop;
+}
+// Slots the scene won't show, so the art lands but isn't seen until the scene changes.
+function hiddenSlots(spec, slots) {
+  const why = {
+    labelC: spec.records?.count !== 2 && '只在 records.count=2 时可见', labelD: spec.records?.count !== 2 && '只在 records.count=2 时可见',
+    innerLeft: spec.jacket?.type !== 'gatefold' && '只在 jacket.type=gatefold 时可见', innerRight: spec.jacket?.type !== 'gatefold' && '只在 jacket.type=gatefold 时可见',
+    sleeve: spec.records?.sleeve?.on !== true && '需要 records.sleeve.on=true',
+    insertFront: spec.insert?.on !== true && '需要 insert.on=true', insertBack: spec.insert?.on !== true && '需要 insert.on=true',
+  };
+  return slots.filter(s => why[s]).map(s => `${s}：${why[s]}`);
+}
+
+async function libraryPick(args, opts) {
+  const id = args[0];
+  if (!MBID.test(id || '')) throw new CliError('library pick 需要 release id（来自 library releases 的 UUID）');
+  // Check the flags before going to the network.
+  parseUse((opts.use || []).map(u => u.replace(/=.*/, '=none')), []);
+  const crop = parseCrop(opts.crop);
+  if (args[1] && opts.out && path.resolve(args[1]) !== path.resolve(opts.out)) throw new CliError('library pick 直接改写 spec，spec 路径和 -o 只写一个');
+  const t0 = Date.now();
+  const specFile = path.resolve(args[1] || opts.out || 'spec.json');
+  let spec = {version: 1};
+  if (existsSync(specFile)) {
+    try { spec = JSON.parse(await fs.readFile(specFile, 'utf8')); }
+    catch (e) { throw new CliError(`spec 不是合法 JSON：${e.message}`); }
+  }
+  // Art the spec already has from elsewhere (the viewer's own, generated, typeset) stays unless --use names it.
+  const keep = Object.keys(spec.images || {}).filter(s => spec.meta?.assets?.[s]?.source !== 'fetched');
+  const p = await library.plan(id, {keep, sleeveOn: spec.records?.sleeve?.on === true});
+  const use = parseUse(opts.use, p.images);
+  for (const [slot, n] of Object.entries(use)) {
+    if (n === null) delete p.assign[slot]; else p.assign[slot] = n;
+    p.kept = p.kept.filter(s => s !== slot);
+  }
+  const slots = IMAGE_SLOT_NAMES.filter(s => s in p.assign);
+
+  if (opts['dry-run']) {
+    const by = n => slots.filter(s => p.assign[s] === n);
+    const lines = [`${p.group?.title || p.release.title} — ${p.group?.artist || ''}`, `${p.release.id} · ${[p.release.date, p.release.country, p.release.catalog, p.release.format, p.release.packaging].filter(Boolean).join(' · ')}`, p.release.url, ''];
+    for (const im of p.images) lines.push(`[${im.n}] ${[im.from, im.types.join('/') || '未分类', im.note].filter(Boolean).join(' · ')}${by(im.n).length ? '  → ' + by(im.n).join(', ') : ''}`);
+    if (!p.images.length) lines.push('（没有图）');
+    if (p.records && !opts['images-only']) lines.push('', `唱片参数：records.count=${p.records.count}${p.records.jacket ? `，jacket.type=${p.records.jacket}` : ''}` +
+      p.records.tracks.map((t, i) => t ? `，disc${i + 1}.tracks=${t}（各面 ${p.records.sides[i].join(' / ')}）` : '').join(''));
+    lines.push(...p.notes.map(n => '注意：' + n));
+    lines.push('', '改分配用 --use <贴图位>=<图号> 或 --use <贴图位>=none，确认后去掉 --dry-run。');
+    log(opts, {ok: true, dryRun: true, ...p}, lines.join('\n'));
+    return;
+  }
+
+  const dir = path.resolve(opts.dir || specFile.replace(/\.json$/i, '') + '-library');
+  await fs.mkdir(dir, {recursive: true});
+  const rel = f => path.relative(path.dirname(specFile), f).split(path.sep).join('/');
+  const fetched = new Map(), done = {}, failed = [], warnings = [];
+  const get = n => { if (!fetched.has(n)) fetched.set(n, library.download(p.images[n].full)); return fetched.get(n); };
+  let session = null;
+  try {
+    for (const slot of slots) {
+      const im = p.images[p.assign[slot]];
+      let img;
+      try { img = await get(im.n); } catch { failed.push(slot); continue; }
+      const note = `CAA ${im.ref} · ${im.types.join('/') || 'image'} · ${img.url}`;
+      if (library.isLabelSlot(slot)) {
+        // Disc photos become labels with the page's own crop, so the hole lands where the GUI would put it.
+        session ??= await openPage(opts);
+        const c = await session.page.evaluate(([src, adj]) => window.recordMockup.labelCrop(src, adj),
+          [`data:${img.type};base64,${img.buffer.toString('base64')}`, crop[slot] || {}]);
+        const file = path.join(dir, `${slot}.png`);
+        await fs.writeFile(file, Buffer.from(c.dataUrl.split(',')[1], 'base64'));
+        if (!c.auto) warnings.push(`${slot}：没找到中孔，按图片中心裁切，用 --crop ${slot}=dx:…,dy:… 微调`);
+        done[slot] = {file: rel(file), image: im.n, crop: {auto: c.auto, cx: c.cx, cy: c.cy, radius: c.radius, rot: c.rot}};
+        setPath(spec, `meta.assets.${slot}`, {source: 'fetched', tool: 'MusicBrainz + Cover Art Archive',
+          note: `${note} · label crop centre ${c.cx},${c.cy} radius ${c.radius} px, rotated ${Math.round(c.rot)}°`});
+      } else {
+        const file = path.join(dir, slot + (EXT[img.type] || '.jpg'));
+        await fs.writeFile(file, img.buffer);
+        done[slot] = {file: rel(file), image: im.n};
+        setPath(spec, `meta.assets.${slot}`, {source: 'fetched', tool: 'MusicBrainz + Cover Art Archive', note});
+      }
+      setPath(spec, `images.${slot}`, done[slot].file);
+    }
+  } finally { if (session) await session.close(); }
+
+  const records = {};
+  if (p.records && !opts['images-only']) {
+    setPath(spec, 'records.count', records.count = p.records.count);
+    if (p.records.jacket) setPath(spec, 'jacket.type', records.jacket = p.records.jacket);
+    p.records.tracks.forEach((t, i) => { if (t) setPath(spec, `records.disc${i + 1}.tracks`, records[`disc${i + 1}.tracks`] = t); });
+  }
+  // A part given new art is switched on, so the image is actually seen.
+  for (const s of ['obi', 'sticker']) if (done[s]) setPath(spec, `${s}.on`, true);
+  if (p.group) { setPath(spec, 'meta.artist', p.group.artist); setPath(spec, 'meta.album', p.group.title); }
+  await fs.mkdir(path.dirname(specFile), {recursive: true});
+  await fs.writeFile(specFile, JSON.stringify(spec, null, 2) + '\n');
+
+  if (failed.length) warnings.push(`下载失败，保留 spec 里原来的图：${failed.join(', ')}`);
+  warnings.push(...hiddenSlots(spec, Object.keys(done)).map(w => '当前场景看不到 ' + w));
+  const result = {spec: specFile, dir, release: p.release, group: p.group, slots: done, kept: p.kept, records, failed, notes: p.notes, warnings, ms: Date.now() - t0};
+  for (const w of warnings) if (!opts.json) process.stderr.write(`警告：${w}\n`);
+  const text = [`已写入 ${specFile}：${Object.keys(done).join(', ') || '没有图片'}${Object.keys(records).length ? `；${Object.entries(records).map(([k, v]) => `${k}=${v}`).join('，')}` : ''}`,
+    ...p.notes.map(n => '注意：' + n), '这些是曲库里的真实发行素材，登记为 fetched。下一步：record-mockup render ' + (path.relative(process.cwd(), specFile).startsWith('..') ? specFile : path.relative(process.cwd(), specFile))].join('\n');
+  log(opts, {ok: true, ...result}, text);
+}
+
 // ---------- output ----------
 function log(opts, obj, text) { process.stdout.write(opts.json ? JSON.stringify(obj) + '\n' : text + '\n'); }
 function finish(opts, session, result, text) {
@@ -354,9 +541,10 @@ async function main() {
     else if (cmd === 'render') await cmdRender(args, opts);
     else if (cmd === 'numbers') await cmdNumbers(args, opts);
     else if (cmd === 'video') await cmdVideo(args, opts);
+    else if (cmd === 'library') await cmdLibrary(args, opts);
     else throw new CliError(`未知命令：${cmd}\n\n${HELP}`);
   } catch (e) {
-    const msg = e instanceof CliError ? e.message : (e.stack || String(e));
+    const msg = e instanceof CliError || e instanceof library.LibraryError ? e.message : (e.stack || String(e));
     if (opts.json) process.stdout.write(JSON.stringify({ok: false, error: msg}) + '\n');
     else process.stderr.write(`错误：${msg}\n`);
     process.exitCode = 1;

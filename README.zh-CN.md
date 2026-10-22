@@ -84,7 +84,9 @@ node cli/record-mockup.mjs render examples/2lp-gatefold.json -o output/example.p
 node cli/record-mockup.mjs init -o output/spec.json
 ```
 
-图片和 spec 放在同一个目录，路径写相对 spec 的路径。每张自定义贴图都要在 `meta.assets.<贴图位>.source` 登记来源，可选值为 `user`、`generated`、`typeset`、`composite`、`sample`；网页曲库检索取到的图为 `fetched`。生图素材还要记录提示词。
+图片和 spec 放在同一个目录，路径写相对 spec 的路径。每张自定义贴图都要在 `meta.assets.<贴图位>.source` 登记来源，可选值为 `user`、`generated`、`typeset`、`composite`、`sample`；网页曲库检索或 `library pick` 取到的图为 `fetched`（`pick` 会自动登记）。
+
+要做某张已发行的专辑时，可以先从曲库取图：`library search --artist … --album …` 找到专辑，`library releases <group-id>` 选版本，`library pick <release-id> spec.json` 把封面、背面和按中孔裁好的标签填进 spec，同时写入唱片张数、封套类型和每面音轨数。详见 `cli/README.md`。生图素材还要记录提示词。
 
 ```json
 {
@@ -154,7 +156,7 @@ python3 -m http.server 8000 --bind 127.0.0.1
 
 然后访问 `http://127.0.0.1:8000`。
 
-浏览器页面从固定版本的 CDN 加载 three.js（出视频时还有 Mediabunny 和 gifenc），需要联网。命令行工具改用本地安装的包。曲库检索只在你搜索时直接请求 musicbrainz.org 和 coverartarchive.org；取到的图片版权归原权利方，仅供预览。Google Fonts 仍会尝试联网加载，失败时退回系统字体，文字外观可能不同。命令行工具会临时监听回环地址，运行环境需要允许启动本地服务和浏览器。
+浏览器页面从固定版本的 CDN 加载 three.js（出视频时还有 Mediabunny 和 gifenc），需要联网。命令行工具改用本地安装的包。曲库检索（网页和 `library` 命令）只在你搜索时直接请求 musicbrainz.org 和 coverartarchive.org；取到的图片版权归原权利方，仅供预览。Google Fonts 仍会尝试联网加载，失败时退回系统字体，文字外观可能不同。命令行工具会临时监听回环地址，运行环境需要允许启动本地服务和浏览器。
 
 ## 重新生成 README 配图
 
