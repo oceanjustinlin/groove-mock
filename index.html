@@ -1582,7 +1582,7 @@ function placeNumber(){
   else if(p==='front'){if(isGate()){coverFront.add(numAnchor);numAnchor.position.set(0,0,J.board/2+eps)}else{scene.add(numAnchor);numAnchor.position.set(0,0,J.d/2+eps)}}
   else if(p==='obi'){const {F,eps:oe}=obiLayout();obi.add(numAnchor);numAnchor.position.set(-J.w/2+F/2,0,frontZ()+oe+eps)}
   else{sticker.add(numAnchor);const k=1/state.stickerSize;numAnchor.scale.set(k,k,1);numAnchor.position.set(0,0,.03)}
-  numAnchor.visible=state.numOn;
+  numAnchor.visible=state.numOn&&!discOnly();
   numMesh.position.set(state.numX,state.numY,0);numMesh.rotation.z=THREE.MathUtils.degToRad(state.numRot);numMesh.scale.set(state.numSize*numAspect,state.numSize,1)}
 
 // ---------- Pose ----------
