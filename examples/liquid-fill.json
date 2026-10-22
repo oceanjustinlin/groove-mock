@@ -6,12 +6,10 @@
   "records": {
     "disc1": {
       "vinyl": "color",
-      "color": "#111214",
-      "transparency": 5,
+      "color": "#1f9ee2",
       "recordOut": 75,
       "pattern": {
-        "id": "liquid-02",
-        "color": "#e8ebe7"
+        "id": "liquid-02"
       }
     }
   },
