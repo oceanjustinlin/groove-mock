@@ -27,7 +27,7 @@ async function render(t, records) {
 test('liquid, sand and glitter are patterns', () => {
   const schema = JSON.parse(run(['schema']).stdout);
   const disc = schema.properties.records.properties.disc1.properties;
-  for (const id of ['liquid-01', 'liquid-05', 'sand-01', 'glitter-02']) assert.ok(disc.pattern.properties.id.enum.includes(id), id);
+  for (const id of ['liquid-01', 'liquid-03', 'sand-01', 'glitter-02']) assert.ok(disc.pattern.properties.id.enum.includes(id), id);
   assert.equal(disc.fill, undefined);
   assert.equal(disc.glitter, undefined);
 });
