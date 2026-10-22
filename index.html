@@ -1187,8 +1187,8 @@ function applyFinish(){const f=state.finish;for(const m of[frontMat,backMat,spin
 
 // Each disc gets its own face/edge materials, so a 2LP can mix black and coloured vinyl.
 function vinylMats(){const face=new THREE.MeshPhysicalMaterial({color:0x0b0b0c,metalness:0,roughness:1,anisotropy:.9,envMap:studioEnv,envMapIntensity:.32,side:THREE.FrontSide});
-  // See-through vinyl is darker and denser towards its rim, where light crosses more of the disc, with a
-  // thin outline at the very edge. shellEdge is 0 for opaque discs.
+  // A filled disc's clear shell is darker and denser towards its rim, where light crosses more of the disc,
+  // with a thin outline at the very edge. shellEdge is 1 only for liquid and sand patterns.
   const edge={value:0};face.userData.shellEdge=edge;
   face.onBeforeCompile=sh=>{sh.uniforms.shellEdge=edge;
     sh.vertexShader='varying float vShellR;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\n  vShellR=length(position.xy);');
@@ -1394,9 +1394,9 @@ function applyVinylTo(i,mats){
   for(const m of[mats.face,mats.edge]){m.color.set(shell).multiplyScalar(VINYL_LIFT);m.transparent=see;m.opacity=1-shellClear;m.depthWrite=!see;m.needsUpdate=true}
   // A see-through disc shows its far face through the near one, so the inside of each face is drawn too.
   mats.face.side=see?THREE.DoubleSide:THREE.FrontSide;
-  // The rim is seen through the disc's whole width: darker and nearly opaque.
-  mats.face.userData.shellEdge.value=see?1:0;
-  if(see){mats.edge.color.multiplyScalar(.7);mats.edge.opacity=1-clear*.3}
+  // A liquid or sand disc's clear shell is seen through its whole width at the rim: darker and nearly opaque.
+  mats.face.userData.shellEdge.value=sealed?1:0;
+  if(sealed){mats.edge.color.multiplyScalar(.7);mats.edge.opacity=1-shellClear*.3}
   mats.face.envMapIntensity=black?.32:.22;
   const g=grooveMaps(state[i===2?'tracks2':'tracks']);
   if(mats.face.roughnessMap!==g.rough){mats.face.roughnessMap=g.rough;mats.face.anisotropyMap=g.aniso;mats.face.needsUpdate=true}
