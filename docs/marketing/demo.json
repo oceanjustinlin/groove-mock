@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "jacket": {"type": "single", "finish": "satin"},
+  "records": {
+    "count": 2,
+    "sleeve": {"on": true},
+    "disc1": {"vinyl": "black", "sleeveOut": 32, "recordOut": 38},
+    "disc2": {"vinyl": "color", "color": "#d64b3a", "sleeveOut": 56, "recordOut": 40}
+  },
+  "obi": {"on": true},
+  "wrap": {"on": true},
+  "sticker": {"on": true},
+  "number": {"on": true, "current": 88, "total": 500, "place": "front", "finish": "foil"},
+  "camera": {"view": "quarter", "zoom": 0.86},
+  "output": {"background": "#ece9e2"},
+  "animation": {"preset": "swing", "angle": 22, "duration": 6, "aspect": "1:1", "size": 720, "fps": 20},
+  "meta": {"title": "Illustrative 2LP marketing demo using built-in sample artwork"}
+}
