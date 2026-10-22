@@ -1,5 +1,5 @@
 # Deploy each pull request's editor to Cloudflare Pages as a noindex preview and link it on the PR.
-# The public site stays on GitHub Pages (pages.yml); this only publishes branch previews.
+# The public site is the production branch of the same project (pages.yml); this only publishes branch previews.
 # Needs repository secrets CLOUDFLARE_API_TOKEN (Cloudflare Pages: Edit) and CLOUDFLARE_ACCOUNT_ID.
 name: Preview
 
