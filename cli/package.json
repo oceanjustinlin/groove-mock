@@ -6,7 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "test": "node --test --test-concurrency=1 test/provenance.test.mjs test/video.test.mjs"
+    "test": "node --test --test-concurrency=1 test/provenance.test.mjs test/video.test.mjs test/fill.test.mjs"
   },
   "bin": {
     "record-mockup": "./record-mockup.mjs"
