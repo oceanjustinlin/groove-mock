@@ -1362,6 +1362,8 @@ async function applyPatternTo(i,mats){
 function applyVinylTo(i,mats){
   const{black,base,clear,mask}=discLook(i),see=clear>0;
   for(const m of[mats.face,mats.edge]){m.color.set(base).multiplyScalar(VINYL_LIFT);m.transparent=see;m.opacity=1-clear;m.depthWrite=!see;m.needsUpdate=true}
+  // A see-through disc shows its far face through the near one, so the inside of each face is drawn too.
+  mats.face.side=see?THREE.DoubleSide:THREE.FrontSide;
   mats.face.envMapIntensity=black?.32:.22;
   const g=grooveMaps(state[i===2?'tracks2':'tracks']);
   if(mats.face.roughnessMap!==g.rough){mats.face.roughnessMap=g.rough;mats.face.anisotropyMap=g.aniso;mats.face.needsUpdate=true}
@@ -1464,7 +1466,10 @@ const sleeve=makeSleeve(),sleeve2=makeSleeve();
 // LP: grooved faces, rim, two labels, spindle hole.
 function makeRecord(matA,matB,vm){const group=new THREE.Group(),{r,t,label,hole}=LP;
   const face=remapUV(new THREE.RingGeometry(label,r,256,6),r*2);
-  const top=mesh(face,vm.face);top.position.z=t/2;const bot=mesh(face,vm.face);bot.position.z=-t/2;bot.rotation.y=Math.PI;
+  // The back face is the front turned over (x flipped), so its U is flipped too: both faces then sample the
+  // pattern at the same point of the disc, and a see-through disc shows the same pattern through it.
+  const back=remapUV(new THREE.RingGeometry(label,r,256,6),-r*2,r*2);
+  const top=mesh(face,vm.face);top.position.z=t/2;const bot=mesh(back,vm.face);bot.position.z=-t/2;bot.rotation.y=Math.PI;
   const edge=mesh(new THREE.CylinderGeometry(r,r,t,256,1,true),vm.edge);edge.rotation.x=Math.PI/2;
   const lab=remapUV(new THREE.RingGeometry(hole,label,128,2),label*2);
   const la=mesh(lab,matA);la.position.z=t/2;const lb=mesh(lab,matB);lb.position.z=-t/2;lb.rotation.y=Math.PI;
