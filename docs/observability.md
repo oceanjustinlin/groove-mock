@@ -12,7 +12,7 @@
 | type | 何时发 | 主要字段 |
 |---|---|---|
 | `ready` | 第一帧画出来 | `ms` 从打开页面到第一帧，`gpu` |
-| `export` | PNG / GIF / MP4 导出结束（取消不算） | `format`，`ok`，`ms`，`w` × `h`，`bytes`，失败时 `msg` |
+| `export` | PNG / GIF / MP4 导出结束（取消不算） | `format`，`ok`，`ms`，`w` × `h`，`bytes`，`art`，`lib`，失败时 `msg` |
 | `error` | 未捕获的脚本错误 | `msg`，`src`，`line`，`col`，`stack` |
 | `rejection` | 未处理的 Promise 拒绝 | `msg`，`stack` |
 | `resource` | 脚本、样式、图片加载失败（比如 CDN 挂了） | `src` |
@@ -20,6 +20,17 @@
 | `gl-unavailable` | 浏览器起不来 WebGL 2 | `msg` |
 
 同一个页面里，重复的报错只发一次，每个页面最多发 30 条。WebGL 起不来时只记一条 `gl-unavailable`，随后抛出的未捕获错误不再另记 `error`。
+
+## 素材来源
+
+`export` 事件带两个字段，用来区分「音乐人用自己的封面」和「乐迷拿曲库里的真实发行做图」：
+
+| 字段 | 列 | 含义 |
+|---|---|---|
+| `art` | `blob16` | 封套正面的来源：`user` 自己上传，`fetched` 从曲库（MusicBrainz / Cover Art Archive）取得，`sample` 内置示例图 |
+| `lib` | `double14` | 本次导出时有几个贴图位用的是曲库图（封面、背面、标签等都算） |
+
+刷新页面后恢复的贴图保留原来的来源，按「新建」清空后回到 `sample`。只看唱片模式（`scene.mode: "disc"`）下封面不出现在图里，这时主要看 `lib`。加上这两个字段之前的导出没有这两列，读出来是 `''` 和 `0`。
 
 ## 机器人标记
 
@@ -109,6 +120,11 @@ WHERE blob6 IN ('recordmockup.com', 'www.recordmockup.com') AND timestamp > NOW(
 -- 各格式导出成功率和耗时中位数
 SELECT blob13 AS format, sum(double10) / count() AS ok_rate, quantileWeighted(0.5, double1, _sample_interval) AS p50_ms
 FROM record_mockup_logs WHERE index1 = 'export' AND double13 = 0 AND timestamp > NOW() - INTERVAL '7' DAY GROUP BY format
+
+-- 导出按封面来源分：曲库占比高，说明乐迷在用
+SELECT blob16 AS art, count() AS exports, count(DISTINCT blob12) AS sessions, sum(if(double14 > 0, 1, 0)) AS with_library
+FROM record_mockup_logs WHERE index1 = 'export' AND double10 = 1 AND double13 = 0 AND blob16 != ''
+  AND blob6 IN ('recordmockup.com', 'www.recordmockup.com') AND timestamp > NOW() - INTERVAL '7' DAY GROUP BY art
 
 -- 首帧耗时 p75，按国家
 SELECT blob7 AS country, count() AS n, quantileWeighted(0.75, double1, _sample_interval) AS p75_ms

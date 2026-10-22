@@ -1111,7 +1111,11 @@ function paperBump(){const N=512,c=canvas(N,N),g=c.getContext('2d'),d=g.createIm
 
 // ---------- Renderer / scene ----------
 // Usage reports go to the deployed site's /api/log through site/rum.js; elsewhere window.rmTrack is absent.
-const track=(type,data)=>{try{window.rmTrack?.(type,data)}catch(e){}};
+// Exports also say where the art came from: art is the front cover's source (user upload, library pick or the
+// built-in sample) and lib counts the slots filled from the record library, so fan-made mockups of real
+// releases can be told apart from artists' own covers.
+const track=(type,data)=>{try{window.rmTrack?.(type,type==='export'?{...data,art:slotOrigin.front||'sample',
+  lib:Object.values(slotOrigin).filter(o=>o==='fetched').length}:data)}catch(e){}};
 const stage=$('stage');let renderer;
 try{
   renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,premultipliedAlpha:true});
