@@ -21,6 +21,8 @@
 | 流量归因 | 首轮帖子原来用 UTM 参数，但 Cloudflare Web Analytics 当前不记录查询参数。 | 已从发布文案移除“UTM 可归因”的说法；先看来源网站、落地页路径和导出趋势。参见 [Cloudflare Web Analytics FAQ](https://developers.cloudflare.com/web-analytics/faq/)。 |
 | 第三方代码/字体 | 仓库已有许可证文本及说明。网页从 CDN 和 Google Fonts 加载资源。 | 继续保留 `THIRD_PARTY_NOTICES.md`，更新依赖时检查许可和字体版本。 |
 
+用途页首屏的切换视频（`docs/marketing/hero-reel.mp4`）用了 16 张 Unsplash 照片做封面底图，均为 Unsplash License（可免费商用，不要求署名），只选了风景、质感和抽象光影，没有可辨认的人物、品牌或他人画作。标题是虚构的示意专辑名，并印有 SAMPLE COVER。作者和原图链接记在 `docs/specs/hero-variants/photos/credits.json` 和各 spec 的 `meta.assets` 里。Unsplash License 不允许把照片原样单独出售或做成同类图库，这里只作为合成封面的一部分使用。
+
 ## 真实客户案例的最小授权记录
 
 在取得对方同意前，只用本站示例图。取得同意时记录：权利方名称、授权人的身份和联系方式、所授权的具体封面/标志/图片文件、可使用渠道（网站、社媒、Product Hunt、付费广告）、使用期限和地域、可否裁切与合成、署名方式、撤回或修改联系渠道，以及对方已核对展示的实际发行规格。保存授权邮件或合同原文，不仅记录一句“已同意”。

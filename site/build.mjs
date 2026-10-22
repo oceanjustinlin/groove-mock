@@ -94,7 +94,7 @@ await fs.mkdir(path.join(OUT, 'images'), {recursive: true});
 for (const image of ['hero.jpg', 'gatefold-open.jpg', 'back-cover.jpg', 'vinyl-variants.jpg', 'vinyl-patterns.jpg']) {
   await fs.copyFile(path.join(ROOT, 'docs', 'images', image), path.join(OUT, 'images', image));
 }
-for (const media of ['demo.mp4', 'demo-poster.jpg']) {
+for (const media of ['demo.mp4', 'demo-poster.jpg', 'hero-reel.mp4', 'hero-reel.jpg']) {
   await fs.copyFile(path.join(ROOT, 'docs', 'marketing', media), path.join(OUT, 'images', media));
 }
 for (const slug of ['for-artists', 'examples', 'privacy']) {
