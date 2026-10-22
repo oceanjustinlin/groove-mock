@@ -483,13 +483,13 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
                   <div class="seg" id="fill-type"><button data-v="none" aria-pressed="true">无</button><button data-v="liquid" aria-pressed="false">液体</button><button data-v="dry" aria-pressed="false">干填充</button></div>
                 </div>
                 <div class="sub" id="fill-sub" hidden>
-                  <div class="row"><span class="lbl">预设</span><span class="row tight fill-presets" id="fill-presets" style="flex-wrap:wrap;justify-content:flex-end;gap:4px"><button class="chip" type="button" data-p="cloudy">浑浊水</button><button class="chip" type="button" data-p="twotone">双色液</button><button class="chip" type="button" data-p="oil">油</button><button class="chip" type="button" data-p="sand">沙</button></span></div>
+                  <div class="row"><span class="lbl">预设</span><span class="row tight fill-presets" id="fill-presets" style="flex-wrap:wrap;justify-content:flex-end;gap:4px"><button class="chip" type="button" data-p="cloudy">浑浊水</button><button class="chip" type="button" data-p="twotone">双色液</button><button class="chip" type="button" data-p="oil">黑白</button><button class="chip" type="button" data-p="foam">泡沫</button><button class="chip" type="button" data-p="sand">沙</button></span></div>
                   <div class="row"><span class="lbl" id="fill-colors-lbl">液体 / 色块</span><div class="row" style="justify-content:flex-end"><input type="color" id="fill-color" aria-label="第 1 张填充主色"><input type="color" id="fill-color2" aria-label="第 1 张填充第二色"></div></div>
-                  <div class="slider"><label for="fill-amount" id="fill-amount-lbl">填充量</label><input type="range" id="fill-amount" min="0" max="100" value="95"><output id="fill-amount-v">95%</output></div>
-                  <div class="slider"><label for="fill-phase2" id="fill-phase2-lbl">色块</label><input type="range" id="fill-phase2" min="0" max="100" value="30"><output id="fill-phase2-v">30%</output></div>
-                  <div class="slider" data-wet><label for="fill-cloud" id="fill-cloud-lbl">浑浊度</label><input type="range" id="fill-cloud" min="0" max="100" value="80"><output id="fill-cloud-v">80%</output></div>
-                  <div class="slider" data-wet><label for="fill-bubbles" id="fill-bubbles-lbl">气泡</label><input type="range" id="fill-bubbles" min="0" max="100" value="25"><output id="fill-bubbles-v">25%</output></div>
-                  <div class="slider"><label for="fill-settle" id="fill-settle-lbl">沉降</label><input type="range" id="fill-settle" min="0" max="100" value="35"><output id="fill-settle-v">35%</output></div>
+                  <div class="slider"><label for="fill-amount" id="fill-amount-lbl">填充量</label><input type="range" id="fill-amount" min="0" max="100" value="100"><output id="fill-amount-v">100%</output></div>
+                  <div class="slider"><label for="fill-phase2" id="fill-phase2-lbl">色块</label><input type="range" id="fill-phase2" min="0" max="100" value="28"><output id="fill-phase2-v">28%</output></div>
+                  <div class="slider" data-wet><label for="fill-cloud" id="fill-cloud-lbl">浑浊度</label><input type="range" id="fill-cloud" min="0" max="100" value="75"><output id="fill-cloud-v">75%</output></div>
+                  <div class="slider" data-wet><label for="fill-bubbles" id="fill-bubbles-lbl">细碎</label><input type="range" id="fill-bubbles" min="0" max="100" value="25"><output id="fill-bubbles-v">25%</output></div>
+                  <div class="slider"><label for="fill-settle" id="fill-settle-lbl">沉降</label><input type="range" id="fill-settle" min="0" max="100" value="25"><output id="fill-settle-v">25%</output></div>
                   <div class="row"><span class="lbl">分布</span><button class="chip icon" id="fill-seed" type="button" title="换一种分布" aria-label="换一种分布"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M11.5 1.5 14.5 4.5l-3 3v-2h-1.3c-.9 0-1.4.4-2 1.2L5.4 10.4C4.6 11.6 3.6 12 2.5 12h-1v-1.6h1c.6 0 1-.2 1.5-.9L6.8 5.8C7.6 4.6 8.6 4 10.2 4h1.3zM1.5 4h1c1.1 0 2 .4 2.8 1.5l-1 1.3c-.5-.7-.9-1.2-1.8-1.2h-1zm8.2 5.2c.5.7.9 1.2 1.8 1.2v-2l3 3-3 3v-2c-1.4 0-2.3-.5-3-1.5z"/></svg></button></div>
                 </div>
                 <div class="slider"><label for="glitter">亮片</label><input type="range" id="glitter" min="0" max="100" value="0"><output id="glitter-v">0%</output></div>
@@ -533,13 +533,13 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
                     <div class="seg" id="fill2-type"><button data-v="none" aria-pressed="true">无</button><button data-v="liquid" aria-pressed="false">液体</button><button data-v="dry" aria-pressed="false">干填充</button></div>
                   </div>
                   <div class="sub" id="fill2-sub" hidden>
-                    <div class="row"><span class="lbl">预设</span><span class="row tight fill-presets" id="fill2-presets" style="flex-wrap:wrap;justify-content:flex-end;gap:4px"><button class="chip" type="button" data-p="cloudy">浑浊水</button><button class="chip" type="button" data-p="twotone">双色液</button><button class="chip" type="button" data-p="oil">油</button><button class="chip" type="button" data-p="sand">沙</button></span></div>
+                    <div class="row"><span class="lbl">预设</span><span class="row tight fill-presets" id="fill2-presets" style="flex-wrap:wrap;justify-content:flex-end;gap:4px"><button class="chip" type="button" data-p="cloudy">浑浊水</button><button class="chip" type="button" data-p="twotone">双色液</button><button class="chip" type="button" data-p="oil">黑白</button><button class="chip" type="button" data-p="foam">泡沫</button><button class="chip" type="button" data-p="sand">沙</button></span></div>
                     <div class="row"><span class="lbl" id="fill2-colors-lbl">液体 / 色块</span><div class="row" style="justify-content:flex-end"><input type="color" id="fill2-color" aria-label="第 2 张填充主色"><input type="color" id="fill2-color2" aria-label="第 2 张填充第二色"></div></div>
-                    <div class="slider"><label for="fill2-amount" id="fill2-amount-lbl">填充量</label><input type="range" id="fill2-amount" min="0" max="100" value="95"><output id="fill2-amount-v">95%</output></div>
-                    <div class="slider"><label for="fill2-phase2" id="fill2-phase2-lbl">色块</label><input type="range" id="fill2-phase2" min="0" max="100" value="30"><output id="fill2-phase2-v">30%</output></div>
-                    <div class="slider" data-wet><label for="fill2-cloud" id="fill2-cloud-lbl">浑浊度</label><input type="range" id="fill2-cloud" min="0" max="100" value="80"><output id="fill2-cloud-v">80%</output></div>
-                    <div class="slider" data-wet><label for="fill2-bubbles" id="fill2-bubbles-lbl">气泡</label><input type="range" id="fill2-bubbles" min="0" max="100" value="25"><output id="fill2-bubbles-v">25%</output></div>
-                    <div class="slider"><label for="fill2-settle" id="fill2-settle-lbl">沉降</label><input type="range" id="fill2-settle" min="0" max="100" value="35"><output id="fill2-settle-v">35%</output></div>
+                    <div class="slider"><label for="fill2-amount" id="fill2-amount-lbl">填充量</label><input type="range" id="fill2-amount" min="0" max="100" value="100"><output id="fill2-amount-v">100%</output></div>
+                    <div class="slider"><label for="fill2-phase2" id="fill2-phase2-lbl">色块</label><input type="range" id="fill2-phase2" min="0" max="100" value="28"><output id="fill2-phase2-v">28%</output></div>
+                    <div class="slider" data-wet><label for="fill2-cloud" id="fill2-cloud-lbl">浑浊度</label><input type="range" id="fill2-cloud" min="0" max="100" value="75"><output id="fill2-cloud-v">75%</output></div>
+                    <div class="slider" data-wet><label for="fill2-bubbles" id="fill2-bubbles-lbl">细碎</label><input type="range" id="fill2-bubbles" min="0" max="100" value="25"><output id="fill2-bubbles-v">25%</output></div>
+                    <div class="slider"><label for="fill2-settle" id="fill2-settle-lbl">沉降</label><input type="range" id="fill2-settle" min="0" max="100" value="25"><output id="fill2-settle-v">25%</output></div>
                     <div class="row"><span class="lbl">分布</span><button class="chip icon" id="fill2-seed" type="button" title="换一种分布" aria-label="换一种分布"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M11.5 1.5 14.5 4.5l-3 3v-2h-1.3c-.9 0-1.4.4-2 1.2L5.4 10.4C4.6 11.6 3.6 12 2.5 12h-1v-1.6h1c.6 0 1-.2 1.5-.9L6.8 5.8C7.6 4.6 8.6 4 10.2 4h1.3zM1.5 4h1c1.1 0 2 .4 2.8 1.5l-1 1.3c-.5-.7-.9-1.2-1.8-1.2h-1zm8.2 5.2c.5.7.9 1.2 1.8 1.2v-2l3 3-3 3v-2c-1.4 0-2.3-.5-3-1.5z"/></svg></button></div>
                   </div>
                   <div class="slider"><label for="glitter2">亮片</label><input type="range" id="glitter2" min="0" max="100" value="0"><output id="glitter2-v">0%</output></div>
@@ -812,7 +812,7 @@ const EN={
   '第 2 张':'Disc 2','C / D 面 · 放在第 1 张后面':'Sides C / D · behind disc 1','上传 C 面标签':'Upload side C label','上传 D 面标签':'Upload side D label',
   'C 面标签':'Side C label','D 面标签':'Side D label','第 2 张胶色':'Disc 2 vinyl colour',
   '纹路':'Pattern','第 1 张纹路':'Disc 1 pattern','第 2 张纹路':'Disc 2 pattern','纹路色':'Pattern colour','第 1 张纹路色':'Disc 1 pattern colour','第 2 张纹路色':'Disc 2 pattern colour',
-  '第 1 张第三块颜色':'Disc 1 third region colour','胶色和纹路与第 1 张相同':'Same vinyl and pattern as disc 1','样式':'Style','纯色':'Solid','颜色':'Colour','透明度':'Transparency','纹路透明度':'Pattern transparency','第 2 张第三块颜色':'Disc 2 third region colour','反差':'Contrast','纹路角度':'Pattern angle','填充':'Fill','无':'None','液体':'Liquid','干填充':'Dry fill','预设':'Preset','浑浊水':'Cloudy water','双色液':'Two-tone','油':'Oil','沙':'Sand','液体 / 色块':'Liquid / blobs','填充量':'Fill amount','色块':'Blobs','浑浊度':'Cloudiness','气泡':'Bubbles','沉降':'Settling','分布':'Layout','换一种分布':'Shuffle the layout','亮片':'Glitter','亮片颜色':'Glitter colour','第 1 张填充主色':'Disc 1 fill colour','第 1 张填充第二色':'Disc 1 second fill colour','第 2 张填充主色':'Disc 2 fill colour','第 2 张填充第二色':'Disc 2 second fill colour','第 1 张亮片颜色':'Disc 1 glitter colour','第 2 张亮片颜色':'Disc 2 glitter colour','从封面取色':'Colours from cover','随机换一款纹路，底色不变':'Shuffle: a random pattern, same base colour',
+  '第 1 张第三块颜色':'Disc 1 third region colour','胶色和纹路与第 1 张相同':'Same vinyl and pattern as disc 1','样式':'Style','纯色':'Solid','颜色':'Colour','透明度':'Transparency','纹路透明度':'Pattern transparency','第 2 张第三块颜色':'Disc 2 third region colour','反差':'Contrast','纹路角度':'Pattern angle','填充':'Fill','无':'None','液体':'Liquid','干填充':'Dry fill','预设':'Preset','浑浊水':'Cloudy water','双色液':'Two-tone','黑白':'Black & white','泡沫':'Foam','沙':'Sand','液体 / 色块':'Liquid / blobs','填充量':'Fill amount','色块':'Blobs','浑浊度':'Cloudiness','细碎':'Detail','沉降':'Settling','分布':'Layout','换一种分布':'Shuffle the layout','亮片':'Glitter','亮片颜色':'Glitter colour','第 1 张填充主色':'Disc 1 fill colour','第 1 张填充第二色':'Disc 1 second fill colour','第 2 张填充主色':'Disc 2 fill colour','第 2 张填充第二色':'Disc 2 second fill colour','第 1 张亮片颜色':'Disc 1 glitter colour','第 2 张亮片颜色':'Disc 2 glitter colour','从封面取色':'Colours from cover','随机换一款纹路，底色不变':'Shuffle: a random pattern, same base colour',
   '内袋抽出：内袋连同唱片一起从封套开口拉出。唱片抽出：唱片再从内袋里往外拉。':'Sleeve out pulls the inner sleeve, record inside, out of the jacket. Record out then slides the record out of the sleeve.',
   '唱片抽出：唱片从封套开口拉出的比例，100% 时完全抽出。':'Record out is how far the record comes out of the jacket; at 100% it is all the way out.',
   'Insert 插页':'Insert','304 × 304 mm · 双面':'304 × 304 mm · double-sided','放入插页':'Include insert','上传插页正面':'Upload insert front','上传插页背面':'Upload insert back',
@@ -860,8 +860,8 @@ const state = {
   pattern2:'none', pattern2Color:'#1b1b1b', pattern2Alt:'#2a6f4e', pattern2Contrast:1, pattern2Clear:0, pattern2Rot:0, pattern2FromCover:false, vinylSame:true,
   vinylClear:0, vinyl2Clear:0, tracks:6, tracks2:6,
   // Filled vinyl (liquid or dry) and glitter; inner / outer are the cavity's radii in cm.
-  fillType:'none', fillColor:'#7a0d2a', fillColor2:'#f29cc2', fillAmount:.95, fillPhase2:.3, fillCloud:.8, fillBubbles:.25, fillSettle:.35, fillSeed:1, fillInner:5.3, fillOuter:14.6, glitter:0, glitterColor:'#e6e6ea',
-  fill2Type:'none', fill2Color:'#7a0d2a', fill2Color2:'#f29cc2', fill2Amount:.95, fill2Phase2:.3, fill2Cloud:.8, fill2Bubbles:.25, fill2Settle:.35, fill2Seed:1, fill2Inner:5.3, fill2Outer:14.6, glitter2:0, glitter2Color:'#e6e6ea',
+  fillType:'none', fillColor:'#e0900f', fillColor2:'#f4f2ec', fillAmount:1, fillPhase2:.28, fillCloud:.75, fillBubbles:.25, fillSettle:.25, fillSeed:1, fillInner:5.3, fillOuter:14.6, glitter:0, glitterColor:'#e6e6ea',
+  fill2Type:'none', fill2Color:'#e0900f', fill2Color2:'#f4f2ec', fill2Amount:1, fill2Phase2:.28, fill2Cloud:.75, fill2Bubbles:.25, fill2Settle:.25, fill2Seed:1, fill2Inner:5.3, fill2Outer:14.6, glitter2:0, glitter2Color:'#e6e6ea',
   stickerOn:true, stickerShape:'circle', stickerTemplate:'none', stickerLines:null, stickerColor:'yellow', stickerSize:7.6, stickerX:8.8, stickerY:9.2, stickerRot:0,
   numOn:true, numCur:123, numTotal:1000, numPrefix:'No.', numFormat:'slash', numFont:'auto', numPlace:'back', numFinish:'stamp', numColor:'#25336f',
   numX:10.5, numY:-13.6, numSize:.5, numRot:0,
@@ -1415,16 +1415,19 @@ function applyVinyl(){
 
 // ---------- Filled vinyl ----------
 // A liquid- or dry-filled record is a see-through shell with a sealed cavity across the groove area. The fill
-// is a ring at the disc's mid-plane, between the two faces, drawn by a shader from noise fields laid out in a
-// frame whose "down" points at the floor: the fill pools low, and stays put while the disc spins. Glitter
-// flakes ride the same ring across the whole face, so they also work on a clear disc with no fill.
+// is a ring at the disc's mid-plane, between the two faces, drawn by a shader in a frame whose "down" points at
+// the floor, so the fill settles and stays put while the disc spins. A liquid is a tinted carrier filling the
+// cavity with a light, milky phase in it: rounded blobs built from overlapping circles, some flattened along
+// the cavity walls, round droplets of every size around them, and specks of carrier caught inside. Dry fill
+// is a noise field cut at a threshold. Glitter flakes ride the same ring and also work with no fill.
 const FILL_TYPES=['none','liquid','dry'];
 // Starting points for the panel and spec: carrier colour, second phase (blobs for liquid, grain tone for dry),
 // fill share, second-phase share, cloudiness, bubbles, settling.
 const FILL_PRESETS={
-  cloudy:{type:'liquid',color:'#d8d2c2',color2:'#f4f0e6',amount:.96,phase2:.16,cloud:.5,bubbles:.55,settle:.2},
-  twotone:{type:'liquid',color:'#7a0d2a',color2:'#f29cc2',amount:.95,phase2:.3,cloud:.8,bubbles:.25,settle:.35},
-  oil:{type:'liquid',color:'#121317',color2:'#5d6b74',amount:.7,phase2:.22,cloud:.92,bubbles:.12,settle:.55},
+  cloudy:{type:'liquid',color:'#ddd6c4',color2:'#fbf9f2',amount:1,phase2:.14,cloud:.4,bubbles:.6,settle:.2},
+  twotone:{type:'liquid',color:'#e0900f',color2:'#f4f2ec',amount:1,phase2:.28,cloud:.75,bubbles:.25,settle:.25},
+  oil:{type:'liquid',color:'#111214',color2:'#e8ebe7',amount:1,phase2:.26,cloud:.96,bubbles:.55,settle:.25},
+  foam:{type:'liquid',color:'#c4e6c8',color2:'#1f9ee2',amount:1,phase2:.34,cloud:.3,bubbles:.75,settle:.1},
   sand:{type:'dry',color:'#c9a57c',color2:'#7f6045',amount:.62,phase2:.5,cloud:1,bubbles:0,settle:.7}};
 const FILL_KEYS={color:'Color',color2:'Color2',amount:'Amount',phase2:'Phase2',cloud:'Cloud',bubbles:'Bubbles',settle:'Settle'};
 function applyFillPreset(s,id){const p=FILL_PRESETS[id];state[`fill${s}Type`]=p.type;for(const[k,v]of Object.entries(FILL_KEYS))state[`fill${s}${v}`]=p[k]}
@@ -1444,10 +1447,16 @@ float lqCarrier(vec2 q){vec2 w=q*.11+lqSeed+lqWobble()*.6;
   float h=lqFbm(w+1.1*warp,2);
   if(lqType==2)h+=(lqFbm(q*1.6+4.,3)-.5)*.12;
   return h+lqSettle*.5*q.y/15.1;}
-// Second phase: smaller blobs that float up.
-float lqBlobs(vec2 q){vec2 w=q*.17+lqSeed.yx*1.7+11.+lqWobble()*.9;
-  vec2 warp=vec2(lqFbm(w*.7+5.3,2),lqFbm(w*.7+1.9,2))-.5;
-  return lqFbm(w+.9*warp,2)-lqSettle*.3*q.y/15.1;}`;
+float lqSmin(float a,float b,float k){float h=max(k-abs(a-b),0.)/k;return min(a,b)-h*h*k*.25;}
+// Signed distance (cm, negative inside) to the light phase: a smooth union of its circles minus the specks.
+// Big circles melt into one another over a wide blend, so a blob's outline is smooth; droplets stay round.
+// In clips each circle drifts round a small loop of its own, smaller circles further.
+float lqBlobSD(vec2 q){float d=1e3,hole=1e3,t=6.2831853*lqTime;
+  for(int i=0;i<256;i++){if(i>=lqCount)break;vec4 c=texelFetch(lqCircles,ivec2(i,0),0);
+    vec2 off=vec2(sin(t+c.w)-sin(c.w),cos(t+c.w)-cos(c.w))*.18/(.5+(c.z>0.?c.z:1.));
+    float di=length(q-c.xy-off)-abs(c.z);
+    if(c.z>0.)d=lqSmin(d,di,clamp(.5*c.z,.06,.8));else hole=min(hole,di);}
+  return max(d,-hole);}`;
 const lqFract=x=>x-Math.floor(x);
 function lqHashJS(x,y){const a=lqFract(x*.1031),b=lqFract(y*.1031),c=a,d=a*(b+33.33)+b*(c+33.33)+c*(a+33.33);return lqFract((a+d+b+d)*(c+d))}
 function lqNoiseJS(x,y){const ix=Math.floor(x),iy=Math.floor(y),fx=x-ix,fy=y-iy,ux=fx*fx*fx*(fx*(fx*6-15)+10),uy=fy*fy*fy*(fy*(fy*6-15)+10),m=(a,b,t)=>a+(b-a)*t;
@@ -1456,9 +1465,47 @@ function lqFbmJS(x,y,n){let s=0,a=.5,t=0;for(let i=0;i<n;i++){s+=a*lqNoiseJS(x,y
 function lqCarrierJS(qx,qy,{seed,settle,dry}){const wx=qx*.11+seed[0],wy=qy*.11+seed[1];
   const ax=lqFbmJS(wx*.6+3.1,wy*.6+3.1,2)-.5,ay=lqFbmJS(wx*.6+7.7,wy*.6+7.7,2)-.5;
   let h=lqFbmJS(wx+1.1*ax,wy+1.1*ay,2);if(dry)h+=(lqFbmJS(qx*1.6+4,qy*1.6+4,3)-.5)*.12;return h+settle*.5*qy/15.1}
-function lqBlobsJS(qx,qy,{seed,settle}){const wx=qx*.17+seed[1]*1.7+11,wy=qy*.17+seed[0]*1.7+11;
-  const ax=lqFbmJS(wx*.7+5.3,wy*.7+5.3,2)-.5,ay=lqFbmJS(wx*.7+1.9,wy*.7+1.9,2)-.5;
-  return lqFbmJS(wx+.9*ax,wy+.9*ay,2)-settle*.3*qy/15.1}
+// The light phase of a liquid as circles [x, y, r, phase] in the gravity frame (cm, +y down); r < 0 marks a speck
+// of carrier cut out of a blob. Built to cover share of the cavity: walls first, then blobs, then droplets.
+function liquidLayout({seed,inner,outer,share,settle,specks}){
+  if(share<=0)return[];
+  const r=rng(seed*7919+13),big=[],small=[],holes=[],scale=Math.sqrt(share/.25);
+  // Coverage is counted on fixed sample points, so overlaps and the walls don't inflate it.
+  const pr=rng(3),N=1500,px=new Float32Array(N),py=new Float32Array(N),hit=new Uint8Array(N);let covered=0;
+  for(let i=0;i<N;i++){const rr=Math.sqrt(pr()*(outer*outer-inner*inner)+inner*inner),a=pr()*Math.PI*2;px[i]=rr*Math.cos(a);py[i]=rr*Math.sin(a)}
+  const frac=()=>covered/N;
+  // A point in the cavity; with settling the light phase favours the top (-y).
+  const spot=()=>{for(let k=0;k<40;k++){const rr=Math.sqrt(r()*(outer*outer-inner*inner)+inner*inner),a=r()*Math.PI*2,x=rr*Math.cos(a),y=rr*Math.sin(a);
+    if(r()<Math.exp(-settle*1.6*(y/outer+1)))return[x,y]}return[0,-(inner+outer)/2]};
+  const put=(list,x,y,rad)=>{list.push([x,y,rad,r()*6.283]);
+    for(let i=0;i<N;i++)if(!hit[i]&&(px[i]-x)**2+(py[i]-y)**2<rad*rad){hit[i]=1;covered++}};
+  // Along a wall: circles centred just inside it, so the blob spreads flat against the wall.
+  const wall=(R,side,a0,span)=>{const n=Math.max(2,Math.round(span*R/1.1));
+    for(let k=0;k<n;k++){const rad=(.6+.7*r())*scale,a=a0+span*k/n,rr=R+side*rad*.5;put(big,rr*Math.cos(a),rr*Math.sin(a),rad)}};
+  // A blob: a short random walk of overlapping circles, so it comes out lobed and now and then elongated.
+  const blob=()=>{let[x,y]=spot(),ang=r()*Math.PI*2;const n=1+Math.floor(r()*r()*6);
+    for(let k=0;k<n;k++){const rad=(.55+1.6*r()**1.4)*scale;put(big,x,y,rad);ang+=(r()-.5)*1.6;const step=rad*(.75+.45*r());
+      x+=Math.cos(ang)*step;y+=Math.sin(ang)*step;const d=Math.hypot(x,y);if(d>outer-.3||d<inner+.3)ang+=Math.PI*.7}};
+  if(r()<.65)wall(inner,1,r()*Math.PI*2,.6+r()*2.2);
+  if(r()<.5)wall(outer,-1,-Math.PI/2-.4+(r()-.5)*(1-settle)*Math.PI*2,.3+r()*.7);
+  // specks also sets how much of the share goes to droplets, and how many there can be.
+  const dropShare=.08+.3*specks,maxDrops=30+Math.round(300*specks);
+  while(frac()<share*(1-dropShare)&&big.length<90)blob();
+  // Droplets, many small and few large: beside a blob, in a band round the label, or anywhere.
+  while(frac()<share&&small.length<maxDrops){const rad=.05+.5*r()**2.5,u=r();let x,y;
+    if(u<.5&&big.length){const p=big[Math.floor(r()*big.length)],a=r()*Math.PI*2,d=p[2]+rad+.08+r()**2*1.6;x=p[0]+Math.cos(a)*d;y=p[1]+Math.sin(a)*d}
+    else if(u<.75){const rr=inner+.25+r()*1.8,a=r()*Math.PI*2;x=rr*Math.cos(a);y=rr*Math.sin(a)}
+    else[x,y]=spot();
+    put(small,x,y,rad)}
+  // Specks of carrier inside the larger blobs; they drift with their blob.
+  const host=big.filter(c=>c[2]>.45);
+  for(let k=0;k<Math.round(specks*60)&&host.length;k++){const p=host[Math.floor(r()*host.length)],a=r()*Math.PI*2,d=Math.sqrt(r())*(p[2]-.15);
+    holes.push([p[0]+Math.cos(a)*d,p[1]+Math.sin(a)*d,-(.025+.07*r()**2),p[3]])}
+  return[...big,...holes,...small].slice(0,256)}
+// Liquid level for a part-filled cavity: the height (q.y) with amount of the cavity below it; -1000 when full.
+function liquidLevel(amount,inner,outer){if(amount>=.999)return -1e3;
+  const r=rng(5),N=2000,v=new Float32Array(N);for(let i=0;i<N;i++){const rr=Math.sqrt(r()*(outer*outer-inner*inner)+inner*inner);v[i]=rr*Math.sin(r()*Math.PI*2)}
+  v.sort();return v[Math.min(N-1,Math.floor((1-amount)*N))]}
 // Threshold that leaves share of the cavity above it. Fixed sample points, so a slider never flickers.
 const lqQuantCache=new Map();
 function lqThreshold(fn,share,o,inner,outer){
@@ -1471,14 +1518,14 @@ function lqThreshold(fn,share,o,inner,outer){
 let liquidClock=0;   // loop phase of the clip frame being drawn; 0 for stills
 function fillMaterial(){
   const u={lqType:{value:0},lqC1:{value:new THREE.Color()},lqC2:{value:new THREE.Color()},lqGlitC:{value:new THREE.Color()},
-    lqAmountT:{value:2},lqPhase2T:{value:2},lqPhase2:{value:.5},lqCloud:{value:.8},lqBubbles:{value:0},lqSettle:{value:0},lqInner:{value:5.3},lqOuter:{value:14.6},
+    lqAmountT:{value:2},lqPhase2:{value:.5},lqLevel:{value:-1e3},lqCount:{value:0},lqCircles:{value:null},lqCloud:{value:.8},lqBubbles:{value:0},lqSettle:{value:0},lqInner:{value:5.3},lqOuter:{value:14.6},
     lqGlitter:{value:0},lqTime:{value:0},lqSeed:{value:new THREE.Vector2()},lqDown:{value:new THREE.Vector2(0,1)}};
   const m=new THREE.MeshPhysicalMaterial({color:0xffffff,metalness:0,roughness:.12,transparent:true,depthWrite:false,side:THREE.DoubleSide,envMap:studioEnv,envMapIntensity:.55});
   m.onBeforeCompile=sh=>{Object.assign(sh.uniforms,u);
     sh.vertexShader='varying vec2 vLqPos;varying vec3 vLqTx,vLqTy;\n'+sh.vertexShader.replace('#include <uv_vertex>',`#include <uv_vertex>
       vLqPos=position.xy;vLqTx=normalize((modelViewMatrix*vec4(1.,0.,0.,0.)).xyz);vLqTy=normalize((modelViewMatrix*vec4(0.,1.,0.,0.)).xyz);`);
     sh.fragmentShader=`uniform int lqType;uniform vec3 lqC1,lqC2,lqGlitC;
-uniform float lqAmountT,lqPhase2T,lqPhase2,lqCloud,lqBubbles,lqSettle,lqInner,lqOuter,lqGlitter,lqTime;uniform vec2 lqSeed,lqDown;
+uniform sampler2D lqCircles;uniform int lqCount;uniform float lqLevel,lqAmountT,lqPhase2,lqCloud,lqBubbles,lqSettle,lqInner,lqOuter,lqGlitter,lqTime;uniform vec2 lqSeed,lqDown;
 varying vec2 vLqPos;varying vec3 vLqTx,vLqTy;${FILL_GLSL}\n`+sh.fragmentShader
       .replace('#include <map_fragment>',`#include <map_fragment>
   // q: disc coordinates (cm) turned so +y points at the floor.
@@ -1487,37 +1534,32 @@ varying vec2 vLqPos;varying vec3 vLqTx,vLqTy;${FILL_GLSL}\n`+sh.fragmentShader
   vec3 lqCol=vec3(0.);vec2 lqOut=vec2(0.),lqGlitN=vec2(0.);
   if(lqType>0){
     float cav=smoothstep(lqInner,lqInner+.05,lqR)*(1.-smoothstep(lqOuter-.05,lqOuter,lqR)),e=.03;
-    float h=lqCarrier(q);vec2 g=vec2(lqCarrier(q+vec2(e,0.))-h,lqCarrier(q+vec2(0.,e))-h)/e;
-    float d=(h-lqAmountT)/max(length(g),1e-4),inA=smoothstep(-lqPx,lqPx,d)*cav;   // d: cm to the edge, + inside
-    vec2 outA=-normalize(lqRight*g.x+lqDown*g.y+1e-6);
     if(lqType==2){
       // Dry fill: packed grains, rough and nearly opaque, two tones in clumps plus per-grain speckle.
+      float h=lqCarrier(q);vec2 g=vec2(lqCarrier(q+vec2(e,0.))-h,lqCarrier(q+vec2(0.,e))-h)/e;
+      float d=(h-lqAmountT)/max(length(g),1e-4),inA=smoothstep(-lqPx,lqPx,d)*cav;   // d: cm to the edge, + inside
       float tone=lqFbm(q*.9+9.,2),grain=lqHash(floor(q*40.)+lqSeed),fine=clamp(1.5-lqPx*40.,0.,1.);
       lqCol=mix(lqC1,lqC2,clamp(lqPhase2*1.6*tone+(grain-.5)*.6*fine,0.,1.))*mix(.82,1.,smoothstep(0.,.15,d))*(1.+(grain-.5)*.25*fine);
-      lqA=inA*.97;lqRough=.9;lqTilt=.5*exp(-max(d,0.)/.08)*inA;lqOut=outA;
+      lqA=inA*.97;lqRough=.9;lqTilt=.5*exp(-max(d,0.)/.08)*inA;lqOut=-normalize(lqRight*g.x+lqDown*g.y+1e-6);
     }else{
-      // Carrier: cloudier means more opaque; a meniscus rim at the edge, deeper colour where it is thick.
-      float rim=exp(-max(d,0.)/.05);
-      vec3 cA=lqC1*mix(1.12,.82,smoothstep(0.,.8,d))*(1.-.3*rim);
-      float aA=inA*mix(mix(.3,.92,lqCloud),.95,rim);
-      float hb=lqBlobs(q);vec2 gb=vec2(lqBlobs(q+vec2(e,0.))-hb,lqBlobs(q+vec2(0.,e))-hb)/e;
-      float db=(hb-lqPhase2T)/max(length(gb),1e-4),inB=smoothstep(-lqPx,lqPx,db)*cav;
-      vec3 cB=lqC2*mix(.86,1.08,smoothstep(0.,.35,db));
-      // Satellite droplets: small round beads of the second phase, more of them near the big blobs.
-      vec2 dq=q*2.2+lqSeed.yx*5.,dc=floor(dq),df=fract(dq);
-      float drad=mix(.06,.2,pow(lqHash(dc+13.),3.)),near=smoothstep(lqPhase2T-.12,lqPhase2T,hb);
-      vec2 dcen=.5+(lqHash2(dc+29.)-.5)*(1.-2.*drad);
-      float dd=(length(df-dcen)-drad)/2.2,don=step(lqHash(dc+17.),(.12+.8*near)*min(1.,lqPhase2*2.5))*cav;
-      float inD=don*(1.-smoothstep(-lqPx,lqPx,dd));
-      if(inD>inB){inB=inD;db=-dd;gb=normalize(df-dcen+1e-6)*-1.;}
-      lqCol=mix(cA,cB,inB);lqA=mix(aA,.93*cav,inB);
-      float tA=.85*exp(-max(d,0.)/.12)*inA,tB=.85*exp(-max(db,0.)/.1)*inB;
-      lqTilt=max(tA,tB);lqOut=tB>tA?-normalize(lqRight*gb.x+lqDown*gb.y+1e-6):outA;
-      // Bubbles: one per cell at most, more of them near the top, only in the carrier.
+      // Carrier: the whole cavity, or below the level with air above. Cloudier is more opaque.
+      float dl=q.y-lqLevel,inA=smoothstep(-lqPx,lqPx,dl)*cav,rimA=exp(-max(dl,0.)/.06);
+      vec3 cA=lqC1*(1.-.3*rimA);float aA=inA*mix(mix(.28,.92,lqCloud),.95,rimA);
+      // Light phase: thin and see-through at its edge, thick and milky inside, with a glossy rim.
+      float db=-lqBlobSD(q),inB=smoothstep(-lqPx,lqPx,db)*inA;
+      vec3 cB=lqC2*mix(.8,1.04,smoothstep(0.,.3,db));float aB=mix(.55,.96,smoothstep(0.,.25,db));
+      lqCol=mix(cA,cB,inB);lqA=mix(aA,aB*inA,inB);
+      // The rim's normal from the distance field's screen-space slope, turned back into the gravity frame.
+      mat2 J=mat2(dFdx(q),dFdy(q));float det=determinant(J);
+      vec2 gq=abs(det)>1e-12?inverse(transpose(J))*vec2(dFdx(db),dFdy(db)):vec2(0.);
+      float tB=.9*exp(-max(db,0.)/.1)*inB;
+      if(tB>0.){lqTilt=tB;vec2 o=-normalize(gq+1e-9);lqOut=lqRight*o.x+lqDown*o.y;}
+      float tA=.6*rimA*inA;if(tA>lqTilt){lqTilt=tA;lqOut=-lqDown;}
+      // Air bubbles: one per cell at most, more of them near the top, only in the carrier.
       vec2 bq=q*1.1+lqSeed*3.,cell=floor(bq),f=fract(bq);
       float top=smoothstep(10.,-12.,q.y),rad=mix(.08,.3,pow(lqHash(cell+5.),2.));
       vec2 c=.5+(lqHash2(cell+41.)-.5)*(1.-2.*rad);
-      float on=step(lqHash(cell+7.),lqBubbles*(.2+.6*top))*inA*(1.-inB),bd=(length(f-c)-rad)/1.1;
+      float on=step(lqHash(cell+7.),lqBubbles*(.1+.3*top))*inA*(1.-inB),bd=(length(f-c)-rad)/1.1;
       float inside=on*(1.-smoothstep(-lqPx,lqPx,bd)),ring=on*exp(-abs(bd)/max(.012,lqPx));
       lqCol=mix(lqCol,lqC1*.5+.5,inside*.5);lqA=mix(lqA,.12,inside);lqA=max(lqA,.85*ring);lqCol=mix(lqCol,vec3(1.),.35*ring);
       float tb=.9*exp(-abs(bd)/.04)*on;if(tb>lqTilt){lqTilt=tb;vec2 dq=normalize(f-c+1e-6);lqOut=lqRight*dq.x+lqDown*dq.y;}
@@ -1544,8 +1586,10 @@ varying vec2 vLqPos;varying vec3 vLqTx,vLqTy;${FILL_GLSL}\n`+sh.fragmentShader
     #endif
     outgoingLight+=lqGlit*lqGlitC*sp;}
   #include <opaque_fragment>`)};
-  m.customProgramCacheKey=()=>'filled-vinyl-v1';
-  return{mat:m,uniforms:u,mesh:null}}
+  m.customProgramCacheKey=()=>'filled-vinyl-v2';
+  // Circles of the light phase, one texel each (see liquidLayout).
+  const circles=new THREE.DataTexture(new Float32Array(256*4),256,1,THREE.RGBAFormat,THREE.FloatType);circles.needsUpdate=true;u.lqCircles.value=circles;
+  return{mat:m,uniforms:u,mesh:null,circles,layoutKey:''}}
 const fill1=fillMaterial(),fill2=fillMaterial();
 const lqQuat=new THREE.Quaternion(),lqDown3=new THREE.Vector3(),lqScale=new THREE.Vector3();
 // Gravity in the disc's own frame, every draw: the disc's pose (pulled out, flipped, spun, turned for a clip)
@@ -1563,8 +1607,10 @@ function applyFillTo(i,f){
   u.lqType.value=FILL_TYPES.indexOf(type);u.lqSeed.value.set(...sv);
   u.lqC1.value.set(state[`fill${s}Color`]);u.lqC2.value.set(state[`fill${s}Color2`]);u.lqGlitC.value.set(state[`glitter${s}Color`]);
   u.lqPhase2.value=state[`fill${s}Phase2`];u.lqCloud.value=state[`fill${s}Cloud`];u.lqBubbles.value=state[`fill${s}Bubbles`];u.lqSettle.value=settle;u.lqInner.value=inner;u.lqOuter.value=outer;u.lqGlitter.value=glitter;
-  if(type!=='none'){u.lqAmountT.value=lqThreshold(lqCarrierJS,state[`fill${s}Amount`],o,inner,outer);
-    u.lqPhase2T.value=type==='liquid'?lqThreshold(lqBlobsJS,state[`fill${s}Phase2`],o,inner,outer):2}}
+  if(type==='dry')u.lqAmountT.value=lqThreshold(lqCarrierJS,state[`fill${s}Amount`],o,inner,outer);
+  if(type==='liquid'){u.lqLevel.value=liquidLevel(state[`fill${s}Amount`],inner,outer);
+    const lay={seed,inner,outer,share:state[`fill${s}Phase2`],settle,specks:state[`fill${s}Bubbles`]},key=JSON.stringify(lay);
+    if(key!==f.layoutKey){f.layoutKey=key;const cs=liquidLayout(lay),d=f.circles.image.data;d.fill(0);cs.forEach((c,k)=>d.set(c,k*4));f.circles.needsUpdate=true;u.lqCount.value=cs.length}}}
 const sleeveMat=new THREE.MeshStandardMaterial({color:state.sleeveColor,roughness:.88,side:THREE.DoubleSide,bumpMap:bump,bumpScale:.25});
 
 // Shrink wrap: alpha comes from the film's own reflections, so the film stays invisible where it reflects
@@ -2698,14 +2744,14 @@ const SPEC_FIELDS=[
     numF(`records.disc${i}.pattern.rotation`,`pattern${s}Rot`,-180,180,1,`第 ${i} 张纹路相对标签的旋转角度（度，逆时针为正）${note}`),
     ...(i===2?[boolF('records.disc2.sameAsDisc1','vinylSame','第 2 张的胶色和纹路与第 1 张相同（默认）。设为 false 后 disc2 的 vinyl、color、pattern 才生效；没写这个字段、但写了这些字段时，视为 false（仅 records.count=2 时生效）')]:[]),
     boolF(`records.disc${i}.pattern.fromCover`,`pattern${s}FromCover`,`第 ${i} 张从封面（images.front）自动取底色和纹路色，需要同时给 pattern.id；同时写了 color、pattern.color、pattern.color2 或 vinyl 的，以写明的为准。2LP 的第 2 张会取下一组配色${note}`),
-    enumF(`records.disc${i}.fill.type`,`fill${s}Type`,FILL_TYPES,`第 ${i} 张填充：none 无；liquid 液体胶（透明外壳里封着液体，可有第二相色块和气泡）；dry 干填充（沙、粉之类的颗粒）。填充在盘面中间的空腔里，外壳要透明才看得见：需要 vinyl=color，transparency 建议 40 以上。重力朝下：唱片竖着时填充沉在下方，自转时留在原处。快速起步用 fill.preset${note}`),
-    colorF(`records.disc${i}.fill.color`,`fill${s}Color`,`第 ${i} 张填充主色：液体为主液体颜色，干填充为颗粒的第一种颜色${note}`),
-    colorF(`records.disc${i}.fill.color2`,`fill${s}Color2`,`第 ${i} 张第二色：液体为漂浮色块（与主液体不相溶的第二相）颜色，干填充为颗粒的第二种颜色${note}`),
-    numF(`records.disc${i}.fill.amount`,`fill${s}Amount`,0,100,.01,`第 ${i} 张填充量（%）：空腔里被主液体或颗粒占据的比例，其余为透明${note}`),
-    numF(`records.disc${i}.fill.phase2`,`fill${s}Phase2`,0,100,.01,`第 ${i} 张第二色的比例（%）：液体为色块占空腔的比例，干填充为第二种颜色的比重${note}`),
+    enumF(`records.disc${i}.fill.type`,`fill${s}Type`,FILL_TYPES,`第 ${i} 张填充：none 无；liquid 液体胶（有色透明液体铺满空腔，里面漂着乳白的另一相：圆润的大块、贴着标签或外缘铺开的一段、大小不一的圆液滴，块里夹着液体小点）；dry 干填充（沙、粉之类的颗粒）。填充在盘面中间的空腔里，外壳要透明才看得见：需要 vinyl=color，transparency 建议 40 以上。重力朝下：唱片自转时填充留在原处。快速起步用 fill.preset${note}`),
+    colorF(`records.disc${i}.fill.color`,`fill${s}Color`,`第 ${i} 张填充主色：液体为铺满空腔的有色液体，干填充为颗粒的第一种颜色${note}`),
+    colorF(`records.disc${i}.fill.color2`,`fill${s}Color2`,`第 ${i} 张第二色：液体为漂在里面的乳白一相（色块和液滴），干填充为颗粒的第二种颜色${note}`),
+    numF(`records.disc${i}.fill.amount`,`fill${s}Amount`,0,100,.01,`第 ${i} 张填充量（%）：液体为液面高度，100 为灌满，低于 100 时上方留一段空气；干填充为颗粒占空腔的比例${note}`),
+    numF(`records.disc${i}.fill.phase2`,`fill${s}Phase2`,0,100,.01,`第 ${i} 张第二色的比例（%）：液体为色块和液滴合计占空腔的面积，干填充为第二种颜色的比重${note}`),
     numF(`records.disc${i}.fill.cloud`,`fill${s}Cloud`,0,100,.01,`第 ${i} 张液体浑浊度（%）：0 清澈透光，100 几乎不透明；干填充不使用${note}`),
-    numF(`records.disc${i}.fill.bubbles`,`fill${s}Bubbles`,0,100,.01,`第 ${i} 张气泡多少（%），气泡多在上方；干填充不使用${note}`),
-    numF(`records.disc${i}.fill.settle`,`fill${s}Settle`,0,100,.01,`第 ${i} 张沉降程度（%）：0 均匀分布，越大越往下沉（色块越往上浮）${note}`),
+    numF(`records.disc${i}.fill.bubbles`,`fill${s}Bubbles`,0,100,.01,`第 ${i} 张细碎程度（%）：越大液滴越多越碎、色块里夹的液体小点越多、空气泡越多（多在上方）；干填充不使用${note}`),
+    numF(`records.disc${i}.fill.settle`,`fill${s}Settle`,0,100,.01,`第 ${i} 张沉降程度（%）：0 均匀分布，越大乳白一相越往上浮（干填充越往下沉）${note}`),
     numF(`records.disc${i}.fill.seed`,`fill${s}Seed`,1,9999,1,`第 ${i} 张填充分布的随机种子，换一个数就换一种分布；2LP 的两张即使样式相同，分布也不同${note}`,true),
     numF(`records.disc${i}.fill.inner`,`fill${s}Inner`,50,100,.1,`第 ${i} 张空腔内半径（mm），标签半径为 50${note}`),
     numF(`records.disc${i}.fill.outer`,`fill${s}Outer`,100,151,.1,`第 ${i} 张空腔外半径（mm），盘半径为 151，外缘通常留几毫米透明边${note}`),
@@ -2812,7 +2858,7 @@ function buildSchema(){
     const s=f.type==='enum'?{enum:f.values}:f.type==='number'?{type:f.integer?'integer':'number',minimum:f.min,maximum:f.max}:f.type==='boolean'?{type:'boolean'}:f.type==='color'?{type:'string',pattern:'^#[0-9a-fA-F]{6}$'}:{type:'string',maxLength:f.maxLength};
     Object.assign(s,{description:f.desc,default:toSpecValue(f,DEFAULT_STATE[f.key])});parent(f.path).properties[f.path.split('.').at(-1)]=s}
   parent('sticker.lines').properties.lines={type:'array',maxItems:3,items:{type:'string',maxLength:40},description:'模板从上到下每一行的文字。不写的行用模板默认文字（方括号是占位，要换成实际内容），写空字符串去掉这一行。只在用模板时生效'};
-  for(const i of[1,2])parent(`records.disc${i}.fill.preset`).properties.preset={enum:Object.keys(FILL_PRESETS),description:`第 ${i} 张填充预设，一次写好 type、color、color2、amount、phase2、cloud、bubbles、settle；同时写明的字段以写明的为准。cloudy 乳白浑浊的水（多气泡）；twotone 深色液体里漂着浅色色块；oil 深色油状液体；sand 干沙。预设只是起点，颜色按封面改`};
+  for(const i of[1,2])parent(`records.disc${i}.fill.preset`).properties.preset={enum:Object.keys(FILL_PRESETS),description:`第 ${i} 张填充预设，一次写好 type、color、color2、amount、phase2、cloud、bubbles、settle；同时写明的字段以写明的为准。cloudy 浑浊水（浅色液体、少量白块、多气泡）；twotone 橙色液体里漂着白色大块；oil 黑色液体里漂着白块和液滴，块里夹着黑点；foam 浅绿透明液体里满是蓝色液滴；sand 干沙。预设只是起点，颜色按封面改`};
   parent('number.fontFile').properties.fontFile={type:'string',description:'自定义字体文件（TTF/OTF/WOFF/WOFF2）。CLI 中写相对 spec 文件的路径；提供后 number.font 默认变为 custom'};
   root.properties.images={type:'object',additionalProperties:false,description:'各部件贴图。CLI 中写相对 spec 文件的本地路径或 http(s) 地址；页面 API 接受 data URL 或 URL。未提供的部件使用示例图',
     properties:Object.fromEntries(Object.entries(IMAGE_SLOTS).map(([k,d])=>[k,{type:'string',description:d}]))};

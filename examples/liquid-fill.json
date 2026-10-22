@@ -1,13 +1,29 @@
 {
   "version": 1,
-  "meta": {"title": "Liquid-filled LP"},
+  "meta": {
+    "title": "Liquid-filled LP"
+  },
   "records": {
     "disc1": {
-      "vinyl": "color", "color": "#f6eef0", "transparency": 70, "recordOut": 75,
-      "fill": {"preset": "twotone", "color": "#6e0b24", "color2": "#f39cc0"},
-      "glitter": {"amount": 30, "color": "#e8e8ee"}
+      "vinyl": "color",
+      "color": "#f6eef0",
+      "transparency": 70,
+      "recordOut": 75,
+      "fill": {
+        "preset": "oil"
+      },
+      "glitter": {
+        "amount": 20,
+        "color": "#e8e8ee"
+      }
     }
   },
-  "camera": {"view": "quarter"},
-  "output": {"width": 2400, "height": 1600, "background": "#e6e3dc"}
+  "camera": {
+    "view": "quarter"
+  },
+  "output": {
+    "width": 2400,
+    "height": 1600,
+    "background": "#e6e3dc"
+  }
 }
