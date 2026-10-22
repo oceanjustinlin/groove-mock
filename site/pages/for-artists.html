@@ -12,7 +12,7 @@ __ROBOTS_META__
 <body>
 <div class="wrap"><nav class="nav" aria-label="Main navigation"><a class="brand" href="../">RECORD MOCKUP</a><div class="nav-links"><a href="../examples/">Examples</a><a href="../">Open editor →</a></div></nav></div>
 <main>
-<div class="wrap hero"><div><div class="eyebrow">For independent artists & small labels</div><h1>Show the record before it exists.</h1><p class="lede">Turn your finished album artwork into images for a preorder page, release announcement or pressing proposal. Build the jacket, choose the vinyl, then export a still or a short reveal video.</p><div class="actions"><a class="button" href="../">Make a vinyl mockup</a><a class="button secondary" href="../examples/">See examples</a></div></div><figure class="reel"><video id="hero-reel" autoplay muted loop playsinline preload="auto" poster="../images/hero-reel.jpg" width="1280" height="720" aria-label="A 2LP package swinging gently while its cover art and vinyl colours change every fraction of a second, seventeen sample designs in all"><source src="../images/hero-reel.mp4" type="video/mp4"></video><button class="reel-toggle" id="reel-toggle" type="button" aria-pressed="false">Pause</button><figcaption>Seventeen illustrative designs made with Record Mockup, with cover photos from Unsplash. None is an official release.</figcaption></figure></div>
+<div class="wrap hero"><div><div class="eyebrow">For independent artists & small labels</div><h1>Show the record before it exists.</h1><p class="lede">Turn your finished album artwork into images for a preorder page, release announcement or pressing proposal. Build the jacket, choose the vinyl, then export a still or a short reveal video.</p><div class="actions"><a class="button" href="../">Make a vinyl mockup</a><a class="button secondary" href="../examples/">See examples</a></div></div><figure class="reel"><div class="reel-frame"><video id="hero-reel" autoplay muted loop playsinline preload="auto" poster="../images/hero-reel.jpg" width="1280" height="720" aria-label="A 2LP package swinging gently while its cover art and vinyl colours change every fraction of a second, seventeen sample designs in all"><source src="../images/hero-reel.mp4" type="video/mp4"></video><button class="reel-toggle" id="reel-toggle" type="button" aria-label="Pause animation"><svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg><svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg></button></div><figcaption>Seventeen illustrative designs made with Record Mockup, with cover photos from Unsplash. None is an official release.</figcaption></figure></div>
 <div class="band"><div class="wrap"><span>No account required</span><span>Your uploads are processed in your browser</span><span>Transparent PNG up to 4096 px</span><span>MP4 & GIF loops</span></div></div>
 <section class="wrap section"><div class="eyebrow">From cover to campaign image</div><h2>One release, several useful views.</h2><p class="section-intro">Use the same cover art across your store listing, social posts and pitch deck. Change the packaging details without rebuilding the artwork.</p><div class="steps"><div class="step"><div class="num">01 / ADD ARTWORK</div><h3>Start with your cover</h3><p>Upload your front cover and, if you have them, back cover, labels and gatefold artwork.</p></div><div class="step"><div class="num">02 / SET THE PRESSING</div><h3>Make it yours</h3><p>Choose one or two LPs, colored or translucent vinyl, sleeves, wrap, obi, stickers and edition numbers.</p></div><div class="step"><div class="num">03 / EXPORT</div><h3>Publish the result</h3><p>Download a PNG with a solid or transparent background, or export an MP4 or GIF reveal.</p></div></div></section>
 <section class="wrap section" style="padding-top:0"><div class="eyebrow">What you can make</div><div class="showcase"><article><img src="../images/vinyl-variants.jpg" width="2000" height="1250" alt="Two colored records emerging from an LP jacket"><h3>Preorder product image</h3><p>Show the selected pressing color and how the record sits with its jacket.</p></article><article><img src="../images/gatefold-open.jpg" width="2400" height="1200" alt="Open gatefold package with two LPs and printed inner panels"><h3>Gatefold reveal</h3><p>Give fans a view of the inner panels and two-disc package before production.</p></article></div></section>
@@ -20,12 +20,22 @@ __ROBOTS_META__
 <section class="dark"><div class="wrap section"><div class="eyebrow">Ready for your artwork</div><h2>Make the first image now.</h2><p class="section-intro">The sample artwork is only a demonstration. Use artwork you own or are authorised to use. Before using a mockup for preorders, check that its colour, packaging and edition details match the actual release.</p><a class="button" href="../">Open the free editor</a></div></section>
 </main>
 <script>
-// The reel loops forever, so it gets a pause control, and it stays on its poster for people who ask for less motion.
+// The reel loops forever, so it can be paused (the corner button or a click on the video), it starts paused for
+// people who ask for less motion, and it stops while scrolled out of view so it costs nothing off screen.
 (() => {
   const v = document.getElementById('hero-reel'), b = document.getElementById('reel-toggle');
-  const set = paused => { b.textContent = paused ? 'Play' : 'Pause'; b.setAttribute('aria-pressed', paused) };
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) { v.removeAttribute('autoplay'); v.pause(); set(true) }
-  b.addEventListener('click', () => { if (v.paused) { v.play(); set(false) } else { v.pause(); set(true) } });
+  let held = matchMedia('(prefers-reduced-motion: reduce)').matches, visible = true;
+  const sync = () => {
+    if (held || !visible) v.pause(); else v.play().catch(() => {});
+    b.classList.toggle('is-paused', held);
+    b.setAttribute('aria-label', held ? 'Play animation' : 'Pause animation');
+  };
+  const toggle = () => { held = !held; sync() };
+  if (held) v.removeAttribute('autoplay');
+  b.addEventListener('click', toggle);
+  v.addEventListener('click', toggle);
+  new IntersectionObserver(([e]) => { visible = e.isIntersecting; sync() }).observe(v);
+  sync();
 })();
 </script>
 <div class="wrap footer"><span>Record Mockup · 3D vinyl release visuals</span><span><a href="../examples/">Examples</a><a href="../privacy/">Privacy & copyright</a><a href="../">Editor</a><a href="https://github.com/oceanjustinlin/record-mockup">GitHub</a></span></div>
