@@ -1228,7 +1228,7 @@ function unstackMask(bmp,accents){const N=bmp.width,src=canvas(N,bmp.height).get
 const maskCache=new Map(),maskDone=new Set();
 function loadMask(id){
   const m=maskById(id);
-  if(!maskCache.has(id))maskCache.set(id,(m.family==='split'?Promise.resolve(splitMask(id)):fetch('vinyl-masks/'+m.file).then(r=>{if(!r.ok)throw new Error(`HTTP ${r.status}`);return r.blob()}).then(b=>createImageBitmap(b,{colorSpaceConversion:'none',premultiplyAlpha:'none'}))
+  if(!maskCache.has(id))maskCache.set(id,(!m.file?Promise.resolve(splitMask(id)):fetch('vinyl-masks/'+m.file).then(r=>{if(!r.ok)throw new Error(`HTTP ${r.status}`);return r.blob()}).then(b=>createImageBitmap(b,{colorSpaceConversion:'none',premultiplyAlpha:'none'}))
     .then(bmp=>bmp.height>bmp.width?unstackMask(bmp,m.accents):bmp))
     .then(img=>{maskDone.add(id);return img},e=>{maskCache.delete(id);throw e}));
   return maskCache.get(id)}
@@ -2223,7 +2223,7 @@ $('bg-color').addEventListener('input',e=>{state.bgColor=e.target.value;state.bg
 $('sleeve-color').addEventListener('input',e=>{state.sleeveColor=e.target.value;sleeveMat.color.set(tex.sleeve?'#ffffff':e.target.value)});
 field('vinyl-color','vinylColor');field('vinyl2-color','vinyl2Color');field('bg-color','bgColor');field('sleeve-color','sleeveColor');
 // Pattern panel: a thumbnail picker per disc, then only the controls the pattern's palette mode uses.
-const FAMILY={split:['分色','Split'],splatter:['泼溅','Splatter'],starburst:['爆发','Starburst'],blob:['色块','Blob'],pinwheel:['风车','Pinwheel'],ripple:['波纹','Ripple'],swirl:['旋涡','Swirl'],smoke:['烟雾','Smoke'],marble:['大理石','Marble'],tiedye:['扎染','Tie-dye'],ghostly:['云雾','Ghostly']};
+const FAMILY={split:['分色','Split'],splatter:['泼溅','Splatter'],starburst:['爆发','Starburst'],blob:['色块','Blob'],pinwheel:['风车','Pinwheel'],ripple:['波纹','Ripple'],swirl:['旋涡','Swirl'],smoke:['烟雾','Smoke'],marble:['大理石','Marble'],tiedye:['扎染','Tie-dye'],ghostly:['云雾','Ghostly'],halo:['光环','Halo']};
 // The palette mode (split / main + accent / tonal) stays internal: the controls below already follow it.
 const patternLabel=m=>m?`${tr(...(FAMILY[m.family]??[m.family,m.family]))} · ${m.id}`:tr('纯色','Solid');
 const splitThumbs=new Map();

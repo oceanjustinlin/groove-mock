@@ -132,6 +132,22 @@ def extract(photo, crop=0.975, clusters=3, accents=1):
             w[neg, k] = 0
             with np.errstate(all='ignore'):
                 w[neg, o] = np.clip(d[neg] @ axes[o] / float(axes[o] @ axes[o]), 0, None)
+        # A pixel a little past one pattern colour (a more saturated yellow than the yellow cluster) is explained as
+        # that colour plus a share of the other, so a clean yellow halo comes out yellow + dark wine and renders
+        # brown. A mix can't hold more than all of it: where the weights add up past 1, keep the best of one
+        # colour alone or the two mixed with each other.
+        over = w.sum(1) > 1
+        if over.any():
+            with np.errstate(all='ignore'):
+                x, a1, a2 = d[over], axes[0], axes[1]
+                t1 = np.clip(x @ a1 / float(a1 @ a1), 0, None)
+                t2 = np.clip(x @ a2 / float(a2 @ a2), 0, None)
+                e = a2 - a1
+                s = np.clip((x - a1) @ e / float(e @ e), 0, 1)
+                cands = [np.stack([t1, 0 * t1], 1), np.stack([0 * t2, t2], 1), np.stack([1 - s, s], 1)]
+                res = np.stack([np.linalg.norm(x - c @ M.T, axis=1) for c in cands], 1)
+                pick = res.argmin(1)
+                w[over] = np.choose(pick[:, None], cands)
     w = w.reshape(N, N, len(axes))
     layers, patterns = [], []
     # The photo's blank label is often a little larger than the page's (radius 100 of 302), so its edge lands on
