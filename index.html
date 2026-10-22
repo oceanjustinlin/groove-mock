@@ -1439,26 +1439,26 @@ float lqFbm(vec2 p,int n){float s=0.,a=.5,t=0.;for(int i=0;i<5;i++){if(i>=n)brea
 // Loop-safe drift for clips: a small circle that starts and ends at rest.
 vec2 lqWobble(){float a=6.2831853*lqTime;return vec2(sin(a),cos(a)-1.)*.35;}
 // Carrier: warped fbm, raised where the disc is low (q.y > 0 is down) so it pools there.
-float lqCarrier(vec2 q){vec2 w=q*.2+lqSeed+lqWobble();
-  vec2 warp=vec2(lqFbm(w*.7+3.1,2),lqFbm(w*.7+7.7,2))-.5;
-  float h=lqFbm(w+2.2*warp,3);
+float lqCarrier(vec2 q){vec2 w=q*.11+lqSeed+lqWobble()*.6;
+  vec2 warp=vec2(lqFbm(w*.6+3.1,2),lqFbm(w*.6+7.7,2))-.5;
+  float h=lqFbm(w+1.1*warp,2);
   if(lqType==2)h+=(lqFbm(q*1.6+4.,3)-.5)*.12;
   return h+lqSettle*.5*q.y/15.1;}
 // Second phase: smaller blobs that float up.
-float lqBlobs(vec2 q){vec2 w=q*.34+lqSeed.yx*1.7+11.+lqWobble()*1.4;
-  vec2 warp=vec2(lqFbm(w*.8+5.3,2),lqFbm(w*.8+1.9,2))-.5;
-  return lqFbm(w+1.8*warp,2)-lqSettle*.3*q.y/15.1;}`;
+float lqBlobs(vec2 q){vec2 w=q*.17+lqSeed.yx*1.7+11.+lqWobble()*.9;
+  vec2 warp=vec2(lqFbm(w*.7+5.3,2),lqFbm(w*.7+1.9,2))-.5;
+  return lqFbm(w+.9*warp,2)-lqSettle*.3*q.y/15.1;}`;
 const lqFract=x=>x-Math.floor(x);
 function lqHashJS(x,y){const a=lqFract(x*.1031),b=lqFract(y*.1031),c=a,d=a*(b+33.33)+b*(c+33.33)+c*(a+33.33);return lqFract((a+d+b+d)*(c+d))}
 function lqNoiseJS(x,y){const ix=Math.floor(x),iy=Math.floor(y),fx=x-ix,fy=y-iy,ux=fx*fx*fx*(fx*(fx*6-15)+10),uy=fy*fy*fy*(fy*(fy*6-15)+10),m=(a,b,t)=>a+(b-a)*t;
   return m(m(lqHashJS(ix,iy),lqHashJS(ix+1,iy),ux),m(lqHashJS(ix,iy+1),lqHashJS(ix+1,iy+1),ux),uy)}
 function lqFbmJS(x,y,n){let s=0,a=.5,t=0;for(let i=0;i<n;i++){s+=a*lqNoiseJS(x,y);t+=a;[x,y]=[1.6*x-1.2*y+17.3,1.2*x+1.6*y+17.3];a*=.5}return s/t}
-function lqCarrierJS(qx,qy,{seed,settle,dry}){const wx=qx*.2+seed[0],wy=qy*.2+seed[1];
-  const ax=lqFbmJS(wx*.7+3.1,wy*.7+3.1,2)-.5,ay=lqFbmJS(wx*.7+7.7,wy*.7+7.7,2)-.5;
-  let h=lqFbmJS(wx+2.2*ax,wy+2.2*ay,3);if(dry)h+=(lqFbmJS(qx*1.6+4,qy*1.6+4,3)-.5)*.12;return h+settle*.5*qy/15.1}
-function lqBlobsJS(qx,qy,{seed,settle}){const wx=qx*.34+seed[1]*1.7+11,wy=qy*.34+seed[0]*1.7+11;
-  const ax=lqFbmJS(wx*.8+5.3,wy*.8+5.3,2)-.5,ay=lqFbmJS(wx*.8+1.9,wy*.8+1.9,2)-.5;
-  return lqFbmJS(wx+1.8*ax,wy+1.8*ay,2)-settle*.3*qy/15.1}
+function lqCarrierJS(qx,qy,{seed,settle,dry}){const wx=qx*.11+seed[0],wy=qy*.11+seed[1];
+  const ax=lqFbmJS(wx*.6+3.1,wy*.6+3.1,2)-.5,ay=lqFbmJS(wx*.6+7.7,wy*.6+7.7,2)-.5;
+  let h=lqFbmJS(wx+1.1*ax,wy+1.1*ay,2);if(dry)h+=(lqFbmJS(qx*1.6+4,qy*1.6+4,3)-.5)*.12;return h+settle*.5*qy/15.1}
+function lqBlobsJS(qx,qy,{seed,settle}){const wx=qx*.17+seed[1]*1.7+11,wy=qy*.17+seed[0]*1.7+11;
+  const ax=lqFbmJS(wx*.7+5.3,wy*.7+5.3,2)-.5,ay=lqFbmJS(wx*.7+1.9,wy*.7+1.9,2)-.5;
+  return lqFbmJS(wx+.9*ax,wy+.9*ay,2)-settle*.3*qy/15.1}
 // Threshold that leaves share of the cavity above it. Fixed sample points, so a slider never flickers.
 const lqQuantCache=new Map();
 function lqThreshold(fn,share,o,inner,outer){
@@ -1503,6 +1503,13 @@ varying vec2 vLqPos;varying vec3 vLqTx,vLqTy;${FILL_GLSL}\n`+sh.fragmentShader
       float hb=lqBlobs(q);vec2 gb=vec2(lqBlobs(q+vec2(e,0.))-hb,lqBlobs(q+vec2(0.,e))-hb)/e;
       float db=(hb-lqPhase2T)/max(length(gb),1e-4),inB=smoothstep(-lqPx,lqPx,db)*cav;
       vec3 cB=lqC2*mix(.86,1.08,smoothstep(0.,.35,db));
+      // Satellite droplets: small round beads of the second phase, more of them near the big blobs.
+      vec2 dq=q*2.2+lqSeed.yx*5.,dc=floor(dq),df=fract(dq);
+      float drad=mix(.06,.2,pow(lqHash(dc+13.),3.)),near=smoothstep(lqPhase2T-.12,lqPhase2T,hb);
+      vec2 dcen=.5+(lqHash2(dc+29.)-.5)*(1.-2.*drad);
+      float dd=(length(df-dcen)-drad)/2.2,don=step(lqHash(dc+17.),(.12+.8*near)*min(1.,lqPhase2*2.5))*cav;
+      float inD=don*(1.-smoothstep(-lqPx,lqPx,dd));
+      if(inD>inB){inB=inD;db=-dd;gb=normalize(df-dcen+1e-6)*-1.;}
       lqCol=mix(cA,cB,inB);lqA=mix(aA,.93*cav,inB);
       float tA=.85*exp(-max(d,0.)/.12)*inA,tB=.85*exp(-max(db,0.)/.1)*inB;
       lqTilt=max(tA,tB);lqOut=tB>tA?-normalize(lqRight*gb.x+lqDown*gb.y+1e-6):outA;
