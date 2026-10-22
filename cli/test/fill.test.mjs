@@ -32,10 +32,17 @@ test('liquid, sand and glitter are patterns of the main + accent kind', () => {
   assert.equal(disc.glitter, undefined);
 });
 
-test('a liquid pattern renders with its colours and transparencies, without warnings', async t => {
-  const r = await render(t, {disc1: {vinyl: 'color', color: '#111214', transparency: 10, pattern: {id: 'liquid-02', color: '#e8ebe7', transparency: 20}}});
+test('a liquid pattern renders with its colours, without warnings', async t => {
+  const r = await render(t, {disc1: {vinyl: 'color', color: '#111214', pattern: {id: 'liquid-02', color: '#e8ebe7'}}});
   assert.equal(r.status, 0, r.stdout + r.stderr);
   assert.deepEqual(r.json.warnings, []);
+});
+
+test('liquid and sand have no transparency to set', async t => {
+  const r = await render(t, {disc1: {vinyl: 'color', transparency: 40, pattern: {id: 'sand-01', transparency: 20}}});
+  const w = r.json.warnings.join('\n');
+  assert.match(w, /records\.disc1\.transparency 无效/);
+  assert.match(w, /records\.disc1\.pattern\.transparency 无效/);
 });
 
 test('black vinyl ignores a liquid pattern', async t => {

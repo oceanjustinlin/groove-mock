@@ -1218,14 +1218,15 @@ const SPLITS=[
 // Filled vinyl and glitter: procedural patterns drawn by the fill layer (see "Filled vinyl" below) instead
 // of a mask. All are main + accent: the base is the liquid / grain / vinyl colour and the pattern colour the
 // milky phase / second grain / flakes; each look's shape (share, detail, settling, layout seed) is fixed.
+// Liquid and sand have no transparency controls: the shell is always clear and cloud fixes how clear the liquid is.
 //   share: area of the milky phase (liquid) or weight of the second grain tone (sand); detail: droplets,
 //   specks and air bubbles; settle: how far the milky phase floats up (sand: sinks); amount: sand's cover.
 const FILLS=[
-  {id:'liquid-01',family:'liquid',base:'#e0900f',colors:['#f4f2ec'],fill:{type:'liquid',share:.28,detail:.25,settle:.25,seed:1}},
-  {id:'liquid-02',family:'liquid',base:'#111214',colors:['#e8ebe7'],fill:{type:'liquid',share:.26,detail:.55,settle:.25,seed:4}},
-  {id:'liquid-03',family:'liquid',base:'#c4e6c8',colors:['#1f9ee2'],fill:{type:'liquid',share:.34,detail:.8,settle:.1,seed:7}},
-  {id:'liquid-04',family:'liquid',base:'#2477b8',colors:['#e2eef5'],fill:{type:'liquid',share:.42,detail:.3,settle:.3,seed:2}},
-  {id:'liquid-05',family:'liquid',base:'#ddd6c4',colors:['#fbf9f2'],fill:{type:'liquid',share:.14,detail:.6,settle:.2,seed:9}},
+  {id:'liquid-01',family:'liquid',base:'#e0900f',colors:['#f4f2ec'],fill:{type:'liquid',cloud:0.75,share:.28,detail:.25,settle:.25,seed:1}},
+  {id:'liquid-02',family:'liquid',base:'#111214',colors:['#e8ebe7'],fill:{type:'liquid',cloud:0.96,share:.26,detail:.55,settle:.25,seed:4}},
+  {id:'liquid-03',family:'liquid',base:'#c4e6c8',colors:['#1f9ee2'],fill:{type:'liquid',cloud:0.3,share:.34,detail:.8,settle:.1,seed:7}},
+  {id:'liquid-04',family:'liquid',base:'#2477b8',colors:['#e2eef5'],fill:{type:'liquid',cloud:0.7,share:.42,detail:.3,settle:.3,seed:2}},
+  {id:'liquid-05',family:'liquid',base:'#ddd6c4',colors:['#fbf9f2'],fill:{type:'liquid',cloud:0.4,share:.14,detail:.6,settle:.2,seed:9}},
   {id:'sand-01',family:'sand',base:'#c9a57c',colors:['#7f6045'],fill:{type:'dry',amount:.62,share:.5,settle:.7,seed:3}},
   {id:'glitter-01',family:'glitter',base:'#d8d2c8',colors:['#e9e9ee'],fill:{type:'none',glitter:.35,seed:5}},
   {id:'glitter-02',family:'glitter',base:'#1d2a4a',colors:['#e2c26a'],fill:{type:'none',glitter:.8,seed:6}}
@@ -1377,7 +1378,7 @@ const STYLE_KEYS=['vinyl#','vinyl#Color','vinyl#Clear','pattern#','pattern#Color
 // colour as its base, either one optionally see-through. Only main + accent patterns have a pattern
 // transparency (pclear): split regions and tonal shades are all part of the base.
 function discLook(i){const s=styleSfx(i),black=state['vinyl'+s]==='black',mask=black?null:maskById(state['pattern'+s]);
-  return{s,black,base:black?VINYL_BLACK:state[`vinyl${s}Color`],clear:black?0:state[`vinyl${s}Clear`],mask,pclear:mask?.palette.mode==='accent'?state[`pattern${s}Clear`]:0}}
+  return{s,black,base:black?VINYL_BLACK:state[`vinyl${s}Color`],clear:black?0:state[`vinyl${s}Clear`],mask,pclear:mask?.palette.mode==='accent'&&!mask.fill?state[`pattern${s}Clear`]:0}}
 async function applyPatternTo(i,mats){
   const{s,base,clear,pclear,mask:m}=discLook(i),token=++patternToken[i-1];
   const drop=()=>{for(const t of[mats.face.map,mats.face.alphaMap])t?.dispose();mats.face.map=mats.face.alphaMap=null;mats.face.needsUpdate=true};
@@ -1599,10 +1600,9 @@ function fillOnBeforeRender(f){return function(){
   // rest, then turn with the disc.
   if(liquidSpin)v.rotateAround(new THREE.Vector2(),THREE.MathUtils.degToRad(liquidSpin));
   f.uniforms.lqTime.value=liquidClock}}
-// A fill pattern's look on disc i: the liquid takes the base colour and the milky phase the pattern colour;
-// the disc transparency is how clear the liquid is, the pattern transparency how see-through the milky phase.
+// A fill pattern's look on disc i: the liquid takes the base colour and the milky phase the pattern colour.
 function applyFillTo(i,f){
-  const{s,black,base,clear,pclear,mask:m}=discLook(i),spec=!black&&m?.fill,type=spec?spec.type:'none',u=f.uniforms;
+  const{s,black,base,mask:m}=discLook(i),spec=!black&&m?.fill,type=spec?spec.type:'none',u=f.uniforms;
   if(f.mesh){f.mesh.visible=!!spec&&type!=='none';for(const g of f.glitter)g.visible=!!spec&&type==='none'}
   if(!spec)return;
   const color=derivePattern(m,base,state[`pattern${s}Color`],state[`pattern${s}Alt`],1)[0];
@@ -1610,7 +1610,7 @@ function applyFillTo(i,f){
   const seed=spec.seed+(i-1)*101,sv=[(seed*12.9898)%97,(seed*78.233)%89],inner=5.3,outer=14.6,settle=spec.settle??0;
   u.lqType.value=FILL_TYPES.indexOf(type);u.lqSeed.value.set(...sv);u.lqRot.value=THREE.MathUtils.degToRad(state[`pattern${s}Rot`]);
   u.lqC1.value.set(base);u.lqC2.value.set(color);u.lqGlitC.value.set(color);
-  u.lqPhase2.value=spec.share??0;u.lqCloud.value=Math.max(.05,1-clear*1.15);u.lqBlobClear.value=pclear;u.lqBubbles.value=spec.detail??0;u.lqSettle.value=settle;
+  u.lqPhase2.value=spec.share??0;u.lqCloud.value=spec.cloud??1;u.lqBlobClear.value=0;u.lqBubbles.value=spec.detail??0;u.lqSettle.value=settle;
   u.lqInner.value=inner;u.lqOuter.value=outer;u.lqGlitter.value=spec.glitter??0;
   if(type==='dry')u.lqAmountT.value=lqThreshold(lqCarrierJS,spec.amount,{seed:sv,settle,dry:true},inner,outer);
   if(type==='liquid'){
@@ -2496,10 +2496,12 @@ function syncPatterns(){for(const i of[1,2]){const s=i===1?'':'2',black=state['v
   $(`vinyl${s}-color-lbl`).textContent=!m?tr('颜色','Colour'):mode==='regions'?tr('第一块','First region'):tr('底色','Base');
   // Two transparencies only when there are two layers to tell apart: base and pattern.
   $(`vinyl${s}-clear-lbl`).textContent=mode==='accent'?tr('底色透明度','Base transparency'):tr('透明度','Transparency');
+  // Liquid and sand sit in a clear shell of their own: no transparency to set.
+  $(`vinyl${s}-clear`).parentElement.hidden=!!m?.fill&&m.fill.type!=='none';
   for(const b of $(`pattern${s}-pick`).children)b.setAttribute('aria-checked',String(b.dataset.id===m?.id));
   if(!m)continue;
   $(`pattern${s}-name`).textContent=patternLabel(m);
-  $(`pattern${s}-colors`).hidden=mode==='tonal';$(`pattern${s}-alt`).hidden=!(mode==='regions'&&m.accents===2);$(`pattern${s}-contrast-row`).hidden=mode!=='tonal';$(`pattern${s}-clear-row`).hidden=mode!=='accent';
+  $(`pattern${s}-colors`).hidden=mode==='tonal';$(`pattern${s}-alt`).hidden=!(mode==='regions'&&m.accents===2);$(`pattern${s}-contrast-row`).hidden=mode!=='tonal';$(`pattern${s}-clear-row`).hidden=mode!=='accent'||!!m.fill;
   $(`pattern${s}-colors-lbl`).textContent=mode==='regions'?tr('其余几块','Other regions'):tr('纹路色','Pattern colour');
   $(`pattern${s}-hint`).textContent=mode==='regions'?tr('第一块用上面的底色，下面选其余几块。','The first region uses the base colour; pick the others below.')
     :mode==='accent'?tr('选好底色和纹路色，其余色层自动搭配。','Pick the base and pattern colours; the other layers follow them.')
@@ -2722,7 +2724,7 @@ const SPEC_FIELDS=[
     numF(`records.disc${i}.sleeveOut`,`sleeve${s}X`,0,100,.01,`第 ${i} 张内袋连同唱片从封套开口抽出的比例（%），只在 records.sleeve.on=true 时生效，内袋不显示时写了会被忽略并给出警告${note}${i===2?'。双开且 records.layout=split 时从左扇的开口抽出：合上时朝右，打开后朝左':''}`),
     numF(`records.disc${i}.recordOut`,`record${s}X`,0,100,.01,`第 ${i} 张唱片抽出的比例（%）。显示内袋时是唱片再从内袋里抽出的比例；不显示内袋时是唱片直接抽出封套的比例，100 为完全抽出、落在地面${note}`),
     numF(`records.disc${i}.tracks`,`tracks${s}`,1,20,1,`第 ${i} 张每面的音轨数，盘面按等宽分成这么多圈，相邻音轨之间有一道亮环；两面相同${note}`,true),
-    enumF(`records.disc${i}.pattern.id`,`pattern${s}`,['none',...MASKS.map(m=>m.id)],`第 ${i} 张彩胶纹路，none 或不写为纯色，只在 vinyl=color 时生效。按配色方式分三类——分色（底色是第一块，pattern.color 第二块，三块的纹路（split-tri、tiedye-*）再用 pattern.color2 第三块；split-quad 对角同色）：${patternIds('regions')}；主次（底色 + pattern.color，其余色层自动推算）：${patternIds('accent')}；同色系（只用底色，纹路是它的深浅变化，pattern.contrast 调反差）：${patternIds('tonal')}。液体胶、沙、亮片也是主次类：liquid-* 为透明外壳里封着液体，底色是液体颜色，pattern.color 是漂在里面的乳白一相（大块和圆液滴），transparency 是液体的通透程度（0 不透光），pattern.transparency 是乳白相的透明度，液体随唱片转动；sand-01 底色和 pattern.color 是两种沙色；glitter-* 底色是胶色（配合 transparency），pattern.color 是亮片颜色。底色是 color；写了 color 而没写 pattern.color / pattern.color2 时，纹路色按底色推算；color 也没写时，用这款纹路的默认配色${note}`),
+    enumF(`records.disc${i}.pattern.id`,`pattern${s}`,['none',...MASKS.map(m=>m.id)],`第 ${i} 张彩胶纹路，none 或不写为纯色，只在 vinyl=color 时生效。按配色方式分三类——分色（底色是第一块，pattern.color 第二块，三块的纹路（split-tri、tiedye-*）再用 pattern.color2 第三块；split-quad 对角同色）：${patternIds('regions')}；主次（底色 + pattern.color，其余色层自动推算）：${patternIds('accent')}；同色系（只用底色，纹路是它的深浅变化，pattern.contrast 调反差）：${patternIds('tonal')}。液体胶、沙、亮片也是主次类：liquid-* 为透明外壳里封着液体，底色是液体颜色，pattern.color 是漂在里面的乳白一相（大块和圆液滴），外壳总是透明，液体的通透程度由每款纹路决定，不用 transparency 和 pattern.transparency，液体随唱片转动；sand-01 底色和 pattern.color 是两种沙色，同样不用透明度；glitter-* 底色是胶色（可配合 transparency），pattern.color 是亮片颜色。底色是 color；写了 color 而没写 pattern.color / pattern.color2 时，纹路色按底色推算；color 也没写时，用这款纹路的默认配色${note}`),
     colorF(`records.disc${i}.pattern.color`,`pattern${s}Color`,`第 ${i} 张纹路色：主次类为纹路颜色，分色类为第二块颜色；同色系不使用${note}`),
     numF(`records.disc${i}.pattern.transparency`,`pattern${s}Clear`,0,80,.01,`第 ${i} 张纹路的透明度（%），默认 0 为不透明；纹路色和由它推算的色层一起变透明。底色不透明时纹路会透出底色、变淡；底色也透明时（transparency）纹路同样透光。仅主次类（${patternIds('accent')}）使用，分色类和同色系忽略并给出警告${note}`),
     colorF(`records.disc${i}.pattern.color2`,`pattern${s}Alt`,`第 ${i} 张分色第三块颜色，仅三块的分色纹路（split-tri、tiedye-*）使用${note}`),
@@ -2809,7 +2811,7 @@ function specFromState(){
   for(const i of[1,2]){const d=s.records[`disc${i}`],sx=i===1?'':'2';if(!('vinyl' in d))continue;
     if(state['vinyl'+sx]==='black')for(const k of['color','transparency','pattern'])delete d[k];
     else if(!maskById(state['pattern'+sx]))delete d.pattern;
-    else if(maskById(state['pattern'+sx]).palette.mode!=='accent')delete d.pattern.transparency}
+    else{const m=maskById(state['pattern'+sx]);if(m.palette.mode!=='accent'||m.fill)delete d.pattern.transparency;if(m.fill&&m.fill.type!=='none')delete d.transparency}}
   {const t=stickerTpl();if(t){delete s.sticker.shape;s.sticker.lines=tplLines(t,state.stickerLines)}else delete s.sticker.color}
   s.camera={view:state.view,zoom:state.camZoom,azimuth:state.camAz,elevation:state.camEl,panX:state.camPanX,panY:state.camPanY};
   s.output={background:state.bg==='transparent'?'transparent':state.bgColor,width:state.outW,height:state.outH};
@@ -2916,6 +2918,8 @@ async function applySpec(spec){
       if(!has(`${pre}.color`)&&m.base)state[`vinyl${s}Color`]=m.base}
     if(has(`${pre}.pattern.color`)&&mode==='tonal')warnings.push(`${pre}.pattern.color 无效：${m.id} 是同色系纹路，只用底色 ${pre}.color`);
     if(has(`${pre}.pattern.color2`)&&!tri)warnings.push(`${pre}.pattern.color2 无效：只有三块的分色纹路（split-tri、tiedye-*）使用第三块颜色`);
+    if(m.fill&&has(`${pre}.pattern.transparency`))warnings.push(`${pre}.pattern.transparency 无效：${m.id} 没有纹路透明度`);
+    if(m.fill&&m.fill.type!=='none'&&has(`${pre}.transparency`))warnings.push(`${pre}.transparency 无效：${m.id} 的外壳总是透明的，液体或沙的通透程度由纹路决定`);
     if(has(`${pre}.pattern.transparency`)&&mode!=='accent')warnings.push(`${pre}.pattern.transparency 无效：只有主次类纹路（${patternIds('accent')}）有单独的纹路透明度；${m.id} 是${mode==='regions'?'分色':'同色系'}纹路，透明度只用 ${pre}.transparency`);
     if(has(`${pre}.pattern.contrast`)&&mode!=='tonal')warnings.push(`${pre}.pattern.contrast 无效：只有同色系纹路（${patternIds('tonal')}）使用反差`);
     if(i===2&&state.lpCount!==2&&has(`${pre}.pattern.id`))warnings.push(`${pre}.pattern 仅在 records.count=2 时可见`)}
