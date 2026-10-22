@@ -77,7 +77,6 @@ button,input,select{font:inherit;color:inherit}
 .chip.icon svg{width:14px;height:14px;fill:currentColor}
 .row.tight{flex-wrap:nowrap;min-width:0;text-align:right}
 .row.tight .chip{flex:none}
-.fill-presets .chip{padding:3px 9px;font-size:12px}
 .play .i-pause,.play[aria-pressed="true"] .i-play{display:none}
 .play[aria-pressed="true"] .i-pause{display:block}
 .chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;cursor:pointer;font-size:13px}
@@ -479,21 +478,6 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
                 <div class="slider" id="pattern-clear-row" data-look="pattern"><label for="pattern-clear">纹路透明度</label><input type="range" id="pattern-clear" min="0" max="80" value="0"><output id="pattern-clear-v">0%</output></div>
                 <div class="slider" id="pattern-contrast-row" data-look="pattern"><label for="pattern-contrast">反差</label><input type="range" id="pattern-contrast" min="0" max="200" value="100"><output id="pattern-contrast-v">100%</output></div>
                 <div class="slider" data-look="pattern"><label for="pattern-rot">纹路角度</label><input type="range" id="pattern-rot" min="-180" max="180" value="0"><output id="pattern-rot-v">0°</output></div>
-                <div class="row"><span class="lbl">填充</span>
-                  <div class="seg" id="fill-type"><button data-v="none" aria-pressed="true">无</button><button data-v="liquid" aria-pressed="false">液体</button><button data-v="dry" aria-pressed="false">干填充</button></div>
-                </div>
-                <div class="sub" id="fill-sub" hidden>
-                  <div class="row"><span class="lbl">预设</span><span class="row tight fill-presets" id="fill-presets" style="flex-wrap:wrap;justify-content:flex-end;gap:4px"><button class="chip" type="button" data-p="cloudy">浑浊水</button><button class="chip" type="button" data-p="twotone">双色液</button><button class="chip" type="button" data-p="oil">黑白</button><button class="chip" type="button" data-p="foam">泡沫</button><button class="chip" type="button" data-p="sand">沙</button></span></div>
-                  <div class="row"><span class="lbl" id="fill-colors-lbl">液体 / 色块</span><div class="row" style="justify-content:flex-end"><input type="color" id="fill-color" aria-label="第 1 张填充主色"><input type="color" id="fill-color2" aria-label="第 1 张填充第二色"></div></div>
-                  <div class="slider"><label for="fill-amount" id="fill-amount-lbl">填充量</label><input type="range" id="fill-amount" min="0" max="100" value="100"><output id="fill-amount-v">100%</output></div>
-                  <div class="slider"><label for="fill-phase2" id="fill-phase2-lbl">色块</label><input type="range" id="fill-phase2" min="0" max="100" value="28"><output id="fill-phase2-v">28%</output></div>
-                  <div class="slider" data-wet><label for="fill-cloud" id="fill-cloud-lbl">浑浊度</label><input type="range" id="fill-cloud" min="0" max="100" value="75"><output id="fill-cloud-v">75%</output></div>
-                  <div class="slider" data-wet><label for="fill-bubbles" id="fill-bubbles-lbl">细碎</label><input type="range" id="fill-bubbles" min="0" max="100" value="25"><output id="fill-bubbles-v">25%</output></div>
-                  <div class="slider"><label for="fill-settle" id="fill-settle-lbl">沉降</label><input type="range" id="fill-settle" min="0" max="100" value="25"><output id="fill-settle-v">25%</output></div>
-                  <div class="row"><span class="lbl">分布</span><button class="chip icon" id="fill-seed" type="button" title="换一种分布" aria-label="换一种分布"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M11.5 1.5 14.5 4.5l-3 3v-2h-1.3c-.9 0-1.4.4-2 1.2L5.4 10.4C4.6 11.6 3.6 12 2.5 12h-1v-1.6h1c.6 0 1-.2 1.5-.9L6.8 5.8C7.6 4.6 8.6 4 10.2 4h1.3zM1.5 4h1c1.1 0 2 .4 2.8 1.5l-1 1.3c-.5-.7-.9-1.2-1.8-1.2h-1zm8.2 5.2c.5.7.9 1.2 1.8 1.2v-2l3 3-3 3v-2c-1.4 0-2.3-.5-3-1.5z"/></svg></button></div>
-                </div>
-                <div class="slider"><label for="glitter">亮片</label><input type="range" id="glitter" min="0" max="100" value="0"><output id="glitter-v">0%</output></div>
-                <div class="row" id="glitter-color-row" hidden><span class="lbl">亮片颜色</span><input type="color" id="glitter-color" aria-label="第 1 张亮片颜色"></div>
               </div>
               <div class="slider"><label for="tracks">每面音轨</label><input type="range" id="tracks" min="1" max="20" value="6"><output id="tracks-v">6</output></div>
               <div class="tiles two">
@@ -529,21 +513,6 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
                   <div class="slider" id="pattern2-clear-row" data-look="pattern"><label for="pattern2-clear">纹路透明度</label><input type="range" id="pattern2-clear" min="0" max="80" value="0"><output id="pattern2-clear-v">0%</output></div>
                   <div class="slider" id="pattern2-contrast-row" data-look="pattern"><label for="pattern2-contrast">反差</label><input type="range" id="pattern2-contrast" min="0" max="200" value="100"><output id="pattern2-contrast-v">100%</output></div>
                   <div class="slider" data-look="pattern"><label for="pattern2-rot">纹路角度</label><input type="range" id="pattern2-rot" min="-180" max="180" value="0"><output id="pattern2-rot-v">0°</output></div>
-                  <div class="row"><span class="lbl">填充</span>
-                    <div class="seg" id="fill2-type"><button data-v="none" aria-pressed="true">无</button><button data-v="liquid" aria-pressed="false">液体</button><button data-v="dry" aria-pressed="false">干填充</button></div>
-                  </div>
-                  <div class="sub" id="fill2-sub" hidden>
-                    <div class="row"><span class="lbl">预设</span><span class="row tight fill-presets" id="fill2-presets" style="flex-wrap:wrap;justify-content:flex-end;gap:4px"><button class="chip" type="button" data-p="cloudy">浑浊水</button><button class="chip" type="button" data-p="twotone">双色液</button><button class="chip" type="button" data-p="oil">黑白</button><button class="chip" type="button" data-p="foam">泡沫</button><button class="chip" type="button" data-p="sand">沙</button></span></div>
-                    <div class="row"><span class="lbl" id="fill2-colors-lbl">液体 / 色块</span><div class="row" style="justify-content:flex-end"><input type="color" id="fill2-color" aria-label="第 2 张填充主色"><input type="color" id="fill2-color2" aria-label="第 2 张填充第二色"></div></div>
-                    <div class="slider"><label for="fill2-amount" id="fill2-amount-lbl">填充量</label><input type="range" id="fill2-amount" min="0" max="100" value="100"><output id="fill2-amount-v">100%</output></div>
-                    <div class="slider"><label for="fill2-phase2" id="fill2-phase2-lbl">色块</label><input type="range" id="fill2-phase2" min="0" max="100" value="28"><output id="fill2-phase2-v">28%</output></div>
-                    <div class="slider" data-wet><label for="fill2-cloud" id="fill2-cloud-lbl">浑浊度</label><input type="range" id="fill2-cloud" min="0" max="100" value="75"><output id="fill2-cloud-v">75%</output></div>
-                    <div class="slider" data-wet><label for="fill2-bubbles" id="fill2-bubbles-lbl">细碎</label><input type="range" id="fill2-bubbles" min="0" max="100" value="25"><output id="fill2-bubbles-v">25%</output></div>
-                    <div class="slider"><label for="fill2-settle" id="fill2-settle-lbl">沉降</label><input type="range" id="fill2-settle" min="0" max="100" value="25"><output id="fill2-settle-v">25%</output></div>
-                    <div class="row"><span class="lbl">分布</span><button class="chip icon" id="fill2-seed" type="button" title="换一种分布" aria-label="换一种分布"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M11.5 1.5 14.5 4.5l-3 3v-2h-1.3c-.9 0-1.4.4-2 1.2L5.4 10.4C4.6 11.6 3.6 12 2.5 12h-1v-1.6h1c.6 0 1-.2 1.5-.9L6.8 5.8C7.6 4.6 8.6 4 10.2 4h1.3zM1.5 4h1c1.1 0 2 .4 2.8 1.5l-1 1.3c-.5-.7-.9-1.2-1.8-1.2h-1zm8.2 5.2c.5.7.9 1.2 1.8 1.2v-2l3 3-3 3v-2c-1.4 0-2.3-.5-3-1.5z"/></svg></button></div>
-                  </div>
-                  <div class="slider"><label for="glitter2">亮片</label><input type="range" id="glitter2" min="0" max="100" value="0"><output id="glitter2-v">0%</output></div>
-                  <div class="row" id="glitter2-color-row" hidden><span class="lbl">亮片颜色</span><input type="color" id="glitter2-color" aria-label="第 2 张亮片颜色"></div>
                 </div>
               </div>
               <div class="slider"><label for="tracks2">每面音轨</label><input type="range" id="tracks2" min="1" max="20" value="6"><output id="tracks2-v">6</output></div>
@@ -812,7 +781,7 @@ const EN={
   '第 2 张':'Disc 2','C / D 面 · 放在第 1 张后面':'Sides C / D · behind disc 1','上传 C 面标签':'Upload side C label','上传 D 面标签':'Upload side D label',
   'C 面标签':'Side C label','D 面标签':'Side D label','第 2 张胶色':'Disc 2 vinyl colour',
   '纹路':'Pattern','第 1 张纹路':'Disc 1 pattern','第 2 张纹路':'Disc 2 pattern','纹路色':'Pattern colour','第 1 张纹路色':'Disc 1 pattern colour','第 2 张纹路色':'Disc 2 pattern colour',
-  '第 1 张第三块颜色':'Disc 1 third region colour','胶色和纹路与第 1 张相同':'Same vinyl and pattern as disc 1','样式':'Style','纯色':'Solid','颜色':'Colour','透明度':'Transparency','纹路透明度':'Pattern transparency','第 2 张第三块颜色':'Disc 2 third region colour','反差':'Contrast','纹路角度':'Pattern angle','填充':'Fill','无':'None','液体':'Liquid','干填充':'Dry fill','预设':'Preset','浑浊水':'Cloudy water','双色液':'Two-tone','黑白':'Black & white','泡沫':'Foam','沙':'Sand','液体 / 色块':'Liquid / blobs','填充量':'Fill amount','色块':'Blobs','浑浊度':'Cloudiness','细碎':'Detail','沉降':'Settling','分布':'Layout','换一种分布':'Shuffle the layout','亮片':'Glitter','亮片颜色':'Glitter colour','第 1 张填充主色':'Disc 1 fill colour','第 1 张填充第二色':'Disc 1 second fill colour','第 2 张填充主色':'Disc 2 fill colour','第 2 张填充第二色':'Disc 2 second fill colour','第 1 张亮片颜色':'Disc 1 glitter colour','第 2 张亮片颜色':'Disc 2 glitter colour','从封面取色':'Colours from cover','随机换一款纹路，底色不变':'Shuffle: a random pattern, same base colour',
+  '第 1 张第三块颜色':'Disc 1 third region colour','胶色和纹路与第 1 张相同':'Same vinyl and pattern as disc 1','样式':'Style','纯色':'Solid','颜色':'Colour','透明度':'Transparency','纹路透明度':'Pattern transparency','第 2 张第三块颜色':'Disc 2 third region colour','反差':'Contrast','纹路角度':'Pattern angle','从封面取色':'Colours from cover','随机换一款纹路，底色不变':'Shuffle: a random pattern, same base colour',
   '内袋抽出：内袋连同唱片一起从封套开口拉出。唱片抽出：唱片再从内袋里往外拉。':'Sleeve out pulls the inner sleeve, record inside, out of the jacket. Record out then slides the record out of the sleeve.',
   '唱片抽出：唱片从封套开口拉出的比例，100% 时完全抽出。':'Record out is how far the record comes out of the jacket; at 100% it is all the way out.',
   'Insert 插页':'Insert','304 × 304 mm · 双面':'304 × 304 mm · double-sided','放入插页':'Include insert','上传插页正面':'Upload insert front','上传插页背面':'Upload insert back',
@@ -859,9 +828,6 @@ const state = {
   pattern:'none', patternColor:'#1b1b1b', patternAlt:'#2a6f4e', patternContrast:1, patternClear:0, patternRot:0, patternFromCover:false,
   pattern2:'none', pattern2Color:'#1b1b1b', pattern2Alt:'#2a6f4e', pattern2Contrast:1, pattern2Clear:0, pattern2Rot:0, pattern2FromCover:false, vinylSame:true,
   vinylClear:0, vinyl2Clear:0, tracks:6, tracks2:6,
-  // Filled vinyl (liquid or dry) and glitter; inner / outer are the cavity's radii in cm.
-  fillType:'none', fillColor:'#e0900f', fillColor2:'#f4f2ec', fillAmount:1, fillPhase2:.28, fillCloud:.75, fillBubbles:.25, fillSettle:.25, fillSeed:1, fillInner:5.3, fillOuter:14.6, glitter:0, glitterColor:'#e6e6ea',
-  fill2Type:'none', fill2Color:'#e0900f', fill2Color2:'#f4f2ec', fill2Amount:1, fill2Phase2:.28, fill2Cloud:.75, fill2Bubbles:.25, fill2Settle:.25, fill2Seed:1, fill2Inner:5.3, fill2Outer:14.6, glitter2:0, glitter2Color:'#e6e6ea',
   stickerOn:true, stickerShape:'circle', stickerTemplate:'none', stickerLines:null, stickerColor:'yellow', stickerSize:7.6, stickerX:8.8, stickerY:9.2, stickerRot:0,
   numOn:true, numCur:123, numTotal:1000, numPrefix:'No.', numFormat:'slash', numFont:'auto', numPlace:'back', numFinish:'stamp', numColor:'#25336f',
   numX:10.5, numY:-13.6, numSize:.5, numRot:0,
@@ -1249,7 +1215,22 @@ const SPLITS=[
   {id:'split-half',family:'split',role:'layout',palette:{mode:'regions'},accents:1,base:'#f2efe6',colors:['#c8392b']},
   {id:'split-tri',family:'split',role:'layout',palette:{mode:'regions'},accents:2,base:'#f2c14e',colors:['#e4572e','#2a6f4e']},
   {id:'split-quad',family:'split',role:'layout',palette:{mode:'regions'},accents:1,base:'#f2efe6',colors:['#1b4f9c']}];
-const MASKS=[...SPLITS,...await fetch('vinyl-masks/manifest.json').then(r=>r.ok?r.json():{masks:[]}).then(j=>j.masks).catch(()=>[])];
+// Filled vinyl and glitter: procedural patterns drawn by the fill layer (see "Filled vinyl" below) instead
+// of a mask. All are main + accent: the base is the liquid / grain / vinyl colour and the pattern colour the
+// milky phase / second grain / flakes; each look's shape (share, detail, settling, layout seed) is fixed.
+//   share: area of the milky phase (liquid) or weight of the second grain tone (sand); detail: droplets,
+//   specks and air bubbles; settle: how far the milky phase floats up (sand: sinks); amount: sand's cover.
+const FILLS=[
+  {id:'liquid-01',family:'liquid',base:'#e0900f',colors:['#f4f2ec'],fill:{type:'liquid',share:.28,detail:.25,settle:.25,seed:1}},
+  {id:'liquid-02',family:'liquid',base:'#111214',colors:['#e8ebe7'],fill:{type:'liquid',share:.26,detail:.55,settle:.25,seed:4}},
+  {id:'liquid-03',family:'liquid',base:'#c4e6c8',colors:['#1f9ee2'],fill:{type:'liquid',share:.34,detail:.8,settle:.1,seed:7}},
+  {id:'liquid-04',family:'liquid',base:'#2477b8',colors:['#e2eef5'],fill:{type:'liquid',share:.42,detail:.3,settle:.3,seed:2}},
+  {id:'liquid-05',family:'liquid',base:'#ddd6c4',colors:['#fbf9f2'],fill:{type:'liquid',share:.14,detail:.6,settle:.2,seed:9}},
+  {id:'sand-01',family:'sand',base:'#c9a57c',colors:['#7f6045'],fill:{type:'dry',amount:.62,share:.5,settle:.7,seed:3}},
+  {id:'glitter-01',family:'glitter',base:'#d8d2c8',colors:['#e9e9ee'],fill:{type:'none',glitter:.35,seed:5}},
+  {id:'glitter-02',family:'glitter',base:'#1d2a4a',colors:['#e2c26a'],fill:{type:'none',glitter:.8,seed:6}}
+].map(m=>({role:'layout',palette:{mode:'accent',derive:[]},accents:1,...m}));
+const MASKS=[...SPLITS,...FILLS,...await fetch('vinyl-masks/manifest.json').then(r=>r.ok?r.json():{masks:[]}).then(j=>j.masks).catch(()=>[])];
 const maskById=id=>MASKS.find(m=>m.id===id);
 const patternIds=mode=>MASKS.filter(m=>m.palette.mode===mode).map(m=>m.id).join(' / ')||'暂无';
 // Hard wedges per channel, then a slight blur: two vinyl colours meet with a narrow blended seam.
@@ -1272,6 +1253,7 @@ function unstackMask(bmp,accents){const N=bmp.width,src=canvas(N,bmp.height).get
 const maskCache=new Map(),maskDone=new Set();
 function loadMask(id){
   const m=maskById(id);
+  if(m.fill){maskDone.add(id);return Promise.resolve(null)}
   if(!maskCache.has(id))maskCache.set(id,(m.family==='split'?Promise.resolve(splitMask(id)):fetch('vinyl-masks/'+m.file).then(r=>{if(!r.ok)throw new Error(`HTTP ${r.status}`);return r.blob()}).then(b=>createImageBitmap(b,{colorSpaceConversion:'none',premultiplyAlpha:'none'}))
     .then(bmp=>bmp.height>bmp.width?unstackMask(bmp,m.accents):bmp))
     .then(img=>{maskDone.add(id);return img},e=>{maskCache.delete(id);throw e}));
@@ -1390,8 +1372,7 @@ const patternToken=[0,0];
 // Which disc's vinyl/pattern settings a disc uses: a 2LP shares disc 1's until "same as disc 1" is turned off.
 // The keys differ only by this suffix: vinyl/vinyl2, vinylColor/vinyl2Color, pattern/pattern2, ...
 const styleSfx=i=>i===2&&!state.vinylSame?'2':'';
-const STYLE_KEYS=['vinyl#','vinyl#Color','vinyl#Clear','pattern#','pattern#Color','pattern#Alt','pattern#Contrast','pattern#Clear','pattern#Rot',
-  ...['Type','Color','Color2','Amount','Phase2','Cloud','Bubbles','Settle','Seed','Inner','Outer'].map(k=>'fill#'+k),'glitter#','glitter#Color'];
+const STYLE_KEYS=['vinyl#','vinyl#Color','vinyl#Clear','pattern#','pattern#Color','pattern#Alt','pattern#Contrast','pattern#Clear','pattern#Rot'];
 // A disc's look: black is plain black (no pattern, opaque); colour is a solid colour or a pattern on that
 // colour as its base, either one optionally see-through. Only main + accent patterns have a pattern
 // transparency (pclear): split regions and tonal shades are all part of the base.
@@ -1401,14 +1382,16 @@ async function applyPatternTo(i,mats){
   const{s,base,clear,pclear,mask:m}=discLook(i),token=++patternToken[i-1];
   const drop=()=>{for(const t of[mats.face.map,mats.face.alphaMap])t?.dispose();mats.face.map=mats.face.alphaMap=null;mats.face.needsUpdate=true};
   // Until the mask lands (or if it never does) the face keeps the plain colour and opacity set by applyVinylTo.
-  if(!m){drop();return}
+  if(!m||m.fill){drop();return}
   const img=await loadMask(m.id);if(token!==patternToken[i-1])return;
   const colors=derivePattern(m,base,state[`pattern${s}Color`],state[`pattern${s}Alt`],state[`pattern${s}Contrast`]);
   const t=patternTextures(img,base,colors,state[`pattern${s}Rot`],clear,pclear);
   drop();mats.face.map=t.map;mats.face.alphaMap=t.alpha;mats.face.color.setScalar(VINYL_LIFT);if(t.alpha)mats.face.opacity=1;mats.face.needsUpdate=true}
 function applyVinylTo(i,mats){
-  const{black,base,clear,mask}=discLook(i),see=clear>0;
-  for(const m of[mats.face,mats.edge]){m.color.set(base).multiplyScalar(VINYL_LIFT);m.transparent=see;m.opacity=1-clear;m.depthWrite=!see;m.needsUpdate=true}
+  const{black,base,clear,mask}=discLook(i),sealed=!!mask?.fill&&mask.fill.type!=='none',see=clear>0||sealed;
+  // A liquid or sand disc is a clear shell barely tinted by the fill's colour; the fill does the colouring.
+  const shell=sealed?'#'+new THREE.Color(base).lerp(new THREE.Color('#f4f3f0'),.88).getHexString():base,shellClear=sealed?.8:clear;
+  for(const m of[mats.face,mats.edge]){m.color.set(shell).multiplyScalar(VINYL_LIFT);m.transparent=see;m.opacity=1-shellClear;m.depthWrite=!see;m.needsUpdate=true}
   // A see-through disc shows its far face through the near one, so the inside of each face is drawn too.
   mats.face.side=see?THREE.DoubleSide:THREE.FrontSide;
   // The rim is seen through the disc's whole width: darker and nearly opaque.
@@ -1427,23 +1410,13 @@ function applyVinyl(){
   vinylReady.catch(e=>console.warn('vinyl pattern',e));return vinylReady}
 
 // ---------- Filled vinyl ----------
+const FILL_TYPES=['none','liquid','dry'];
 // A liquid- or dry-filled record is a see-through shell with a sealed cavity across the groove area. The fill
 // is a ring at the disc's mid-plane, between the two faces, drawn by a shader in a frame whose "down" points at
 // the floor, so the fill settles and stays put while the disc spins. A liquid is a tinted carrier filling the
 // cavity with a light, milky phase in it: rounded blobs built from overlapping circles, some flattened along
 // the cavity walls, round droplets of every size around them, and specks of carrier caught inside. Dry fill
 // is a noise field cut at a threshold. Glitter flakes ride the same ring and also work with no fill.
-const FILL_TYPES=['none','liquid','dry'];
-// Starting points for the panel and spec: carrier colour, second phase (blobs for liquid, grain tone for dry),
-// fill share, second-phase share, cloudiness, bubbles, settling.
-const FILL_PRESETS={
-  cloudy:{type:'liquid',color:'#ddd6c4',color2:'#fbf9f2',amount:1,phase2:.14,cloud:.4,bubbles:.6,settle:.2},
-  twotone:{type:'liquid',color:'#e0900f',color2:'#f4f2ec',amount:1,phase2:.28,cloud:.75,bubbles:.25,settle:.25},
-  oil:{type:'liquid',color:'#111214',color2:'#e8ebe7',amount:1,phase2:.26,cloud:.96,bubbles:.55,settle:.25},
-  foam:{type:'liquid',color:'#c4e6c8',color2:'#1f9ee2',amount:1,phase2:.34,cloud:.3,bubbles:.75,settle:.1},
-  sand:{type:'dry',color:'#c9a57c',color2:'#7f6045',amount:.62,phase2:.5,cloud:1,bubbles:0,settle:.7}};
-const FILL_KEYS={color:'Color',color2:'Color2',amount:'Amount',phase2:'Phase2',cloud:'Cloud',bubbles:'Bubbles',settle:'Settle'};
-function applyFillPreset(s,id){const p=FILL_PRESETS[id];state[`fill${s}Type`]=p.type;for(const[k,v]of Object.entries(FILL_KEYS))state[`fill${s}${v}`]=p[k]}
 // The fields, in GLSL and again in JS: the JS copy only measures them, so the fill share and blob share can be
 // turned into thresholds (a quantile over the cavity) and mean what they say whatever the seed and settling.
 const FILL_GLSL=`
@@ -1452,10 +1425,8 @@ vec2 lqHash2(vec2 p){vec3 p3=fract(vec3(p.xyx)*vec3(.1031,.1030,.0973));p3+=dot(
 float lqNoise(vec2 p){vec2 i=floor(p),f=fract(p),u=f*f*f*(f*(f*6.-15.)+10.);
   return mix(mix(lqHash(i),lqHash(i+vec2(1,0)),u.x),mix(lqHash(i+vec2(0,1)),lqHash(i+vec2(1,1)),u.x),u.y);}
 float lqFbm(vec2 p,int n){float s=0.,a=.5,t=0.;for(int i=0;i<5;i++){if(i>=n)break;s+=a*lqNoise(p);t+=a;p=mat2(1.6,1.2,-1.2,1.6)*p+17.3;a*=.5;}return s/t;}
-// Loop-safe drift for clips: a small circle that starts and ends at rest.
-vec2 lqWobble(){float a=6.2831853*lqTime;return vec2(sin(a),cos(a)-1.)*.35;}
 // Carrier: warped fbm, raised where the disc is low (q.y > 0 is down) so it pools there.
-float lqCarrier(vec2 q){vec2 w=q*.11+lqSeed+lqWobble()*.6;
+float lqCarrier(vec2 q){vec2 w=q*.11+lqSeed;
   vec2 warp=vec2(lqFbm(w*.6+3.1,2),lqFbm(w*.6+7.7,2))-.5;
   float h=lqFbm(w+1.1*warp,2);
   if(lqType==2)h+=(lqFbm(q*1.6+4.,3)-.5)*.12;
@@ -1463,10 +1434,12 @@ float lqCarrier(vec2 q){vec2 w=q*.11+lqSeed+lqWobble()*.6;
 float lqSmin(float a,float b,float k){float h=max(k-abs(a-b),0.)/k;return min(a,b)-h*h*k*.25;}
 // Signed distance (cm, negative inside) to the light phase: a smooth union of its circles minus the specks.
 // Big circles melt into one another over a wide blend, so a blob's outline is smooth; droplets stay round.
-// In clips each circle drifts round a small loop of its own, smaller circles further.
-float lqBlobSD(vec2 q){float d=1e3,hole=1e3,t=6.2831853*lqTime;
+// In clips the liquid shears slowly as a whole: a small swirl, the inner ring turning a little more than the
+// outer, plus a faint breathing per droplet; it returns to rest at the end of the loop.
+float lqBlobSD(vec2 q){float d=1e3,hole=1e3,t=6.2831853*lqTime,sw=sin(t);
   for(int i=0;i<256;i++){if(i>=lqCount)break;vec4 c=texelFetch(lqCircles,ivec2(i,0),0);
-    vec2 off=vec2(sin(t+c.w)-sin(c.w),cos(t+c.w)-cos(c.w))*.18/(.5+(c.z>0.?c.z:1.));
+    float th=.06*sw*(1.15-length(c.xy)/15.),cs=cos(th),sn=sin(th);
+    vec2 off=vec2(cs*c.x-sn*c.y,sn*c.x+cs*c.y)-c.xy+vec2(sin(t+c.w)-sin(c.w),cos(t+c.w)-cos(c.w))*.04/(.3+abs(c.z));
     float di=length(q-c.xy-off)-abs(c.z);
     if(c.z>0.)d=lqSmin(d,di,clamp(.5*c.z,.06,.8));else hole=min(hole,di);}
   return max(d,-hole);}`;
@@ -1515,10 +1488,6 @@ function liquidLayout({seed,inner,outer,share,settle,specks}){
   for(let k=0;k<Math.round(specks*60)&&host.length;k++){const p=host[Math.floor(r()*host.length)],a=r()*Math.PI*2,d=Math.sqrt(r())*(p[2]-.15);
     holes.push([p[0]+Math.cos(a)*d,p[1]+Math.sin(a)*d,-(.025+.07*r()**2),p[3]])}
   return[...big,...holes,...small].slice(0,256)}
-// Liquid level for a part-filled cavity: the height (q.y) with amount of the cavity below it; -1000 when full.
-function liquidLevel(amount,inner,outer){if(amount>=.999)return -1e3;
-  const r=rng(5),N=2000,v=new Float32Array(N);for(let i=0;i<N;i++){const rr=Math.sqrt(r()*(outer*outer-inner*inner)+inner*inner);v[i]=rr*Math.sin(r()*Math.PI*2)}
-  v.sort();return v[Math.min(N-1,Math.floor((1-amount)*N))]}
 // Threshold that leaves share of the cavity above it. Fixed sample points, so a slider never flickers.
 const lqQuantCache=new Map();
 function lqThreshold(fn,share,o,inner,outer){
@@ -1528,21 +1497,21 @@ function lqThreshold(fn,share,o,inner,outer){
     v.sort();if(lqQuantCache.size>64)lqQuantCache.clear();lqQuantCache.set(k,v)}
   if(share<=0)return v[v.length-1]+1;if(share>=1)return v[0]-1;
   return v[Math.min(v.length-1,Math.floor((1-share)*v.length))]}
-let liquidClock=0;   // loop phase of the clip frame being drawn; 0 for stills
+let liquidClock=0,liquidSpin=0;   // clip frame being drawn: loop phase, and how far the disc has spun (degrees); 0 for stills
 function fillMaterial(){
   const u={lqType:{value:0},lqC1:{value:new THREE.Color()},lqC2:{value:new THREE.Color()},lqGlitC:{value:new THREE.Color()},
-    lqAmountT:{value:2},lqPhase2:{value:.5},lqLevel:{value:-1e3},lqCount:{value:0},lqCircles:{value:null},lqCloud:{value:.8},lqBubbles:{value:0},lqSettle:{value:0},lqInner:{value:5.3},lqOuter:{value:14.6},
+    lqAmountT:{value:2},lqPhase2:{value:.5},lqCount:{value:0},lqRot:{value:0},lqBlobClear:{value:0},lqCircles:{value:null},lqCloud:{value:.8},lqBubbles:{value:0},lqSettle:{value:0},lqInner:{value:5.3},lqOuter:{value:14.6},
     lqGlitter:{value:0},lqTime:{value:0},lqSeed:{value:new THREE.Vector2()},lqDown:{value:new THREE.Vector2(0,1)}};
   const m=new THREE.MeshPhysicalMaterial({color:0xffffff,metalness:0,roughness:.12,transparent:true,depthWrite:false,side:THREE.DoubleSide,envMap:studioEnv,envMapIntensity:.55});
   m.onBeforeCompile=sh=>{Object.assign(sh.uniforms,u);
     sh.vertexShader='varying vec2 vLqPos;varying vec3 vLqTx,vLqTy;\n'+sh.vertexShader.replace('#include <uv_vertex>',`#include <uv_vertex>
       vLqPos=position.xy;vLqTx=normalize((modelViewMatrix*vec4(1.,0.,0.,0.)).xyz);vLqTy=normalize((modelViewMatrix*vec4(0.,1.,0.,0.)).xyz);`);
     sh.fragmentShader=`uniform int lqType;uniform vec3 lqC1,lqC2,lqGlitC;
-uniform sampler2D lqCircles;uniform int lqCount;uniform float lqLevel,lqAmountT,lqPhase2,lqCloud,lqBubbles,lqSettle,lqInner,lqOuter,lqGlitter,lqTime;uniform vec2 lqSeed,lqDown;
+uniform sampler2D lqCircles;uniform int lqCount;uniform float lqRot,lqBlobClear,lqAmountT,lqPhase2,lqCloud,lqBubbles,lqSettle,lqInner,lqOuter,lqGlitter,lqTime;uniform vec2 lqSeed,lqDown;
 varying vec2 vLqPos;varying vec3 vLqTx,vLqTy;${FILL_GLSL}\n`+sh.fragmentShader
       .replace('#include <map_fragment>',`#include <map_fragment>
   // q: disc coordinates (cm) turned so +y points at the floor.
-  vec2 lqP=vLqPos,lqRight=vec2(-lqDown.y,lqDown.x),q=vec2(dot(lqP,lqRight),dot(lqP,lqDown));
+  vec2 lqP=vLqPos,lqDn=vec2(cos(lqRot)*lqDown.x-sin(lqRot)*lqDown.y,sin(lqRot)*lqDown.x+cos(lqRot)*lqDown.y),lqRight=vec2(-lqDn.y,lqDn.x),q=vec2(dot(lqP,lqRight),dot(lqP,lqDn));
   float lqR=length(lqP),lqPx=max(length(fwidth(lqP)),.002),lqA=0.,lqTilt=0.,lqRough=.12,lqGlit=0.;
   vec3 lqCol=vec3(0.);vec2 lqOut=vec2(0.),lqGlitN=vec2(0.);
   if(lqType>0){
@@ -1557,22 +1526,18 @@ varying vec2 vLqPos;varying vec3 vLqTx,vLqTy;${FILL_GLSL}\n`+sh.fragmentShader
       lqCol=mix(lqC1,lqC2,clamp(lqPhase2*1.6*tone+(grain-.5)*.6*fine,0.,1.))*mix(.82,1.,smoothstep(0.,.15,d))*(1.+(grain-.5)*.25*fine);
       lqA=inA*.97;lqRough=.9;lqTilt=.5*exp(-max(d,0.)/.08)*inA;lqOut=-normalize(lqRight*g.x+lqDown*g.y+1e-6);
     }else{
-      // Carrier: the whole cavity, or below the level with air above. Cloudier is more opaque.
-      // The surface climbs the walls a little (meniscus), so a part-filled cavity has a curved line.
-      float climb=.45*(exp(-(lqR-lqInner)/.5)+exp(-(lqOuter-lqR)/.5));
-      float dl=q.y-lqLevel+climb,inA=smoothstep(-lqPx,lqPx,dl)*cav,rimA=exp(-max(dl,0.)/.06);
-      vec3 cA=lqC1*(1.-.3*rimA);float aA=inA*mix(mix(.28,.92,lqCloud),.95,rimA);
+      // Carrier: fills the cavity. Cloudier is more opaque.
+      float inA=cav;vec3 cA=lqC1;float aA=inA*mix(.28,.92,lqCloud);
       // Light phase: thin and see-through at its edge, thick and milky inside, with a glossy rim.
       float db=-lqBlobSD(q),inB=smoothstep(-lqPx,lqPx,db)*inA;
       // A blob is a flattened pillow: thin at the edge (the liquid shows through), domed inside.
-      vec3 cB=lqC2*mix(.78,1.04,smoothstep(0.,.35,db));float aB=mix(.5,.97,smoothstep(0.,.3,db));
+      vec3 cB=lqC2*mix(.78,1.04,smoothstep(0.,.35,db));float aB=mix(.5,.97,smoothstep(0.,.3,db))*(1.-lqBlobClear);
       lqCol=mix(cA,cB,inB);lqA=mix(aA,aB*inA,inB);
       // The rim's normal from the distance field's screen-space slope, turned back into the gravity frame.
       mat2 J=mat2(dFdx(q),dFdy(q));float det=determinant(J);
       vec2 gq=abs(det)>1e-12?inverse(transpose(J))*vec2(dFdx(db),dFdy(db)):vec2(0.);
       float tB=(.55*exp(-max(db,0.)/.07)+.45*exp(-max(db,0.)/.35))*inB;
       if(tB>0.){lqTilt=tB;vec2 o=-normalize(gq+1e-9);lqOut=lqRight*o.x+lqDown*o.y;}
-      float tA=.6*rimA*inA;if(tA>lqTilt){lqTilt=tA;lqOut=-lqDown;}
       // Air bubbles: one per cell at most, more of them near the top, only in the carrier.
       vec2 bq=q*1.1+lqSeed*3.,cell=floor(bq),f=fract(bq);
       float top=smoothstep(10.,-12.,q.y),rad=mix(.08,.3,pow(lqHash(cell+5.),2.));
@@ -1589,7 +1554,7 @@ varying vec2 vLqPos;varying vec3 vLqTx,vLqTy;${FILL_GLSL}\n`+sh.fragmentShader
     vec2 gq=lqP*16.+lqSeed*5.,cell=floor(gq),c=.3+.4*lqHash2(cell+8.);
     float on=step(lqHash(cell+3.1),lqGlitter*.45)*(1.-smoothstep(.16,.24,length(fract(gq)-c)));
     float px=length(fwidth(gq));lqGlit=on/(1.+px*px);lqGlitN=(lqHash2(cell+27.)*2.-1.)*.75;
-    lqCol=mix(lqCol,lqGlitC*.45,lqGlit*(1.-lqA*.5));lqA=max(lqA,.9*lqGlit);
+    lqCol=mix(lqCol,lqGlitC*.9,lqGlit);lqA=max(lqA,.95*lqGlit);
   }
   if(lqA<.003)discard;
   diffuseColor.rgb=lqCol;diffuseColor.a*=lqA;`)
@@ -1598,7 +1563,7 @@ varying vec2 vLqPos;varying vec3 vLqTx,vLqTy;${FILL_GLSL}\n`+sh.fragmentShader
   if(lqTilt>0.)normal=normalize(normal*(1.-.6*lqTilt)+(vLqTx*lqOut.x+vLqTy*lqOut.y)*lqTilt);`)
       .replace('#include <opaque_fragment>',`if(lqGlit>0.){vec3 fn=normalize(normal+vLqTx*lqGlitN.x+vLqTy*lqGlitN.y);vec3 sp=vec3(0.);
     #ifdef USE_ENVMAP
-    sp+=getIBLRadiance(geometryViewDir,fn,.06)*2.5;
+    sp+=getIBLRadiance(geometryViewDir,fn,.06)*4.;
     #endif
     #if NUM_DIR_LIGHTS > 0
     for(int i=0;i<NUM_DIR_LIGHTS;i++)sp+=directionalLights[i].color*pow(max(dot(fn,normalize(directionalLights[i].direction+geometryViewDir)),0.),300.)*6.;
@@ -1610,25 +1575,46 @@ varying vec2 vLqPos;varying vec3 vLqTx,vLqTy;${FILL_GLSL}\n`+sh.fragmentShader
   const circles=new THREE.DataTexture(new Float32Array(256*4),256,1,THREE.RGBAFormat,THREE.FloatType);circles.needsUpdate=true;u.lqCircles.value=circles;
   return{mat:m,uniforms:u,mesh:null,circles,layoutKey:''}}
 const fill1=fillMaterial(),fill2=fillMaterial();
+// Picker swatch for a fill pattern, drawn flat from the same layout as the disc (liquid) or field (sand).
+function fillThumb(m,N=160){
+  const c=canvas(N,N),g=c.getContext('2d'),d=g.createImageData(N,N),f=m.fill,R=15.1,rgb=h=>[1,3,5].map(k=>parseInt(h.slice(k,k+2),16));
+  const B=rgb(m.base),A=rgb(m.colors[0]),shell=[236,233,226],sv=[(f.seed*12.9898)%97,(f.seed*78.233)%89];
+  const cs=f.type==='liquid'?liquidLayout({seed:f.seed,inner:5.3,outer:14.6,share:f.share,settle:f.settle,specks:f.detail}):[];
+  const T=f.type==='dry'?lqThreshold(lqCarrierJS,f.amount,{seed:sv,settle:f.settle,dry:true},5.3,14.6):0,r=rng(f.seed);
+  const smin=(a,b,k)=>{const h=Math.max(k-Math.abs(a-b),0)/k;return Math.min(a,b)-h*h*k*.25};
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++){const qx=((x+.5)/N-.5)*2*R,qy=((y+.5)/N-.5)*2*R,i=(y*N+x)*4;let col=B;
+    if(f.type==='liquid'){let dd=1e3,hole=1e3;for(const[cx,cy,cr]of cs){const di=Math.hypot(qx-cx,qy-cy)-Math.abs(cr);if(cr>0)dd=smin(dd,di,Math.min(.8,Math.max(.06,.5*cr)));else hole=Math.min(hole,di)}
+      if(Math.max(dd,-hole)<0)col=A}
+    else if(f.type==='dry')col=lqCarrierJS(qx,qy,{seed:sv,settle:f.settle,dry:true})>T?(r()<f.share*.6?A:B):shell;
+    else if(r()<f.glitter*.08)col=A;
+    d.data.set([...col,255],i)}
+  g.putImageData(d,0,0);return c}
 const lqQuat=new THREE.Quaternion(),lqDown3=new THREE.Vector3(),lqScale=new THREE.Vector3();
 // Gravity in the disc's own frame, every draw: the disc's pose (pulled out, flipped, spun, turned for a clip)
 // decides where the fill sits.
 function fillOnBeforeRender(f){return function(){
   this.matrixWorld.decompose(lqDown3,lqQuat,lqScale);lqDown3.set(0,-1,0).applyQuaternion(lqQuat.invert());
   const v=f.uniforms.lqDown.value.set(lqDown3.x,lqDown3.y);if(v.lengthSq()<1e-6)v.set(0,-1);v.normalize();
+  // A spinning disc carries its liquid round with it (the layer is a millimetre thin): settle by the pose at
+  // rest, then turn with the disc.
+  if(liquidSpin)v.rotateAround(new THREE.Vector2(),THREE.MathUtils.degToRad(liquidSpin));
   f.uniforms.lqTime.value=liquidClock}}
+// A fill pattern's look on disc i: the liquid takes the base colour and the milky phase the pattern colour;
+// the disc transparency is how clear the liquid is, the pattern transparency how see-through the milky phase.
 function applyFillTo(i,f){
-  const s=styleSfx(i),black=state['vinyl'+s]==='black',type=black?'none':state[`fill${s}Type`],glitter=black?0:state[`glitter${s}`],u=f.uniforms;
-  if(f.mesh)f.mesh.visible=type!=='none'||glitter>0;
+  const{s,black,base,clear,pclear,mask:m}=discLook(i),spec=!black&&m?.fill,type=spec?spec.type:'none',u=f.uniforms;
+  if(f.mesh){f.mesh.visible=!!spec&&type!=='none';for(const g of f.glitter)g.visible=!!spec&&type==='none'}
+  if(!spec)return;
+  const color=derivePattern(m,base,state[`pattern${s}Color`],state[`pattern${s}Alt`],1)[0];
   // Each disc of a 2LP is pressed on its own, so disc 2 gets a different fill even with a shared style.
-  const seed=state[`fill${s}Seed`]+(i-1)*101,sv=[(seed*12.9898)%97,(seed*78.233)%89];
-  const inner=Math.min(state[`fill${s}Inner`],state[`fill${s}Outer`]-.5),outer=state[`fill${s}Outer`],settle=state[`fill${s}Settle`],o={seed:sv,settle,dry:type==='dry'};
-  u.lqType.value=FILL_TYPES.indexOf(type);u.lqSeed.value.set(...sv);
-  u.lqC1.value.set(state[`fill${s}Color`]);u.lqC2.value.set(state[`fill${s}Color2`]);u.lqGlitC.value.set(state[`glitter${s}Color`]);
-  u.lqPhase2.value=state[`fill${s}Phase2`];u.lqCloud.value=state[`fill${s}Cloud`];u.lqBubbles.value=state[`fill${s}Bubbles`];u.lqSettle.value=settle;u.lqInner.value=inner;u.lqOuter.value=outer;u.lqGlitter.value=glitter;
-  if(type==='dry')u.lqAmountT.value=lqThreshold(lqCarrierJS,state[`fill${s}Amount`],o,inner,outer);
-  if(type==='liquid'){u.lqLevel.value=liquidLevel(state[`fill${s}Amount`],inner,outer);
-    const lay={seed,inner,outer,share:state[`fill${s}Phase2`],settle,specks:state[`fill${s}Bubbles`]},key=JSON.stringify(lay);
+  const seed=spec.seed+(i-1)*101,sv=[(seed*12.9898)%97,(seed*78.233)%89],inner=5.3,outer=14.6,settle=spec.settle??0;
+  u.lqType.value=FILL_TYPES.indexOf(type);u.lqSeed.value.set(...sv);u.lqRot.value=THREE.MathUtils.degToRad(state[`pattern${s}Rot`]);
+  u.lqC1.value.set(base);u.lqC2.value.set(color);u.lqGlitC.value.set(color);
+  u.lqPhase2.value=spec.share??0;u.lqCloud.value=Math.max(.05,1-clear*1.15);u.lqBlobClear.value=pclear;u.lqBubbles.value=spec.detail??0;u.lqSettle.value=settle;
+  u.lqInner.value=inner;u.lqOuter.value=outer;u.lqGlitter.value=spec.glitter??0;
+  if(type==='dry')u.lqAmountT.value=lqThreshold(lqCarrierJS,spec.amount,{seed:sv,settle,dry:true},inner,outer);
+  if(type==='liquid'){
+    const lay={seed,inner,outer,share:spec.share,settle,specks:spec.detail},key=JSON.stringify(lay);
     if(key!==f.layoutKey){f.layoutKey=key;const cs=liquidLayout(lay),d=f.circles.image.data;d.fill(0);cs.forEach((c,k)=>d.set(c,k*4));f.circles.needsUpdate=true;u.lqCount.value=cs.length}}}
 const sleeveMat=new THREE.MeshStandardMaterial({color:state.sleeveColor,roughness:.88,side:THREE.DoubleSide,bumpMap:bump,bumpScale:.25});
 
@@ -1731,8 +1717,10 @@ function makeRecord(matA,matB,vm,fm){const group=new THREE.Group(),{r,t,label,ho
   const la=mesh(lab,matA);la.position.z=t/2;const lb=mesh(lab,matB);lb.position.z=-t/2;lb.rotation.y=Math.PI;
   const bore=mesh(new THREE.CylinderGeometry(hole,hole,t,48,1,true),holeMat);bore.rotation.x=Math.PI/2;
   // Fill / glitter layer at the mid-plane, between the faces; hidden until the disc has one.
-  const mid=mesh(new THREE.RingGeometry(label,r,256,4),fm.mat,{cast:false,receive:false});mid.visible=false;mid.onBeforeRender=fillOnBeforeRender(fm);fm.mesh=mid;
-  group.add(top,bot,edge,la,lb,bore,mid);scene.add(group);return group}
+  const ring=new THREE.RingGeometry(label,r,256,4),mid=mesh(ring,fm.mat,{cast:false,receive:false});mid.visible=false;mid.onBeforeRender=fillOnBeforeRender(fm);fm.mesh=mid;
+  // Glitter sits just under each face instead, so it also shows in opaque vinyl.
+  fm.glitter=[1,-1].map(side=>{const g=mesh(ring,fm.mat,{cast:false,receive:false});g.position.z=side*(t/2+.003);if(side<0)g.rotation.y=Math.PI;g.visible=false;g.onBeforeRender=mid.onBeforeRender;return g});
+  group.add(top,bot,edge,la,lb,bore,mid,...fm.glitter);scene.add(group);return group}
 const record=makeRecord(labelMatA,labelMatB,vinyl1,fill1),record2=makeRecord(labelMatC,labelMatD,vinyl2,fill2);
 
 // Shrink wrap shell: displaced box. Faces stay tight at the box edges (no cracks), wrinkle near edges and corners.
@@ -2443,7 +2431,7 @@ function syncUI(){
   $('out-note-sleeve').hidden=!state.sleeveOn;$('out-note-bare').hidden=state.sleeveOn;
   $('lp2-sub').hidden=state.lpCount!==2;$('vinyl-same').checked=state.vinylSame;$('vinyl2-own').hidden=state.vinylSame;$('gate-sub').hidden=!isGate();$('jacket-spec').textContent=specText();syncAnimPanel();syncExportSummary();
   for(const b of document.querySelectorAll('[data-view]'))b.setAttribute('aria-pressed',b.dataset.view===state.view);
-  syncPatterns();syncFill();syncStickerPanel();syncDiscMode()}
+  syncPatterns();syncStickerPanel();syncDiscMode()}
 // Disc only: the switch, the 2LP disc picker, and the page-level attribute the CSS keys off.
 function syncDiscMode(){const on=discOnly();document.documentElement.toggleAttribute('data-disc-only',on);
   $('disc-only').checked=on;$('disc-only-note').hidden=!on;$('disc-show-row').hidden=!(on&&state.lpCount===2);
@@ -2479,11 +2467,12 @@ $('bg-color').addEventListener('input',e=>{state.bgColor=e.target.value;state.bg
 $('sleeve-color').addEventListener('input',e=>{state.sleeveColor=e.target.value;sleeveMat.color.set(tex.sleeve?'#ffffff':e.target.value)});
 field('vinyl-color','vinylColor');field('vinyl2-color','vinyl2Color');field('bg-color','bgColor');field('sleeve-color','sleeveColor');
 // Pattern panel: a thumbnail picker per disc, then only the controls the pattern's palette mode uses.
-const FAMILY={split:['分色','Split'],splatter:['泼溅','Splatter'],starburst:['爆发','Starburst'],blob:['色块','Blob'],pinwheel:['风车','Pinwheel'],ripple:['波纹','Ripple'],swirl:['旋涡','Swirl'],smoke:['烟雾','Smoke'],marble:['大理石','Marble'],tiedye:['扎染','Tie-dye'],ghostly:['云雾','Ghostly']};
+const FAMILY={liquid:['液体','Liquid'],sand:['沙','Sand'],glitter:['亮片','Glitter'],split:['分色','Split'],splatter:['泼溅','Splatter'],starburst:['爆发','Starburst'],blob:['色块','Blob'],pinwheel:['风车','Pinwheel'],ripple:['波纹','Ripple'],swirl:['旋涡','Swirl'],smoke:['烟雾','Smoke'],marble:['大理石','Marble'],tiedye:['扎染','Tie-dye'],ghostly:['云雾','Ghostly']};
 // The palette mode (split / main + accent / tonal) stays internal: the controls below already follow it.
 const patternLabel=m=>m?`${tr(...(FAMILY[m.family]??[m.family,m.family]))} · ${m.id}`:tr('纯色','Solid');
 const splitThumbs=new Map();
 function thumbUrl(m){if(m.thumb)return'vinyl-masks/'+m.thumb;
+  if(m.fill){if(!splitThumbs.has(m.id))splitThumbs.set(m.id,fillThumb(m).toDataURL('image/jpeg',.82));return splitThumbs.get(m.id)}
   if(!splitThumbs.has(m.id))splitThumbs.set(m.id,compositePattern(splitMask(m.id,160),m.base,derivePattern(m,m.base,m.colors[0],m.colors[1],1),0).color.toDataURL('image/jpeg',.82));
   return splitThumbs.get(m.id)}
 function buildPicker(s){const root=$(`pattern${s}-pick`);root.textContent='';
@@ -2548,28 +2537,6 @@ for(const i of[1,2]){const s=i===1?'':'2';buildPicker(s);
   slider(`pattern${s}-rot`,`pattern${s}Rot`,'deg',queueVinyl);
   $(`pattern${s}-shuffle`).addEventListener('click',()=>shufflePattern(i));
   $(`pattern${s}-cover`).addEventListener('click',()=>{if(applyCover(i)){colorSet[i-1]=true;applyVinyl();syncUI()}else alertNote(tr('封面颜色太单一，没取到可用的配色。','The cover has too few distinct colours to suggest a palette.'))})}
-// Fill panel. The first switch to a fill type starts from its preset (two-tone liquid, sand); a shell that
-// would hide the fill turns see-through.
-const fillFrom=['',''];
-function setFillType(i,type){const s=i===1?'':'2';
-  if(type!=='none'&&type!==fillFrom[i-1]&&type!==state[`fill${s}Type`])applyFillPreset(s,type==='dry'?'sand':'twotone');
-  state[`fill${s}Type`]=type;showFillShell(s);applyVinyl();syncUI()}
-const showFillShell=s=>{if(state[`fill${s}Type`]!=='none'&&state[`vinyl${s}Clear`]<.4)state[`vinyl${s}Clear`]=.55};
-function syncFill(){for(const i of[1,2]){const s=i===1?'':'2',type=state[`fill${s}Type`],dry=type==='dry';
-  if(type!=='none')fillFrom[i-1]=type;
-  $(`fill${s}-sub`).hidden=type==='none';
-  for(const el of $(`fill${s}-sub`).querySelectorAll('[data-wet]'))el.hidden=dry;
-  $(`fill${s}-colors-lbl`).textContent=dry?tr('颗粒两色','Grain colours'):tr('液体 / 色块','Liquid / blobs');
-  $(`fill${s}-phase2-lbl`).textContent=dry?tr('第二色','Second colour'):tr('色块','Blobs');
-  $(`glitter${s}-color-row`).hidden=!state['glitter'+s]}}
-for(const i of[1,2]){const s=i===1?'':'2';
-  CONTROLS.push({kind:'seg',id:`fill${s}-type`,key:`fill${s}Type`});
-  $(`fill${s}-type`).addEventListener('click',e=>{const b=e.target.closest('button');if(b)setFillType(i,b.dataset.v)});
-  $(`fill${s}-presets`).addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;applyFillPreset(s,b.dataset.p);fillFrom[i-1]=state[`fill${s}Type`];showFillShell(s);applyVinyl();syncUI()});
-  for(const [id,key] of[[`fill${s}-color`,`fill${s}Color`],[`fill${s}-color2`,`fill${s}Color2`],[`glitter${s}-color`,`glitter${s}Color`]]){$(id).addEventListener('input',e=>{state[key]=e.target.value;queueVinyl()});field(id,key)}
-  for(const k of['amount','phase2','cloud','bubbles','settle'])slider(`fill${s}-${k}`,`fill${s}${k[0].toUpperCase()+k.slice(1)}`,'pct',queueVinyl);
-  slider(`glitter${s}`,`glitter${s}`,'pct',()=>{$(`glitter${s}-color-row`).hidden=!state['glitter'+s];queueVinyl()});
-  $(`fill${s}-seed`).addEventListener('click',()=>{state[`fill${s}Seed`]=1+Math.floor(Math.random()*9999);applyVinyl()})}
 toggle('sleeve-on','sleeveOn',null,()=>{foldSleeve();syncUI();pose()});
 // 2LP: disc 2 follows disc 1 until unlinked; unlinking starts it from disc 1's current look.
 $('vinyl-same').addEventListener('change',e=>{state.vinylSame=e.target.checked;
@@ -2755,27 +2722,14 @@ const SPEC_FIELDS=[
     numF(`records.disc${i}.sleeveOut`,`sleeve${s}X`,0,100,.01,`第 ${i} 张内袋连同唱片从封套开口抽出的比例（%），只在 records.sleeve.on=true 时生效，内袋不显示时写了会被忽略并给出警告${note}${i===2?'。双开且 records.layout=split 时从左扇的开口抽出：合上时朝右，打开后朝左':''}`),
     numF(`records.disc${i}.recordOut`,`record${s}X`,0,100,.01,`第 ${i} 张唱片抽出的比例（%）。显示内袋时是唱片再从内袋里抽出的比例；不显示内袋时是唱片直接抽出封套的比例，100 为完全抽出、落在地面${note}`),
     numF(`records.disc${i}.tracks`,`tracks${s}`,1,20,1,`第 ${i} 张每面的音轨数，盘面按等宽分成这么多圈，相邻音轨之间有一道亮环；两面相同${note}`,true),
-    enumF(`records.disc${i}.pattern.id`,`pattern${s}`,['none',...MASKS.map(m=>m.id)],`第 ${i} 张彩胶纹路，none 或不写为纯色，只在 vinyl=color 时生效。按配色方式分三类——分色（底色是第一块，pattern.color 第二块，三块的纹路（split-tri、tiedye-*）再用 pattern.color2 第三块；split-quad 对角同色）：${patternIds('regions')}；主次（底色 + pattern.color，其余色层自动推算）：${patternIds('accent')}；同色系（只用底色，纹路是它的深浅变化，pattern.contrast 调反差）：${patternIds('tonal')}。底色是 color；写了 color 而没写 pattern.color / pattern.color2 时，纹路色按底色推算；color 也没写时，用这款纹路的默认配色${note}`),
+    enumF(`records.disc${i}.pattern.id`,`pattern${s}`,['none',...MASKS.map(m=>m.id)],`第 ${i} 张彩胶纹路，none 或不写为纯色，只在 vinyl=color 时生效。按配色方式分三类——分色（底色是第一块，pattern.color 第二块，三块的纹路（split-tri、tiedye-*）再用 pattern.color2 第三块；split-quad 对角同色）：${patternIds('regions')}；主次（底色 + pattern.color，其余色层自动推算）：${patternIds('accent')}；同色系（只用底色，纹路是它的深浅变化，pattern.contrast 调反差）：${patternIds('tonal')}。液体胶、沙、亮片也是主次类：liquid-* 为透明外壳里封着液体，底色是液体颜色，pattern.color 是漂在里面的乳白一相（大块和圆液滴），transparency 是液体的通透程度（0 不透光），pattern.transparency 是乳白相的透明度，液体随唱片转动；sand-01 底色和 pattern.color 是两种沙色；glitter-* 底色是胶色（配合 transparency），pattern.color 是亮片颜色。底色是 color；写了 color 而没写 pattern.color / pattern.color2 时，纹路色按底色推算；color 也没写时，用这款纹路的默认配色${note}`),
     colorF(`records.disc${i}.pattern.color`,`pattern${s}Color`,`第 ${i} 张纹路色：主次类为纹路颜色，分色类为第二块颜色；同色系不使用${note}`),
     numF(`records.disc${i}.pattern.transparency`,`pattern${s}Clear`,0,80,.01,`第 ${i} 张纹路的透明度（%），默认 0 为不透明；纹路色和由它推算的色层一起变透明。底色不透明时纹路会透出底色、变淡；底色也透明时（transparency）纹路同样透光。仅主次类（${patternIds('accent')}）使用，分色类和同色系忽略并给出警告${note}`),
     colorF(`records.disc${i}.pattern.color2`,`pattern${s}Alt`,`第 ${i} 张分色第三块颜色，仅三块的分色纹路（split-tri、tiedye-*）使用${note}`),
     numF(`records.disc${i}.pattern.contrast`,`pattern${s}Contrast`,0,200,.01,`第 ${i} 张同色系纹路的反差（%），100 为这款纹路的原始深浅差；仅同色系使用${note}`),
     numF(`records.disc${i}.pattern.rotation`,`pattern${s}Rot`,-180,180,1,`第 ${i} 张纹路相对标签的旋转角度（度，逆时针为正）${note}`),
     ...(i===2?[boolF('records.disc2.sameAsDisc1','vinylSame','第 2 张的胶色和纹路与第 1 张相同（默认）。设为 false 后 disc2 的 vinyl、color、pattern 才生效；没写这个字段、但写了这些字段时，视为 false（仅 records.count=2 时生效）')]:[]),
-    boolF(`records.disc${i}.pattern.fromCover`,`pattern${s}FromCover`,`第 ${i} 张从封面（images.front）自动取底色和纹路色，需要同时给 pattern.id；同时写了 color、pattern.color、pattern.color2 或 vinyl 的，以写明的为准。2LP 的第 2 张会取下一组配色${note}`),
-    enumF(`records.disc${i}.fill.type`,`fill${s}Type`,FILL_TYPES,`第 ${i} 张填充：none 无；liquid 液体胶（有色透明液体铺满空腔，里面漂着乳白的另一相：圆润的大块、贴着标签或外缘铺开的一段、大小不一的圆液滴，块里夹着液体小点）；dry 干填充（沙、粉之类的颗粒）。填充在盘面中间的空腔里，外壳要透明才看得见：需要 vinyl=color，transparency 建议 40 以上。重力朝下：唱片自转时填充留在原处。快速起步用 fill.preset${note}`),
-    colorF(`records.disc${i}.fill.color`,`fill${s}Color`,`第 ${i} 张填充主色：液体为铺满空腔的有色液体，干填充为颗粒的第一种颜色${note}`),
-    colorF(`records.disc${i}.fill.color2`,`fill${s}Color2`,`第 ${i} 张第二色：液体为漂在里面的乳白一相（色块和液滴），干填充为颗粒的第二种颜色${note}`),
-    numF(`records.disc${i}.fill.amount`,`fill${s}Amount`,0,100,.01,`第 ${i} 张填充量（%）：液体为液面高度，100 为灌满，低于 100 时上方留一段空气；干填充为颗粒占空腔的比例${note}`),
-    numF(`records.disc${i}.fill.phase2`,`fill${s}Phase2`,0,100,.01,`第 ${i} 张第二色的比例（%）：液体为色块和液滴合计占空腔的面积，干填充为第二种颜色的比重${note}`),
-    numF(`records.disc${i}.fill.cloud`,`fill${s}Cloud`,0,100,.01,`第 ${i} 张液体浑浊度（%）：0 清澈透光，100 几乎不透明；干填充不使用${note}`),
-    numF(`records.disc${i}.fill.bubbles`,`fill${s}Bubbles`,0,100,.01,`第 ${i} 张细碎程度（%）：越大液滴越多越碎、色块里夹的液体小点越多、空气泡越多（多在上方）；干填充不使用${note}`),
-    numF(`records.disc${i}.fill.settle`,`fill${s}Settle`,0,100,.01,`第 ${i} 张沉降程度（%）：0 均匀分布，越大乳白一相越往上浮（干填充越往下沉）${note}`),
-    numF(`records.disc${i}.fill.seed`,`fill${s}Seed`,1,9999,1,`第 ${i} 张填充分布的随机种子，换一个数就换一种分布；2LP 的两张即使样式相同，分布也不同${note}`,true),
-    numF(`records.disc${i}.fill.inner`,`fill${s}Inner`,50,100,.1,`第 ${i} 张空腔内半径（mm），标签半径为 50${note}`),
-    numF(`records.disc${i}.fill.outer`,`fill${s}Outer`,100,151,.1,`第 ${i} 张空腔外半径（mm），盘半径为 151，外缘通常留几毫米透明边${note}`),
-    numF(`records.disc${i}.glitter.amount`,`glitter${s}`,0,100,.01,`第 ${i} 张亮片密度（%），0 为没有。亮片悬浮在胶里，可以和填充一起用，也可以单独用在透明彩胶上；外壳不透明时看不见${note}`),
-    colorF(`records.disc${i}.glitter.color`,`glitter${s}Color`,`第 ${i} 张亮片颜色${note}`)]}),
+    boolF(`records.disc${i}.pattern.fromCover`,`pattern${s}FromCover`,`第 ${i} 张从封面（images.front）自动取底色和纹路色，需要同时给 pattern.id；同时写了 color、pattern.color、pattern.color2 或 vinyl 的，以写明的为准。2LP 的第 2 张会取下一组配色${note}`)]}),
   boolF('insert.on','insertOn','是否放入双面插页'),
   numF('insert.out','insertX',0,100,.01,'插页抽出比例（%）。插页在内袋后面，需要比内袋抽得多才看得到'),
   boolF('obi.on','obiOn','是否显示 Obi 侧标'),
@@ -2848,15 +2802,12 @@ function specFromState(){
   const s={version:1};
   for(const f of SPEC_FIELDS)setPath(s,f.path,toSpecValue(f,state[f.key]));
   // A linked disc 2 has no style of its own; writing disc 1's copy would contradict sameAsDisc1.
-  if(state.vinylSame)for(const k of['vinyl','color','transparency','pattern','fill','glitter'])delete s.records.disc2[k];
+  if(state.vinylSame)for(const k of['vinyl','color','transparency','pattern'])delete s.records.disc2[k];
   if(!state.sleeveOn)for(const i of[1,2])delete s.records[`disc${i}`].sleeveOut;
   if(!discOnly()||state.lpCount!==2)delete s.scene.disc;
   // Plain black has no colour, transparency or pattern; solid colour has no pattern.
   for(const i of[1,2]){const d=s.records[`disc${i}`],sx=i===1?'':'2';if(!('vinyl' in d))continue;
-    // No fill: only its type; no glitter: nothing.
-    if(state['vinyl'+sx]==='black'||state[`fill${sx}Type`]==='none')d.fill={type:'none'};
-    if(state['vinyl'+sx]==='black'||!state['glitter'+sx])delete d.glitter;
-    if(state['vinyl'+sx]==='black')for(const k of['color','transparency','pattern','fill'])delete d[k];
+    if(state['vinyl'+sx]==='black')for(const k of['color','transparency','pattern'])delete d[k];
     else if(!maskById(state['pattern'+sx]))delete d.pattern;
     else if(maskById(state['pattern'+sx]).palette.mode!=='accent')delete d.pattern.transparency}
   {const t=stickerTpl();if(t){delete s.sticker.shape;s.sticker.lines=tplLines(t,state.stickerLines)}else delete s.sticker.color}
@@ -2877,7 +2828,6 @@ function buildSchema(){
     const s=f.type==='enum'?{enum:f.values}:f.type==='number'?{type:f.integer?'integer':'number',minimum:f.min,maximum:f.max}:f.type==='boolean'?{type:'boolean'}:f.type==='color'?{type:'string',pattern:'^#[0-9a-fA-F]{6}$'}:{type:'string',maxLength:f.maxLength};
     Object.assign(s,{description:f.desc,default:toSpecValue(f,DEFAULT_STATE[f.key])});parent(f.path).properties[f.path.split('.').at(-1)]=s}
   parent('sticker.lines').properties.lines={type:'array',maxItems:3,items:{type:'string',maxLength:40},description:'模板从上到下每一行的文字。不写的行用模板默认文字（方括号是占位，要换成实际内容），写空字符串去掉这一行。只在用模板时生效'};
-  for(const i of[1,2])parent(`records.disc${i}.fill.preset`).properties.preset={enum:Object.keys(FILL_PRESETS),description:`第 ${i} 张填充预设，一次写好 type、color、color2、amount、phase2、cloud、bubbles、settle；同时写明的字段以写明的为准。cloudy 浑浊水（浅色液体、少量白块、多气泡）；twotone 橙色液体里漂着白色大块；oil 黑色液体里漂着白块和液滴，块里夹着黑点；foam 浅绿透明液体里满是蓝色液滴；sand 干沙。预设只是起点，颜色按封面改`};
   parent('number.fontFile').properties.fontFile={type:'string',description:'自定义字体文件（TTF/OTF/WOFF/WOFF2）。CLI 中写相对 spec 文件的路径；提供后 number.font 默认变为 custom'};
   root.properties.images={type:'object',additionalProperties:false,description:'各部件贴图。CLI 中写相对 spec 文件的本地路径或 http(s) 地址；页面 API 接受 data URL 或 URL。未提供的部件使用示例图',
     properties:Object.fromEntries(Object.entries(IMAGE_SLOTS).map(([k,d])=>[k,{type:'string',description:d}]))};
@@ -2910,7 +2860,7 @@ function buildSchema(){
     size:{type:'integer',minimum:240,maximum:2160,description:'短边像素。不写时 MP4 为 1080（16:9 即 1920 × 1080），GIF 为 600'}}};
   return root}
 
-const SPEC_EXTRA=['records.disc1.fill.preset','records.disc2.fill.preset','version','meta','number.fontFile','output.background','output.width','output.height','camera.view','camera.zoom','camera.azimuth','camera.elevation','camera.panX','camera.panY',...['preset','duration','fps','direction','angle','aspect','size'].map(k=>'animation.'+k),...Object.keys(IMAGE_SLOTS).map(k=>'images.'+k),'sticker.lines'];
+const SPEC_EXTRA=['version','meta','number.fontFile','output.background','output.width','output.height','camera.view','camera.zoom','camera.azimuth','camera.elevation','camera.panX','camera.panY',...['preset','duration','fps','direction','angle','aspect','size'].map(k=>'animation.'+k),...Object.keys(IMAGE_SLOTS).map(k=>'images.'+k),'sticker.lines'];
 async function applySpec(spec){
   if(!spec||typeof spec!=='object'||Array.isArray(spec))throw new Error('spec 必须是 JSON 对象');
   // Legacy "clear" was colour vinyl at a fixed 62% opacity; keep old specs rendering the same.
@@ -2925,9 +2875,6 @@ async function applySpec(spec){
   for(const k of['title','artist','album']){const v=spec.meta?.[k];if(v===undefined)continue;
     if(typeof v==='string'&&v.trim())sceneMeta[k]=v.trim().slice(0,120);else delete sceneMeta[k]}
   const sleeveWas=state.sleeveOn;
-  // A fill preset is a starting point: it goes in first, so fields the spec writes override it.
-  for(const i of[1,2]){const p=getPath(spec,`records.disc${i}.fill.preset`);if(p===undefined)continue;
-    if(FILL_PRESETS[p])applyFillPreset(i===1?'':'2',p);else warnings.push(`records.disc${i}.fill.preset=${JSON.stringify(p)} 无效，可选值：${Object.keys(FILL_PRESETS).join(' / ')}`)}
   for(const f of SPEC_FIELDS){const v=getPath(spec,f.path);if(v===undefined)continue;
     if(f.type==='enum'){if(!f.values.includes(v)){warnings.push(`${f.path}=${JSON.stringify(v)} 无效，可选值：${f.values.join(' / ')}`);continue}state[f.key]=v}
     else if(f.type==='number'){const c=clampNum(f.path,v,f.min,f.max,f.integer);if(c!==null)state[f.key]=c*f.k}
@@ -2956,7 +2903,7 @@ async function applySpec(spec){
   // A disc whose spec gives a colour keeps it when the panel later switches black -> colour.
   for(const i of[1,2])colorSet[i-1]=['color','pattern.color','pattern.color2','pattern.fromCover'].some(k=>has(`records.disc${i}.${k}`));
   // Older specs set disc 2's vinyl without the switch: writing its style fields means "set separately".
-  const disc2Style=['vinyl','color','transparency','pattern','fill','glitter'].filter(k=>has('records.disc2.'+k));
+  const disc2Style=['vinyl','color','transparency','pattern'].filter(k=>has('records.disc2.'+k));
   if(disc2Style.length){if(!has('records.disc2.sameAsDisc1'))state.vinylSame=false;
     else if(state.vinylSame)warnings.push(`records.disc2.sameAsDisc1=true，第 2 张沿用第 1 张的样式，已忽略 ${disc2Style.map(k=>'records.disc2.'+k).join('、')}`)}
   for(const i of[1,2]){const s=i===1?'':'2',m=maskById(state['pattern'+s]),pre=`records.disc${i}`;if(!m||(i===2&&state.vinylSame))continue;
@@ -3002,18 +2949,8 @@ async function applySpec(spec){
     coverTurn[i-1]=i-1;
     if(!applyCover(i,{advance:false,keep:{base:has(`${pre}.color`),style:has(`${pre}.vinyl`),color:has(`${pre}.pattern.color`),alt:has(`${pre}.pattern.color2`)}}))warnings.push(`${pre}.pattern.fromCover：封面颜色太单一，没取到可用配色`)}
   for(const i of[1,2]){const s=i===1?'':'2',pre=`records.disc${i}`;if(state['vinyl'+s]!=='black'||(i===2&&state.vinylSame))continue;
-    const unused=[has(`${pre}.pattern.id`)&&getPath(spec,`${pre}.pattern.id`)!=='none'&&`${pre}.pattern`,has(`${pre}.transparency`)&&`${pre}.transparency`,
-      state[`fill${s}Type`]!=='none'&&`${pre}.fill`,state['glitter'+s]>0&&`${pre}.glitter`].filter(Boolean);
-    if(unused.length)warnings.push(`${pre}.vinyl=black 是纯黑胶，${unused.join('、')} 无效；要用纹路、透明度、填充或亮片请设 vinyl=color`)}
-  // Fill and glitter sit inside the shell: an opaque shell hides them.
-  for(const i of[1,2]){const s=i===1?'':'2',pre=`records.disc${i}`;if(state['vinyl'+s]==='black'||(i===2&&(state.vinylSame||state.lpCount!==2)))continue;
-    const type=state[`fill${s}Type`],clear=state[`vinyl${s}Clear`];
-    if(type!=='none'&&clear<.25)warnings.push(`${pre}.fill.type=${type}，但外壳 ${pre}.transparency=${Math.round(clear*100)}，填充${clear>0?'几乎':''}看不见；建议 transparency 40 以上`);
-    else if(state['glitter'+s]>0&&clear===0)warnings.push(`${pre}.glitter 在不透明外壳里看不见；把 ${pre}.transparency 调到 0 以上`);
-    const idle=['color','color2','amount','phase2','cloud','bubbles','settle','seed','inner','outer'].filter(k=>has(`${pre}.fill.${k}`));
-    if(type==='none'&&idle.length)warnings.push(`${pre}.fill.type=none，${idle.map(k=>`${pre}.fill.${k}`).join('、')} 不生效`);
-    if(type==='dry'){const wet=['cloud','bubbles'].filter(k=>has(`${pre}.fill.${k}`));if(wet.length)warnings.push(`${pre}.fill.type=dry 不使用 ${wet.map(k=>`${pre}.fill.${k}`).join('、')}`)}
-    if(state[`fill${s}Outer`]-state[`fill${s}Inner`]<.5&&type!=='none')warnings.push(`${pre}.fill.outer 要比 fill.inner 大至少 5 mm，已按 inner=outer−5 处理`)}
+    const unused=[has(`${pre}.pattern.id`)&&getPath(spec,`${pre}.pattern.id`)!=='none'&&`${pre}.pattern`,has(`${pre}.transparency`)&&`${pre}.transparency`].filter(Boolean);
+    if(unused.length)warnings.push(`${pre}.vinyl=black 是纯黑胶，${unused.join('、')} 无效；要用纹路或透明度请设 vinyl=color`)}
   if(state.numFont==='custom'&&!userFontFace){warnings.push('number.font=custom 但没有可用的 number.fontFile，已改用 auto');state.numFont='auto'}
   refreshAll();
   try{await vinylReady}catch(e){warnings.push(`彩胶纹路蒙版读取失败：${e.message}，已按纯色渲染`)}
@@ -3161,7 +3098,8 @@ function renderTurned(angle,c){
   for(const o of parts){o.position.sub(c).applyQuaternion(turn).add(c);o.quaternion.premultiply(turn)}
   try{renderer.render(scene,camera)}finally{parts.forEach((o,i)=>{o.position.copy(saved[i][0]);o.quaternion.copy(saved[i][1])})}}
 // Draws one clip frame: poses it, turns it about the rest pose's centre, then restores both.
-function renderAnimFrame(f,pivot){liquidClock=f.u??0;try{withPose(f.set,()=>renderTurned(f.turn||0,pivot))}finally{liquidClock=0}}
+function renderAnimFrame(f,pivot){liquidClock=f.u??0;liquidSpin=f.set?.recordRot!==undefined?f.set.recordRot-state.recordRot:0;
+  try{withPose(f.set,()=>renderTurned(f.turn||0,pivot))}finally{liquidClock=liquidSpin=0}}
 function renderStage(){if(previewActive())renderAnimFrame(animFrame(preview.phase),restPivot());else renderer.render(scene,camera)}
 // The key light's shadow box must cover the product in every frame, not only at rest; 0 restores it.
 function shadowReach(r){const sh=key.shadow.camera;Object.assign(sh,r?{left:-r,right:r,top:r,bottom:-r}:SHADOW_BOX);sh.updateProjectionMatrix()}

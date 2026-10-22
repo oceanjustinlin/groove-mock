@@ -6,15 +6,12 @@
   "records": {
     "disc1": {
       "vinyl": "color",
-      "color": "#f6eef0",
-      "transparency": 70,
+      "color": "#111214",
+      "transparency": 5,
       "recordOut": 75,
-      "fill": {
-        "preset": "oil"
-      },
-      "glitter": {
-        "amount": 20,
-        "color": "#e8e8ee"
+      "pattern": {
+        "id": "liquid-02",
+        "color": "#e8ebe7"
       }
     }
   },

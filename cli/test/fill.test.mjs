@@ -7,36 +7,38 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 
 const cli = fileURLToPath(new URL('../record-mockup.mjs', import.meta.url));
+const run = args => {
+  if (process.env.GROOVE_TEST_BROWSER) args.push('--browser', process.env.GROOVE_TEST_BROWSER);
+  const result = spawnSync(process.execPath, [cli, ...args], {encoding: 'utf8', timeout: 120000});
+  assert.ifError(result.error);
+  assert.ok(result.stdout.trim(), result.stderr);
+  return result;
+};
 
 async function render(t, records) {
   const dir = await mkdtemp(path.join(tmpdir(), 'groove-fill-'));
   t.after(() => rm(dir, {recursive: true, force: true}));
   const file = path.join(dir, 'spec.json');
   await writeFile(file, JSON.stringify({scene: {mode: 'disc'}, records, output: {width: 320, height: 320}}));
-  const args = [cli, 'render', file, '-o', path.join(dir, 'out.png'), '--json'];
-  if (process.env.GROOVE_TEST_BROWSER) args.push('--browser', process.env.GROOVE_TEST_BROWSER);
-  const result = spawnSync(process.execPath, args, {encoding: 'utf8', timeout: 120000});
-  assert.ifError(result.error);
-  assert.ok(result.stdout.trim(), result.stderr);
+  const result = run(['render', file, '-o', path.join(dir, 'out.png'), '--json']);
   return {...result, json: JSON.parse(result.stdout)};
 }
 
-test('a filled disc on a see-through shell renders without warnings', async t => {
-  const r = await render(t, {disc1: {vinyl: 'color', transparency: 60, fill: {preset: 'twotone', bubbles: 40}, glitter: {amount: 30}}});
+test('liquid, sand and glitter are patterns of the main + accent kind', () => {
+  const schema = JSON.parse(run(['schema']).stdout);
+  const disc = schema.properties.records.properties.disc1.properties;
+  for (const id of ['liquid-01', 'liquid-05', 'sand-01', 'glitter-02']) assert.ok(disc.pattern.properties.id.enum.includes(id), id);
+  assert.equal(disc.fill, undefined);
+  assert.equal(disc.glitter, undefined);
+});
+
+test('a liquid pattern renders with its colours and transparencies, without warnings', async t => {
+  const r = await render(t, {disc1: {vinyl: 'color', color: '#111214', transparency: 10, pattern: {id: 'liquid-02', color: '#e8ebe7', transparency: 20}}});
   assert.equal(r.status, 0, r.stdout + r.stderr);
   assert.deepEqual(r.json.warnings, []);
 });
 
-test('fill warns about an opaque shell, a bad preset and fields with no fill', async t => {
-  const r = await render(t, {disc1: {vinyl: 'color', transparency: 0, fill: {type: 'liquid'}}});
-  assert.match(r.json.warnings.join('\n'), /transparency=0/);
-  const bad = await render(t, {disc1: {vinyl: 'color', transparency: 50, fill: {preset: 'bogus', amount: 30}}});
-  const w = bad.json.warnings.join('\n');
-  assert.match(w, /fill\.preset="bogus"/);
-  assert.match(w, /fill\.type=none，records\.disc1\.fill\.amount 不生效/);
-});
-
-test('black vinyl ignores fill and glitter', async t => {
-  const r = await render(t, {disc1: {vinyl: 'black', fill: {preset: 'sand'}, glitter: {amount: 20}}});
-  assert.match(r.json.warnings.join('\n'), /records\.disc1\.fill、records\.disc1\.glitter 无效/);
+test('black vinyl ignores a liquid pattern', async t => {
+  const r = await render(t, {disc1: {vinyl: 'black', pattern: {id: 'liquid-01'}}});
+  assert.match(r.json.warnings.join('\n'), /records\.disc1\.pattern 无效/);
 });
