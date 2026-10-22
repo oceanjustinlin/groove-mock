@@ -19,7 +19,19 @@
 | `context-lost` | WebGL 上下文丢失（多见于手机内存不足） | `ms` |
 | `gl-unavailable` | 浏览器起不来 WebGL 2 | `msg` |
 
-同一个页面里，重复的报错只发一次，每个页面最多发 30 条。
+同一个页面里，重复的报错只发一次，每个页面最多发 30 条。WebGL 起不来时只记一条 `gl-unavailable`，随后抛出的未捕获错误不再另记 `error`。
+
+## 机器人标记
+
+每条上报都带 `bot` 字段（`blob15` 为原因，`double13` 为 0 / 1），原因可以有多个，逗号分隔：
+
+| 原因 | 判断 |
+|---|---|
+| `webdriver` | `navigator.webdriver` 为真：浏览器由自动化工具控制 |
+| `ua-bot` | UA 里有 HeadlessChrome、Lighthouse、bot、crawl、spider 等字样 |
+| `ua-spoof` | UA 自称 Safari / iPhone（WebKit）或 Firefox，浏览器却有 `navigator.deviceMemory` 或 `navigator.userAgentData`。这两个只有 Chromium 才有，说明 UA 是伪装的 |
+
+无头爬虫、截图和预览服务常把 UA 改成 iPhone Safari，而且没有 GPU，所以会报 `gl-unavailable`。看真实用户的报错和耗时时加上 `double13 = 0`。加上这个字段之前的数据没有这两列，读出来是 `''` 和 `0`，那段时间的伪装访问要靠 `blob9 LIKE '%Safari%' AND double5 > 0`（Safari 不提供 deviceMemory，读出来恒为 0）来辨认。
 
 ## 一次性设置
 
@@ -48,7 +60,7 @@ CF_ANALYTICS_TOKEN=$(sed -nE 's/^oauth_token *= *"(.*)"/\1/p' "$HOME/Library/Pre
 |---|---|---|---|
 | Web Analytics | `rumPageloadEventsAdaptiveGroups`（账户级） | PV（`count`）、访问次数（`sum.visits`），可按主机、页面、国家、浏览器分 | 不含：只算真的跑了 beacon 脚本的浏览器 |
 | 域名 HTTP 统计 | `httpRequests1dGroups`（Zone 级） | 请求数、`pageViews`、独立访客 `uniq.uniques`（按 IP 去重） | 含：爬虫、扫描器、脚本请求都算，只能当上限 |
-| `/api/log` | `record_mockup_logs`（见下一节） | `ready` 次数 ≈ 能用的页面打开次数，`count(DISTINCT blob12)` ≈ 会话数 | 基本不含：要跑起 WebGL 才会发 |
+| `/api/log` | `record_mockup_logs`（见下一节） | `ready` 次数 ≈ 能用的页面打开次数，`count(DISTINCT blob12)` ≈ 会话数 | 可以排除：加 `double13 = 0` 去掉带机器人标记的 |
 
 Web Analytics 不提供独立访客数（不用 Cookie，认不出同一个人），要 UV 只能看域名 HTTP 统计的 `uniques`。两个查询都走 GraphQL：
 
@@ -69,7 +81,13 @@ gql "{ viewer { zones(filter:{zoneTag:\"$CF_ZONE_ID\"}) {
     dimensions { date } sum { requests pageViews } uniq { uniques } } } } }"
 ```
 
-`date -v-7d` 是 macOS 写法，Linux 用 `date -d '7 days ago' +%F`。Web Analytics 的维度还有 `requestPath`、`countryName`、`userAgentBrowser`、`deviceType`、`refererHost`，加到 `dimensions` 里就能分组。`www` 现在不跳转到根域名，所以 PV 会分在两个主机上，合起来看。
+`date -v-7d` 是 macOS 写法，Linux 用 `date -d '7 days ago' +%F`。Web Analytics 的维度还有 `requestPath`、`countryName`、`userAgentBrowser`、`deviceType`、`refererHost`，加到 `dimensions` 里就能分组。`www` 现在不跳转到根域名，所以 PV 会分在两个主机上，合起来看。Web Analytics 没法排除伪装成浏览器的机器人（它们会被算成 MobileSafari 之类），真人用量以 `/api/log` 里 `double13 = 0` 的 `ready` 为准：
+
+```sql
+SELECT toDate(timestamp) AS day, count() AS opens, count(DISTINCT blob12) AS sessions FROM record_mockup_logs
+WHERE index1 = 'ready' AND double13 = 0 AND blob6 IN ('recordmockup.com', 'www.recordmockup.com')
+  AND timestamp > NOW() - INTERVAL '7' DAY GROUP BY day ORDER BY day
+```
 
 ## 报错和耗时
 
@@ -84,21 +102,21 @@ curl "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/analy
 常用查询：
 
 ```sql
--- 最近 7 天各类事件数量（正式站）
-SELECT blob1 AS type, count() AS n FROM record_mockup_logs
-WHERE blob6 = 'recordmockup.com' AND timestamp > NOW() - INTERVAL '7' DAY GROUP BY type
+-- 最近 7 天各类事件数量（正式站，分真人和机器人）
+SELECT blob1 AS type, double13 AS bot, count() AS n FROM record_mockup_logs
+WHERE blob6 IN ('recordmockup.com', 'www.recordmockup.com') AND timestamp > NOW() - INTERVAL '7' DAY GROUP BY type, bot
 
 -- 各格式导出成功率和耗时中位数
 SELECT blob13 AS format, sum(double10) / count() AS ok_rate, quantileWeighted(0.5, double1, _sample_interval) AS p50_ms
-FROM record_mockup_logs WHERE index1 = 'export' AND timestamp > NOW() - INTERVAL '7' DAY GROUP BY format
+FROM record_mockup_logs WHERE index1 = 'export' AND double13 = 0 AND timestamp > NOW() - INTERVAL '7' DAY GROUP BY format
 
 -- 首帧耗时 p75，按国家
 SELECT blob7 AS country, count() AS n, quantileWeighted(0.75, double1, _sample_interval) AS p75_ms
-FROM record_mockup_logs WHERE index1 = 'ready' AND timestamp > NOW() - INTERVAL '7' DAY GROUP BY country ORDER BY n DESC
+FROM record_mockup_logs WHERE index1 = 'ready' AND double13 = 0 AND timestamp > NOW() - INTERVAL '7' DAY GROUP BY country ORDER BY n DESC
 
--- 导出失败和上下文丢失集中在哪些 GPU、哪些机型
+-- 真实用户的导出失败、上下文丢失和 WebGL 起不来，集中在哪些 GPU、哪些机型
 SELECT blob10 AS gpu, double5 AS memory_gb, blob1 AS type, count() AS n FROM record_mockup_logs
-WHERE (index1 = 'export' AND double10 = 0) OR index1 = 'context-lost' GROUP BY gpu, memory_gb, type ORDER BY n DESC LIMIT 20
+WHERE double13 = 0 AND ((index1 = 'export' AND double10 = 0) OR index1 IN ('context-lost', 'gl-unavailable')) GROUP BY gpu, memory_gb, type ORDER BY n DESC LIMIT 20
 ```
 
 `blob6` 是主机名：`recordmockup.com` 为正式站，`*.record-mockup.pages.dev` 为预览站。`blob14` 是构建时的 commit，用来判断某个报错是从哪次发布开始出现的。

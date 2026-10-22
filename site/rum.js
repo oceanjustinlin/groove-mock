@@ -8,6 +8,18 @@
   const release = document.querySelector('meta[name="rm-release"]')?.content || '';
   let sent = 0;
 
+  // Why this page view is probably not a person ('' when nothing points that way). Headless crawlers and screenshot
+  // services often claim to be Safari or an iPhone, but run Chromium: deviceMemory and userAgentData exist only in
+  // Chromium, so a WebKit or Gecko user agent that has them is a disguise.
+  const bot = (() => {
+    const ua = navigator.userAgent, why = [];
+    if (navigator.webdriver) why.push('webdriver');
+    if (/HeadlessChrome|PhantomJS|Lighthouse|bot\b|crawl|spider|slurp/i.test(ua)) why.push('ua-bot');
+    const webkit = /AppleWebKit/.test(ua) && !/Chrome|Chromium|Edg\/|OPR\//.test(ua), gecko = /Gecko\/\d+ .*Firefox\//.test(ua);
+    if ((webkit || gecko) && ('deviceMemory' in navigator || 'userAgentData' in navigator)) why.push('ua-spoof');
+    return why.join(',');
+  })();
+
   function send(type, data = {}) {
     // One report per distinct error per page view, and a cap so a render loop that throws cannot flood the endpoint.
     const key = type + '|' + (data.msg || '') + '|' + (data.src || '');
@@ -15,7 +27,7 @@
     seen.add(key);
     if (sent++ >= MAX) return;
     const body = JSON.stringify({
-      type, session, release, path: location.pathname, lang: navigator.language,
+      type, session, release, bot, path: location.pathname, lang: navigator.language,
       dpr: devicePixelRatio, mem: navigator.deviceMemory || 0, cores: navigator.hardwareConcurrency || 0,
       vw: innerWidth, vh: innerHeight, ...data,
     });
@@ -30,6 +42,7 @@
   addEventListener('error', e => {
     const t = e.target;
     if (t && t !== window && (t.src || t.href)) { send('resource', {src: t.src || t.href, msg: t.tagName}); return }
+    if (e.error?.rmReported) return;   // index.html already sent its own event for this one (e.g. gl-unavailable)
     send('error', {msg: e.message, src: e.filename, line: e.lineno, col: e.colno, stack: e.error?.stack});
   }, true);
   addEventListener('unhandledrejection', e => {

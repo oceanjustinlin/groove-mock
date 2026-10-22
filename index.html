@@ -1116,7 +1116,9 @@ const stage=$('stage');let renderer;
 try{
   renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,premultipliedAlpha:true});
   if(!renderer.capabilities.isWebGL2)throw new Error('WebGL2 unavailable');
-}catch(e){$('loading').hidden=true;$('gl-error').hidden=false;track('gl-unavailable',{msg:String(e&&e.message||e)});throw e}
+}catch(e){$('loading').hidden=true;$('gl-error').hidden=false;track('gl-unavailable',{msg:String(e&&e.message||e)});
+  // Still stop the module here; rum.js skips the uncaught error, as gl-unavailable already covers it.
+  if(e&&typeof e==='object')e.rmReported=true;throw e}
 const gpuName=()=>{try{const gl=renderer.getContext(),x=gl.getExtension('WEBGL_debug_renderer_info');
   return gl.getParameter(x?x.UNMASKED_RENDERER_WEBGL:gl.RENDERER)}catch(e){return ''}};
 maxAniso=Math.min(8,renderer.capabilities.getMaxAnisotropy());
