@@ -27,9 +27,51 @@
 2. **Analytics Engine**：在 Cloudflare 后台 Workers & Pages → Analytics Engine 里启用（免费额度够用）。数据集在第一次写入时自动创建，绑定写在 `wrangler.toml` 里。
 3. **自定义域名**：`recordmockup.com` 和 `www.recordmockup.com` 已加到 Pages 项目。域名在 Spaceship 注册，nameserver 指向 Cloudflare（`louis` / `miki.ns.cloudflare.com`），DNS 记录在 Cloudflare 管理，两个名字都 CNAME 到 `record-mockup.pages.dev`。
 4. **Web Analytics**：后台 Web Analytics → Add a site → 填 `recordmockup.com`，选手动安装（JS snippet），把其中的 token 填到 GitHub 仓库变量 `CF_WEB_ANALYTICS_TOKEN`（Settings → Secrets and variables → Actions → Variables）。
-5. GitHub 仓库 secrets `CLOUDFLARE_API_TOKEN`、`CLOUDFLARE_ACCOUNT_ID` 预览部署已经在用，不用再加。查询数据另需一个带 **Account Analytics: Read** 权限的 token。
+5. GitHub 仓库 secrets `CLOUDFLARE_API_TOKEN`、`CLOUDFLARE_ACCOUNT_ID` 预览部署已经在用，不用再加。
 
-## 查询
+## 查询用的 token
+
+下面的查询都可以直接用 `wrangler login` 的登录，不用另建 token（也可以用带 **Account Analytics: Read** 权限的 API token）：
+
+```bash
+npx wrangler whoami >/dev/null   # 顺便刷新登录
+CF_ANALYTICS_TOKEN=$(sed -nE 's/^oauth_token *= *"(.*)"/\1/p' "$HOME/Library/Preferences/.wrangler/config/default.toml")   # Linux 为 ~/.config/.wrangler/config/default.toml
+```
+
+`CLOUDFLARE_ACCOUNT_ID` 和 `CF_ZONE_ID`（`recordmockup.com` 的 Zone ID）在 Cloudflare 后台域名 Overview 页右下角。
+
+## 访问量（PV / UV）
+
+三个来源的口径不同，看哪个取决于想回答什么：
+
+| 来源 | 数据集 | 有什么 | 含不含爬虫 |
+|---|---|---|---|
+| Web Analytics | `rumPageloadEventsAdaptiveGroups`（账户级） | PV（`count`）、访问次数（`sum.visits`），可按主机、页面、国家、浏览器分 | 不含：只算真的跑了 beacon 脚本的浏览器 |
+| 域名 HTTP 统计 | `httpRequests1dGroups`（Zone 级） | 请求数、`pageViews`、独立访客 `uniq.uniques`（按 IP 去重） | 含：爬虫、扫描器、脚本请求都算，只能当上限 |
+| `/api/log` | `record_mockup_logs`（见下一节） | `ready` 次数 ≈ 能用的页面打开次数，`count(DISTINCT blob12)` ≈ 会话数 | 基本不含：要跑起 WebGL 才会发 |
+
+Web Analytics 不提供独立访客数（不用 Cookie，认不出同一个人），要 UV 只能看域名 HTTP 统计的 `uniques`。两个查询都走 GraphQL：
+
+```bash
+gql() { python3 -c 'import json,sys;print(json.dumps({"query":sys.argv[1]}))' "$1" |
+  curl -sS https://api.cloudflare.com/client/v4/graphql -H "Authorization: Bearer $CF_ANALYTICS_TOKEN" \
+    -H 'Content-Type: application/json' --data @-; }
+
+# Web Analytics：最近 7 天每天的 PV 和访问次数（账户里还有别的站，按主机过滤）
+gql "{ viewer { accounts(filter:{accountTag:\"$CLOUDFLARE_ACCOUNT_ID\"}) {
+  rumPageloadEventsAdaptiveGroups(limit:100, orderBy:[date_ASC],
+    filter:{date_geq:\"$(date -v-7d +%F)\", requestHost_in:[\"recordmockup.com\",\"www.recordmockup.com\"]}) {
+    count sum { visits } dimensions { date requestHost } } } } }"
+
+# 域名 HTTP 统计：最近 7 天每天的请求、pageViews 和独立访客
+gql "{ viewer { zones(filter:{zoneTag:\"$CF_ZONE_ID\"}) {
+  httpRequests1dGroups(limit:30, orderBy:[date_ASC], filter:{date_geq:\"$(date -v-7d +%F)\"}) {
+    dimensions { date } sum { requests pageViews } uniq { uniques } } } } }"
+```
+
+`date -v-7d` 是 macOS 写法，Linux 用 `date -d '7 days ago' +%F`。Web Analytics 的维度还有 `requestPath`、`countryName`、`userAgentBrowser`、`deviceType`、`refererHost`，加到 `dimensions` 里就能分组。`www` 现在不跳转到根域名，所以 PV 会分在两个主机上，合起来看。
+
+## 报错和耗时
 
 Analytics Engine 用 SQL API 查询，列名是位置编号，对应关系见 `functions/api/log.js` 顶部的注释。数据保留 90 天。
 
