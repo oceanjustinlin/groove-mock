@@ -168,7 +168,10 @@ def cmd_post(a):
         if not (d / 'gen.png').exists():
             print(f'skip {mid}: no gen.png')
             continue
-        ex = json.loads(run(['python3', 'tools/vinyl-photo-extract.py', str(d), '--accents', str(j.get('accents', 1))]))
+        # job.json "clusters": 5 splits a base that came out as the average of two pale colours (pale blue and pink
+        # read as lavender).
+        ex = json.loads(run(['python3', 'tools/vinyl-photo-extract.py', str(d), '--accents', str(j.get('accents', 1)),
+                             '--clusters', str(j.get('clusters', 3))]))
         if j.get('swapLayers') and len(ex['layers']) == 2:
             ex = swap_layers(d, ex)
         qc = ['python3', 'tools/vinyl-gen-qc.py', str(d), '--master', ','.join(ex['layers']),

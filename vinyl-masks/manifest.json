@@ -157,6 +157,93 @@
       }
     },
     {
+      "id": "blob-06",
+      "family": "blob",
+      "role": "layout",
+      "file": "blob-06.webp",
+      "thumb": "thumbs/blob-06.jpg",
+      "size": 1024,
+      "accents": 1,
+      "base": "#f63c21",
+      "colors": [
+        "#efcbdf"
+      ],
+      "palette": {
+        "mode": "accent",
+        "derive": []
+      },
+      "labelRadius": null,
+      "source": {
+        "kind": "unlicensed-reference",
+        "master": "output/texture-gen/library/blob-06",
+        "file": [
+          "layer1.png"
+        ],
+        "operation": "photo variant + colour extraction",
+        "date": "2026-10-22",
+        "reference": "https://www.pinterest.com/pin/411235009745593219/",
+        "referenceSha256": "9ac026a7dcc7cdac8bb95902720fb1f1b0c4ef96d2cbd103de33c9086fdb4082",
+        "generatedSha256": "32c46794b028a103404d717ce8b06bfc479432d020b15514d3d55be1578570cd",
+        "prompt": "附图是一张彩胶唱片照片。\n\n请生成一张新的产品照片：和附图同一批次压出来的另一张唱片。材料、颜色和压片工艺完全相同，纹路的样子和附图一致，只是具体排布不同：深色和浅色区域的位置、走向都要换掉，不要照着附图摆。\n\n拍摄要求：\n- 严格正俯拍，相机正对中心孔，无透视，唱片是正圆，居中，直径约占画面边长的 92%。\n- 背景是均匀的纯中灰色。\n- 光线均匀漫射，没有高光、反光条和暗角；看不到沟槽。\n- 中心标签是完全空白的浅色哑光纸，没有文字或图案。\n- 没有手、封套、道具、文字或水印。"
+      },
+      "status": "draft",
+      "bake": {
+        "crop": 1.0,
+        "floor": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "id": "blob-07",
+      "family": "blob",
+      "role": "layout",
+      "file": "blob-07.webp",
+      "thumb": "thumbs/blob-07.jpg",
+      "size": 1024,
+      "accents": 2,
+      "base": "#c6cfeb",
+      "colors": [
+        "#fc3c82",
+        "#020101"
+      ],
+      "palette": {
+        "mode": "accent",
+        "derive": [
+          {
+            "t": -0.6745,
+            "dL": -0.4624
+          }
+        ]
+      },
+      "labelRadius": null,
+      "source": {
+        "kind": "unlicensed-reference",
+        "master": "output/texture-gen/library/blob-07",
+        "file": [
+          "layer1.png",
+          "layer2.png"
+        ],
+        "operation": "photo variant + colour extraction",
+        "date": "2026-10-23",
+        "reference": "https://www.pinterest.com/pin/660621839101732723/",
+        "referenceSha256": "8adfbd9ecd6d9eee8ea2c284dfa8750d65ff3a7623de617f745061243a9ab8ef",
+        "generatedSha256": "d03661fd68652992a6a9b2e344d3cabcf193a4e437ae581056c2003f370a1ea2",
+        "prompt": "附图是一张彩胶唱片照片。\n\n请生成一张新的产品照片：和附图同一批次压出来的另一张唱片。材料、颜色和压片工艺完全相同，纹路的样子和附图一致，只是具体排布不同：深色和浅色区域的位置、走向都要换掉，不要照着附图摆。\n\n拍摄要求：\n- 严格正俯拍，相机正对中心孔，无透视，唱片是正圆，居中，直径约占画面边长的 92%。\n- 背景是均匀的纯中灰色。\n- 光线均匀漫射，没有高光、反光条和暗角；看不到沟槽。\n- 中心标签是完全空白的浅色哑光纸，没有文字或图案。\n- 没有手、封套、道具、文字或水印。"
+      },
+      "status": "draft",
+      "bake": {
+        "crop": 1.0,
+        "floor": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    {
       "id": "ghostly-01",
       "family": "ghostly",
       "role": "layout",
@@ -230,6 +317,53 @@
         "referenceSha256": "0e052543f003d901de9410992e8fc930aea3866a2598e6e0346f1e8908501e1c",
         "generatedSha256": "4a683b153918c2ed72cb8a83516de1d23973a3d23243b3335aaecabd36817569",
         "prompt": "附图是一张彩胶唱片照片。\n\n请生成一张新的产品照片：和附图同一批次压出来的另一张唱片。材料、颜色和压片工艺完全相同，纹路的样子和附图一致，只是具体排布不同。\n\n拍摄要求：\n- 严格正俯拍，相机正对中心孔，无透视，唱片是正圆，居中，直径约占画面边长的 92%。\n- 背景是均匀的纯中灰色。\n- 光线均匀漫射，没有高光、反光条和暗角；看不到沟槽。\n- 中心标签是完全空白的浅色哑光纸，没有文字或图案。\n- 没有手、封套、道具、文字或水印。"
+      },
+      "status": "draft",
+      "bake": {
+        "crop": 1.0,
+        "floor": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "id": "halo-01",
+      "family": "halo",
+      "role": "layout",
+      "file": "halo-01.webp",
+      "thumb": "thumbs/halo-01.jpg",
+      "size": 1024,
+      "accents": 2,
+      "base": "#b90b2e",
+      "colors": [
+        "#ff8f28",
+        "#5f0218"
+      ],
+      "palette": {
+        "mode": "accent",
+        "derive": [
+          {
+            "t": 1.5716,
+            "dL": -0.044
+          }
+        ]
+      },
+      "labelRadius": null,
+      "source": {
+        "kind": "unlicensed-reference",
+        "master": "output/texture-gen/library/halo-01",
+        "file": [
+          "layer1.png",
+          "layer2.png"
+        ],
+        "operation": "photo variant + colour extraction",
+        "date": "2026-10-22",
+        "reference": "https://www.pinterest.com/pin/83668505573697830/",
+        "referenceSha256": "104fb6ca0c156d6eb25cd6e6402f0d0aef0fe09dfda151bc3828a1a94a757c44",
+        "generatedSha256": "52ec18a0e4c07128f3b4ea4c7c724401aaec79c1d76a992da895b58b8a6caa3c",
+        "prompt": "附图是一张彩胶唱片照片。\n\n请生成一张新的产品照片：和附图同一批次压出来的另一张唱片。材料、颜色和压片工艺完全相同，纹路的样子和附图一致，只是具体排布不同：深色和浅色区域的位置、走向都要换掉，不要照着附图摆。\n\n拍摄要求：\n- 严格正俯拍，相机正对中心孔，无透视，唱片是正圆，居中，直径约占画面边长的 92%。\n- 背景是均匀的纯中灰色。\n- 光线均匀漫射，没有高光、反光条和暗角；看不到沟槽。\n- 中心标签是完全空白的浅色哑光纸，没有文字或图案。\n- 没有手、封套、道具、文字或水印。"
       },
       "status": "draft",
       "bake": {
@@ -1118,6 +1252,46 @@
       }
     },
     {
+      "id": "split-smoke",
+      "family": "split",
+      "role": "layout",
+      "file": "split-smoke.webp",
+      "thumb": "thumbs/split-smoke.jpg",
+      "size": 1024,
+      "accents": 1,
+      "base": "#e69c03",
+      "colors": [
+        "#120619"
+      ],
+      "palette": {
+        "mode": "accent",
+        "derive": []
+      },
+      "labelRadius": null,
+      "source": {
+        "kind": "unlicensed-reference",
+        "master": "output/texture-gen/library/split-smoke",
+        "file": [
+          "layer1.png"
+        ],
+        "operation": "photo variant + colour extraction",
+        "date": "2026-10-23",
+        "reference": "https://www.pinterest.com/pin/321092648417153881/",
+        "referenceSha256": "4bea8afa427d98df53119bba3fde1e92df0263eaad99c0cdb0aa31b778dddd91",
+        "generatedSha256": "00f1f4e7565e8161d643f8cec9c078cf771c10214fe06f36aaa042fd693554a8",
+        "prompt": "附图是一张彩胶唱片照片。\n\n请生成一张新的产品照片：和附图同一批次压出来的另一张唱片。材料、颜色和压片工艺完全相同，纹路的样子和附图一致，只是具体排布不同：深色和浅色区域的位置、走向都要换掉，不要照着附图摆。\n\n拍摄要求：\n- 严格正俯拍，相机正对中心孔，无透视，唱片是正圆，居中，直径约占画面边长的 92%。\n- 背景是均匀的纯中灰色。\n- 光线均匀漫射，没有高光、反光条和暗角；看不到沟槽。\n- 中心标签是完全空白的浅色哑光纸，没有文字或图案。\n- 没有手、封套、道具、文字或水印。"
+      },
+      "status": "draft",
+      "bake": {
+        "crop": 1.0,
+        "floor": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    {
       "id": "starburst-04",
       "family": "starburst",
       "role": "effect",
@@ -1249,6 +1423,46 @@
       }
     },
     {
+      "id": "starburst-08",
+      "family": "starburst",
+      "role": "effect",
+      "file": "starburst-08.webp",
+      "thumb": "thumbs/starburst-08.jpg",
+      "size": 1024,
+      "accents": 1,
+      "base": "#dcccd7",
+      "colors": [
+        "#009897"
+      ],
+      "palette": {
+        "mode": "accent",
+        "derive": []
+      },
+      "labelRadius": null,
+      "source": {
+        "kind": "unlicensed-reference",
+        "master": "output/texture-gen/library/starburst-08",
+        "file": [
+          "layer1.png"
+        ],
+        "operation": "photo variant + colour extraction",
+        "date": "2026-10-22",
+        "reference": "https://www.pinterest.com/pin/1131599843892082449/",
+        "referenceSha256": "eb121f865a479e9713d7a05cf49bda45c1e1fcaeba53c6e2533329051f07e2bb",
+        "generatedSha256": "5f771ec7809c7b3e44154d9c7636ee741cce764e35e34a7c56f23145d3bce6cb",
+        "prompt": "附图是一张彩胶唱片照片。\n\n请生成一张新的产品照片：和附图同一批次压出来的另一张唱片。材料、颜色和压片工艺完全相同，纹路的样子和附图一致，只是具体排布不同：深色和浅色区域的位置、走向都要换掉，不要照着附图摆。\n\n拍摄要求：\n- 严格正俯拍，相机正对中心孔，无透视，唱片是正圆，居中，直径约占画面边长的 92%。\n- 背景是均匀的纯中灰色。\n- 光线均匀漫射，没有高光、反光条和暗角；看不到沟槽。\n- 中心标签是完全空白的浅色哑光纸，没有文字或图案。\n- 没有手、封套、道具、文字或水印。"
+      },
+      "status": "draft",
+      "bake": {
+        "crop": 1.0,
+        "floor": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    {
       "id": "swirl-02",
       "family": "swirl",
       "role": "layout",
@@ -1322,6 +1536,88 @@
         "referenceSha256": "35c74041f55853ecae4eacf0d56dc82b43a39fdc02a86dbf076a3e40bd07ad3a",
         "generatedSha256": "7840f9dfaa5409af9f7004e15efd74d0aaf8ef4fa3ce161b9d15cc8d87155429",
         "prompt": "附图是一张彩胶唱片照片。\n\n请生成一张新的产品照片：和附图同一批次压出来的另一张唱片。材料、颜色和压片工艺完全相同，纹路的样子和附图一致，只是具体排布不同。\n\n拍摄要求：\n- 严格正俯拍，相机正对中心孔，无透视，唱片是正圆，居中，直径约占画面边长的 92%。\n- 背景是均匀的纯中灰色。\n- 光线均匀漫射，没有高光、反光条和暗角；看不到沟槽。\n- 中心标签是完全空白的浅色哑光纸，没有文字或图案。\n- 没有手、封套、道具、文字或水印。"
+      },
+      "status": "draft",
+      "bake": {
+        "crop": 1.0,
+        "floor": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "id": "swirl-04",
+      "family": "swirl",
+      "role": "layout",
+      "file": "swirl-04.webp",
+      "thumb": "thumbs/swirl-04.jpg",
+      "size": 1024,
+      "accents": 1,
+      "base": "#ad83dd",
+      "colors": [
+        "#030204"
+      ],
+      "palette": {
+        "mode": "accent",
+        "derive": []
+      },
+      "labelRadius": null,
+      "source": {
+        "kind": "unlicensed-reference",
+        "master": "output/texture-gen/library/swirl-04",
+        "file": [
+          "layer1.png"
+        ],
+        "operation": "photo variant + colour extraction",
+        "date": "2026-10-22",
+        "reference": "https://www.pinterest.com/pin/350014202313247838/",
+        "referenceSha256": "d57c9a2a7b35b3d33f0d7a3387e4802c25d3d0a8926c64fbcf3839c66280ea3a",
+        "generatedSha256": "a861f55b2ecb9b7f76bd5fa2cb03c718ebbfeae2d26d5e0b605facfd089525a7",
+        "prompt": "附图是一张彩胶唱片照片。\n\n请生成一张新的产品照片：和附图同一批次压出来的另一张唱片。材料、颜色和压片工艺完全相同，纹路的样子和附图一致，只是具体排布不同：深色和浅色区域的位置、走向都要换掉，不要照着附图摆。\n\n拍摄要求：\n- 严格正俯拍，相机正对中心孔，无透视，唱片是正圆，居中，直径约占画面边长的 92%。\n- 背景是均匀的纯中灰色。\n- 光线均匀漫射，没有高光、反光条和暗角；看不到沟槽。\n- 中心标签是完全空白的浅色哑光纸，没有文字或图案。\n- 没有手、封套、道具、文字或水印。"
+      },
+      "status": "draft",
+      "bake": {
+        "crop": 1.0,
+        "floor": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "id": "swirl-05",
+      "family": "swirl",
+      "role": "layout",
+      "file": "swirl-05.webp",
+      "thumb": "thumbs/swirl-05.jpg",
+      "size": 1024,
+      "accents": 2,
+      "base": "#443da5",
+      "colors": [
+        "#f41e8e",
+        "#780911"
+      ],
+      "palette": {
+        "mode": "regions",
+        "derive": []
+      },
+      "labelRadius": null,
+      "source": {
+        "kind": "unlicensed-reference",
+        "master": "output/texture-gen/library/swirl-05",
+        "file": [
+          "layer1.png",
+          "layer2.png"
+        ],
+        "operation": "photo variant + colour extraction",
+        "date": "2026-10-22",
+        "reference": "https://www.pinterest.com/pin/648377677607559973/",
+        "referenceSha256": "82b7a6163bce552be4afb92b62d2b88e483cd58c7aaa7dacde00b8c26f19c07d",
+        "generatedSha256": "f8a096f660c1755b7028cf4b98dad379a0f5e9f0262a11cdb29f45dab82f7da9",
+        "prompt": "附图是一张彩胶唱片照片。\n\n请生成一张新的产品照片：和附图同一批次压出来的另一张唱片。材料、颜色和压片工艺完全相同，纹路的样子和附图一致，只是具体排布不同：深色和浅色区域的位置、走向都要换掉，不要照着附图摆。\n\n拍摄要求：\n- 严格正俯拍，相机正对中心孔，无透视，唱片是正圆，居中，直径约占画面边长的 92%。\n- 背景是均匀的纯中灰色。\n- 光线均匀漫射，没有高光、反光条和暗角；看不到沟槽。\n- 中心标签是完全空白的浅色哑光纸，没有文字或图案。\n- 没有手、封套、道具、文字或水印。"
       },
       "status": "draft",
       "bake": {
