@@ -3126,6 +3126,12 @@ window.recordMockup={
     const size=(v,d)=>Math.min(4096,Math.max(64,Math.round(v||d)));
     const w=size(opts.width,state.outW),h=size(opts.height,state.outH),blob=await renderToBlob(w,h);
     return{width:w,height:h,bytes:blob.size,dataUrl:await toDataUrl(blob)}},
+  // Turns a disc photo into a label texture with the record library's automatic crop: the spindle hole at the
+  // centre, the label edge at the sides. adjust = {zoom, rot, dx, dy} on top of it (dx / dy in source pixels).
+  async labelCrop(src,adjust={}){const img=await createImageBitmap(await(await fetch(src)).blob());
+    const d=detectLabel(img),c={...d,cx:d.cx+(adjust.dx||0),cy:d.cy+(adjust.dy||0),zoom:adjust.zoom??1,rot:adjust.rot??0};
+    const blob=await new Promise(r=>renderLabel(img,c,1024).toBlob(r,'image/png'));
+    return{auto:d.auto,cx:Math.round(c.cx),cy:Math.round(c.cy),radius:Math.round(c.r*c.zoom),rot:c.rot,width:img.width,height:img.height,dataUrl:await toDataUrl(blob)}},
   // Renders spec.animation as an MP4 or GIF. onProgress(done, total) is called after each frame;
   // encoder (MP4 only) is auto | software | hardware.
   async renderVideo(opts={}){await restored;

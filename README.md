@@ -84,7 +84,9 @@ To start your own scene:
 node cli/record-mockup.mjs init -o output/spec.json
 ```
 
-Keep the images next to the spec and reference them by relative path. Register the source of every custom image under `meta.assets.<slot>.source`: `user`, `generated`, `typeset`, `composite` or `sample`; images taken from the editor's album lookup are recorded as `fetched`. For generated images, also record the prompt.
+Keep the images next to the spec and reference them by relative path. Register the source of every custom image under `meta.assets.<slot>.source`: `user`, `generated`, `typeset`, `composite` or `sample`; images taken from the album lookup (the editor's or `library pick`) are recorded as `fetched`, and `pick` registers them for you.
+
+To mock up a released album, start from the album lookup: `library search --artist … --album …` finds the album, `library releases <group-id>` lists its pressings, and `library pick <release-id> spec.json` fills the spec with the front, back and labels cropped on the spindle hole, plus disc count, jacket type and tracks per side. See `cli/README.md`. For generated images, also record the prompt.
 
 ```json
 {
@@ -148,7 +150,7 @@ python3 -m http.server 8000 --bind 127.0.0.1
 
 Then open `http://127.0.0.1:8000`.
 
-In the browser, three.js (and, for video export, Mediabunny and gifenc) load from pinned CDN versions, so the page needs network access. The CLI serves them from the locally installed packages instead. The album lookup calls musicbrainz.org and coverartarchive.org directly, only when you search; fetched images keep their owners' copyright and are for previews only. Google Fonts are still requested; if that fails, system fonts are used and type may look different. The CLI briefly listens on the loopback address, so the environment must allow a local server and a browser to start.
+In the browser, three.js (and, for video export, Mediabunny and gifenc) load from pinned CDN versions, so the page needs network access. The CLI serves them from the locally installed packages instead. The album lookup (in the editor and the `library` command) calls musicbrainz.org and coverartarchive.org directly, only when you search; fetched images keep their owners' copyright and are for previews only. Google Fonts are still requested; if that fails, system fonts are used and type may look different. The CLI briefly listens on the loopback address, so the environment must allow a local server and a browser to start.
 
 ## Rebuilding the README images
 
