@@ -1543,16 +1543,19 @@ varying vec2 vLqPos;varying vec3 vLqTx,vLqTy;${FILL_GLSL}\n`+sh.fragmentShader
       lqA=inA*.97;lqRough=.9;lqTilt=.5*exp(-max(d,0.)/.08)*inA;lqOut=-normalize(lqRight*g.x+lqDown*g.y+1e-6);
     }else{
       // Carrier: the whole cavity, or below the level with air above. Cloudier is more opaque.
-      float dl=q.y-lqLevel,inA=smoothstep(-lqPx,lqPx,dl)*cav,rimA=exp(-max(dl,0.)/.06);
+      // The surface climbs the walls a little (meniscus), so a part-filled cavity has a curved line.
+      float climb=.45*(exp(-(lqR-lqInner)/.5)+exp(-(lqOuter-lqR)/.5));
+      float dl=q.y-lqLevel+climb,inA=smoothstep(-lqPx,lqPx,dl)*cav,rimA=exp(-max(dl,0.)/.06);
       vec3 cA=lqC1*(1.-.3*rimA);float aA=inA*mix(mix(.28,.92,lqCloud),.95,rimA);
       // Light phase: thin and see-through at its edge, thick and milky inside, with a glossy rim.
       float db=-lqBlobSD(q),inB=smoothstep(-lqPx,lqPx,db)*inA;
-      vec3 cB=lqC2*mix(.8,1.04,smoothstep(0.,.3,db));float aB=mix(.55,.96,smoothstep(0.,.25,db));
+      // A blob is a flattened pillow: thin at the edge (the liquid shows through), domed inside.
+      vec3 cB=lqC2*mix(.78,1.04,smoothstep(0.,.35,db));float aB=mix(.5,.97,smoothstep(0.,.3,db));
       lqCol=mix(cA,cB,inB);lqA=mix(aA,aB*inA,inB);
       // The rim's normal from the distance field's screen-space slope, turned back into the gravity frame.
       mat2 J=mat2(dFdx(q),dFdy(q));float det=determinant(J);
       vec2 gq=abs(det)>1e-12?inverse(transpose(J))*vec2(dFdx(db),dFdy(db)):vec2(0.);
-      float tB=.9*exp(-max(db,0.)/.1)*inB;
+      float tB=(.55*exp(-max(db,0.)/.07)+.45*exp(-max(db,0.)/.35))*inB;
       if(tB>0.){lqTilt=tB;vec2 o=-normalize(gq+1e-9);lqOut=lqRight*o.x+lqDown*o.y;}
       float tA=.6*rimA*inA;if(tA>lqTilt){lqTilt=tA;lqOut=-lqDown;}
       // Air bubbles: one per cell at most, more of them near the top, only in the carrier.
