@@ -25,7 +25,7 @@
 
 1. **Cloudflare Pages 项目** `record-mockup`：生产分支设为 `main`。
 2. **Analytics Engine**：在 Cloudflare 后台 Workers & Pages → Analytics Engine 里启用（免费额度够用）。数据集在第一次写入时自动创建，绑定写在 `wrangler.toml` 里。
-3. **自定义域名**：在 Pages 项目 → Custom domains 添加 `recordmockup.com`，再按提示到域名注册商（Spaceship）把记录改为 CNAME 指向 `record-mockup.pages.dev`。切换完成后，删掉 `.github/workflows/pages.yml` 里的 `github-pages` 任务。
+3. **自定义域名**：`recordmockup.com` 和 `www.recordmockup.com` 已加到 Pages 项目。域名在 Spaceship 注册，nameserver 指向 Cloudflare（`louis` / `miki.ns.cloudflare.com`），DNS 记录在 Cloudflare 管理，两个名字都 CNAME 到 `record-mockup.pages.dev`。
 4. **Web Analytics**：后台 Web Analytics → Add a site → 填 `recordmockup.com`，选手动安装（JS snippet），把其中的 token 填到 GitHub 仓库变量 `CF_WEB_ANALYTICS_TOKEN`（Settings → Secrets and variables → Actions → Variables）。
 5. GitHub 仓库 secrets `CLOUDFLARE_API_TOKEN`、`CLOUDFLARE_ACCOUNT_ID` 预览部署已经在用，不用再加。查询数据另需一个带 **Account Analytics: Read** 权限的 token。
 

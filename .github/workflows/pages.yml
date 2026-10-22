@@ -2,7 +2,6 @@
 # (the /api/log error reports) to the Cloudflare Pages production branch.
 # Needs repository secrets CLOUDFLARE_API_TOKEN (Cloudflare Pages: Edit) and CLOUDFLARE_ACCOUNT_ID, and the
 # repository variable CF_WEB_ANALYTICS_TOKEN for the Web Analytics beacon (optional).
-# The github-pages job keeps the old host current until recordmockup.com points at Cloudflare; remove it then.
 name: Deploy site
 
 on:
@@ -20,8 +19,6 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: pages
@@ -49,22 +46,3 @@ jobs:
         run: |
           npx -y wrangler@4.148.0 pages deploy --branch=main --commit-hash="$GITHUB_SHA" --commit-dirty=true
 
-  github-pages:
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - run: node site/build.mjs
-        env:
-          SITE_RELEASE: ${{ github.sha }}
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: _site
-      - id: deployment
-        uses: actions/deploy-pages@v4
