@@ -1220,8 +1220,18 @@ const stockInner=new THREE.MeshStandardMaterial({color:0xb9b3a4,roughness:.95});
 function applyFinish(){const f=state.finish;for(const m of[frontMat,backMat,spineMat,innerLeftMat,innerRightMat,insertFrontMat,insertBackMat]){m.roughness=f==='gloss'?.26:f==='matte'?.92:.6;m.clearcoat=f==='gloss'?.55:.03;m.clearcoatRoughness=f==='gloss'?.1:.4;m.bumpScale=f==='gloss'?.12:.35}}
 
 // Each disc gets its own face/edge materials, so a 2LP can mix black and coloured vinyl.
-function vinylMats(){return{face:new THREE.MeshPhysicalMaterial({color:0x0b0b0c,metalness:0,roughness:1,anisotropy:.9,envMap:studioEnv,envMapIntensity:.32,side:THREE.FrontSide}),
-  edge:new THREE.MeshPhysicalMaterial({color:0x0b0b0c,metalness:0,roughness:.3,envMap:studioEnv,envMapIntensity:.3})}}
+function vinylMats(){const face=new THREE.MeshPhysicalMaterial({color:0x0b0b0c,metalness:0,roughness:1,anisotropy:.9,envMap:studioEnv,envMapIntensity:.32,side:THREE.FrontSide});
+  // See-through vinyl is darker and denser towards its rim, where light crosses more of the disc, with a
+  // thin outline at the very edge. shellEdge is 0 for opaque discs.
+  const edge={value:0};face.userData.shellEdge=edge;
+  face.onBeforeCompile=sh=>{sh.uniforms.shellEdge=edge;
+    sh.vertexShader='varying float vShellR;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\n  vShellR=length(position.xy);');
+    sh.fragmentShader='uniform float shellEdge;varying float vShellR;\n'+sh.fragmentShader.replace('#include <alphamap_fragment>',`#include <alphamap_fragment>
+  float shE=pow(smoothstep(${LP.r}-1.,${LP.r},vShellR),1.5),shO=smoothstep(${LP.r}-.08,${LP.r}-.01,vShellR);
+  diffuseColor.rgb*=1.-shellEdge*(.38*shE+.35*shO);
+  diffuseColor.a+=(1.-diffuseColor.a)*shellEdge*(.55*shE+.6*shO);`)};
+  face.customProgramCacheKey=()=>'vinyl-face-v1';
+  return{face,edge:new THREE.MeshPhysicalMaterial({color:0x0b0b0c,metalness:0,roughness:.3,envMap:studioEnv,envMapIntensity:.3})}}
 const vinyl1=vinylMats(),vinyl2=vinylMats();
 const labelMatA=new THREE.MeshStandardMaterial({map:tex.labelA,roughness:.62});
 const labelMatB=new THREE.MeshStandardMaterial({map:tex.labelB,roughness:.62});
@@ -1401,6 +1411,9 @@ function applyVinylTo(i,mats){
   for(const m of[mats.face,mats.edge]){m.color.set(base).multiplyScalar(VINYL_LIFT);m.transparent=see;m.opacity=1-clear;m.depthWrite=!see;m.needsUpdate=true}
   // A see-through disc shows its far face through the near one, so the inside of each face is drawn too.
   mats.face.side=see?THREE.DoubleSide:THREE.FrontSide;
+  // The rim is seen through the disc's whole width: darker and nearly opaque.
+  mats.face.userData.shellEdge.value=see?1:0;
+  if(see){mats.edge.color.multiplyScalar(.7);mats.edge.opacity=1-clear*.3}
   mats.face.envMapIntensity=black?.32:.22;
   const g=grooveMaps(state[i===2?'tracks2':'tracks']);
   if(mats.face.roughnessMap!==g.rough){mats.face.roughnessMap=g.rough;mats.face.anisotropyMap=g.aniso;mats.face.needsUpdate=true}
@@ -1534,6 +1547,8 @@ varying vec2 vLqPos;varying vec3 vLqTx,vLqTy;${FILL_GLSL}\n`+sh.fragmentShader
   vec3 lqCol=vec3(0.);vec2 lqOut=vec2(0.),lqGlitN=vec2(0.);
   if(lqType>0){
     float cav=smoothstep(lqInner,lqInner+.05,lqR)*(1.-smoothstep(lqOuter-.05,lqOuter,lqR)),e=.03;
+    // The cavity's walls: a thin dark line each, where the shell's sealed seam catches the light.
+    float wall=exp(-abs(lqR-lqOuter)/max(.025,lqPx))+exp(-abs(lqR-lqInner)/max(.025,lqPx));
     if(lqType==2){
       // Dry fill: packed grains, rough and nearly opaque, two tones in clumps plus per-grain speckle.
       float h=lqCarrier(q);vec2 g=vec2(lqCarrier(q+vec2(e,0.))-h,lqCarrier(q+vec2(0.,e))-h)/e;
@@ -1567,6 +1582,7 @@ varying vec2 vLqPos;varying vec3 vLqTx,vLqTy;${FILL_GLSL}\n`+sh.fragmentShader
       lqCol=mix(lqCol,lqC1*.5+.5,inside*.5);lqA=mix(lqA,.12,inside);lqA=max(lqA,.85*ring);lqCol=mix(lqCol,vec3(1.),.35*ring);
       float tb=.9*exp(-abs(bd)/.04)*on;if(tb>lqTilt){lqTilt=tb;vec2 dq=normalize(f-c+1e-6);lqOut=lqRight*dq.x+lqDown*dq.y;}
     }
+    lqCol=mix(lqCol,lqC1*.45,.6*wall*(1.-lqA*.3));lqA=max(lqA,.55*wall);
   }
   if(lqGlitter>0.){
     // Flakes ~0.6 mm, each with its own tilt; far away they fade instead of flickering.
