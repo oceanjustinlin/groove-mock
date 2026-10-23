@@ -91,7 +91,7 @@ WHERE index1 = 'ready' AND double13 = 0 AND blob6 IN ('recordmockup.com', 'www.r
 
 ## 报错和耗时
 
-Analytics Engine 用 SQL API 查询，列名是位置编号，对应关系见 `functions/api/log.js` 顶部的注释。数据保留 90 天。
+Analytics Engine 用 SQL API 查询，列名是位置编号，对应关系见 `functions/api/log.js` 顶部的注释。[Cloudflare 当前文档](https://developers.cloudflare.com/analytics/analytics-engine/limits/)称数据保留三个月。
 
 ```bash
 curl "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/analytics_engine/sql" \

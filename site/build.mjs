@@ -88,6 +88,22 @@ await fs.copyFile(path.join(ROOT, 'site', 'rum.js'), path.join(OUT, 'rum.js'));
 // Vinyl pattern masks, manifest and picker thumbnails, fetched by the page at runtime.
 await fs.cp(path.join(ROOT, 'vinyl-masks'), path.join(OUT, 'vinyl-masks'), {recursive: true});
 await fs.copyFile(path.join(ROOT, 'docs', 'images', 'social-preview.png'), path.join(OUT, 'social-preview.png'));
+// Small, crawlable use-case pages sit alongside the interactive editor.
+await fs.cp(path.join(ROOT, 'site', 'marketing.css'), path.join(OUT, 'marketing.css'));
+await fs.mkdir(path.join(OUT, 'images'), {recursive: true});
+for (const image of ['hero.jpg', 'gatefold-open.jpg', 'back-cover.jpg', 'vinyl-variants.jpg', 'vinyl-patterns.jpg']) {
+  await fs.copyFile(path.join(ROOT, 'docs', 'images', image), path.join(OUT, 'images', image));
+}
+for (const media of ['demo.mp4', 'demo-poster.jpg', 'hero-reel.mp4', 'hero-reel.jpg']) {
+  await fs.copyFile(path.join(ROOT, 'docs', 'marketing', media), path.join(OUT, 'images', media));
+}
+for (const slug of ['for-artists', 'examples', 'privacy']) {
+  const source = await fs.readFile(path.join(ROOT, 'site', 'pages', `${slug}.html`), 'utf8');
+  const page = source.replaceAll('__SITE_URL__', SITE_URL)
+    .replaceAll('__ROBOTS_META__', PREVIEW ? '<meta name="robots" content="noindex,nofollow">' : '');
+  await fs.mkdir(path.join(OUT, slug), {recursive: true});
+  await fs.writeFile(path.join(OUT, slug, 'index.html'), page);
+}
 if (PREVIEW) {
   await fs.writeFile(path.join(OUT, 'robots.txt'), 'User-agent: *\nDisallow: /\n');
   // Cloudflare Pages reads _headers; the header also covers files that carry no robots meta.
@@ -96,6 +112,7 @@ if (PREVIEW) {
   await fs.writeFile(path.join(OUT, 'robots.txt'), `User-agent: *\nAllow: /\n\nSitemap: ${SITE_URL}sitemap.xml\n`);
   await fs.writeFile(path.join(OUT, 'sitemap.xml'),
     `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
-    `  <url><loc>${SITE_URL}</loc><lastmod>${new Date().toISOString().slice(0, 10)}</lastmod></url>\n</urlset>\n`);
+    ['','for-artists/','examples/','privacy/'].map(slug => `  <url><loc>${SITE_URL}${slug}</loc><lastmod>${new Date().toISOString().slice(0, 10)}</lastmod></url>\n`).join('') +
+    `</urlset>\n`);
 }
 console.log(`Built ${path.relative(ROOT, OUT)}/ for ${SITE_URL}${PREVIEW ? ' (preview, noindex)' : ''}`);

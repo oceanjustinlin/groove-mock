@@ -1,0 +1,89 @@
+{
+  "version": 1,
+  "jacket": {
+    "type": "single",
+    "finish": "satin"
+  },
+  "records": {
+    "sleeve": {
+      "on": false
+    },
+    "count": 2,
+    "disc1": {
+      "vinyl": "color",
+      "color": "#f4c430",
+      "pattern": {
+        "id": "starburst-06",
+        "color": "#e889b5"
+      },
+      "recordOut": 30
+    },
+    "disc2": {
+      "vinyl": "color",
+      "color": "#e889b5",
+      "pattern": {
+        "id": "blob-03",
+        "color": "#f4c430"
+      },
+      "recordOut": 52,
+      "sameAsDisc1": false
+    }
+  },
+  "insert": {
+    "out": 0
+  },
+  "obi": {
+    "on": false
+  },
+  "wrap": {
+    "on": true
+  },
+  "sticker": {
+    "on": true,
+    "color": "cover",
+    "template": "exclusive",
+    "lines": [
+      "SAMPLE STORE",
+      "EXCLUSIVE",
+      "LIMITED TO 500"
+    ]
+  },
+  "number": {
+    "on": false
+  },
+  "camera": {
+    "view": "quarter",
+    "zoom": 1.05
+  },
+  "output": {
+    "background": "#ece9e2",
+    "width": 1600,
+    "height": 900
+  },
+  "animation": {
+    "preset": "swing",
+    "duration": 6.8,
+    "fps": 30,
+    "angle": 25,
+    "direction": "left",
+    "aspect": "16:9",
+    "size": 720
+  },
+  "meta": {
+    "title": "Landing hero reel, variant u09 (sample artwork)",
+    "assets": {
+      "front": {
+        "source": "composite",
+        "note": "Unsplash photo by Gautam Das, https://unsplash.com/photos/close-up-of-a-pink-lotus-flowers-center-_Cp-4Eo6F6k (Unsplash License), title typeset by tools/typeset-hero-covers.mjs"
+      },
+      "spine": {
+        "source": "composite",
+        "note": "Unsplash photo by Gautam Das, https://unsplash.com/photos/close-up-of-a-pink-lotus-flowers-center-_Cp-4Eo6F6k (Unsplash License), title typeset by tools/typeset-hero-covers.mjs"
+      }
+    }
+  },
+  "images": {
+    "front": "art/u09-front.png",
+    "spine": "art/u09-spine.png"
+  }
+}

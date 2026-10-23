@@ -676,7 +676,7 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
               <div class="export-action"><button class="primary" id="png-btn" data-export-png type="button"><span>导出 PNG</span></button><span class="export-sum" id="png-sum"></span></div>
               <div class="export-action"><button class="primary" id="video-btn" type="button">导出视频</button><span class="export-sum" id="video-sum"></span></div>
             </div>
-            <p class="note">图片和视频只在你的浏览器里处理，不会上传。顶栏的导出按钮和 ⌘/Ctrl+E 按这里的设置直接导出 PNG。</p>
+            <p class="note">上传的图片和导出只在浏览器里处理，不会上传给本站。曲库图片的版权归原权利方；公开或商业使用前请取得所需许可。用于预售时，请核对模型图与实际商品一致。<a href="privacy/" target="_blank" rel="noopener">隐私与版权说明</a></p>
           </section>
         </div>
       </div>
@@ -760,6 +760,8 @@ const EN={
   '调整设置面板宽度':'Resize settings panel','素材':'Assets','设置分页':'Settings sections','唱片':'Records','插页':'Insert','包装':'Packaging',
   '曲库':'Record library','曲库搜索':'Record library search','艺人':'Artist','专辑名':'Album','搜索':'Search',
   '搜到专辑后选一个版本（黑胶优先，其他版本只取图片），再给每张图选用途。图片版权归原权利方，仅供预览。':'Find an album, pick a release (vinyl first; other formats lend images only), then choose where each image goes. Images belong to their rights holders and are for preview only.',
+  '上传的图片和导出只在浏览器里处理，不会上传给本站。曲库图片的版权归原权利方；公开或商业使用前请取得所需许可。用于预售时，请核对模型图与实际商品一致。':'Uploaded images and exports are processed in your browser, not sent to this site. Library images belong to their rights holders; obtain the required permission before public or commercial use. For preorders, check that the mockup matches the actual product.',
+  '隐私与版权说明':'Privacy & copyright',
   '设置':'Settings','封套':'Jacket','类型':'Type','单开':'Single','双开':'Gatefold','示例':'Sample',
   '上传封套正面':'Upload jacket front','上传封套背面':'Upload jacket back','上传书脊':'Upload spine',
   '背面':'Back','书脊':'Spine','上传内页左':'Upload inner left','上传内页右':'Upload inner right','内页左':'Inner left','内页右':'Inner right',
@@ -1258,7 +1260,7 @@ const maskCache=new Map(),maskDone=new Set();
 function loadMask(id){
   const m=maskById(id);
   if(m.fill){maskDone.add(id);return Promise.resolve(null)}
-  if(!maskCache.has(id))maskCache.set(id,(m.family==='split'?Promise.resolve(splitMask(id)):fetch('vinyl-masks/'+m.file).then(r=>{if(!r.ok)throw new Error(`HTTP ${r.status}`);return r.blob()}).then(b=>createImageBitmap(b,{colorSpaceConversion:'none',premultiplyAlpha:'none'}))
+  if(!maskCache.has(id))maskCache.set(id,(!m.file?Promise.resolve(splitMask(id)):fetch('vinyl-masks/'+m.file).then(r=>{if(!r.ok)throw new Error(`HTTP ${r.status}`);return r.blob()}).then(b=>createImageBitmap(b,{colorSpaceConversion:'none',premultiplyAlpha:'none'}))
     .then(bmp=>bmp.height>bmp.width?unstackMask(bmp,m.accents):bmp))
     .then(img=>{maskDone.add(id);return img},e=>{maskCache.delete(id);throw e}));
   return maskCache.get(id)}
@@ -1849,7 +1851,7 @@ function placeNumber(){
   else if(p==='front'){if(isGate()){coverFront.add(numAnchor);numAnchor.position.set(0,0,J.board/2+eps)}else{scene.add(numAnchor);numAnchor.position.set(0,0,J.d/2+eps)}}
   else if(p==='obi'){const {F,eps:oe}=obiLayout();obi.add(numAnchor);numAnchor.position.set(-J.w/2+F/2,0,frontZ()+oe+eps)}
   else{sticker.add(numAnchor);const k=1/state.stickerSize;numAnchor.scale.set(k,k,1);numAnchor.position.set(0,0,.03)}
-  numAnchor.visible=state.numOn;
+  numAnchor.visible=state.numOn&&!discOnly();
   numMesh.position.set(state.numX,state.numY,0);numMesh.rotation.z=THREE.MathUtils.degToRad(state.numRot);numMesh.scale.set(state.numSize*numAspect,state.numSize,1)}
 
 // ---------- Pose ----------
@@ -2490,7 +2492,7 @@ $('bg-color').addEventListener('input',e=>{state.bgColor=e.target.value;state.bg
 $('sleeve-color').addEventListener('input',e=>{state.sleeveColor=e.target.value;sleeveMat.color.set(tex.sleeve?'#ffffff':e.target.value)});
 field('vinyl-color','vinylColor');field('vinyl2-color','vinyl2Color');field('bg-color','bgColor');field('sleeve-color','sleeveColor');
 // Pattern panel: a thumbnail picker per disc, then only the controls the pattern's palette mode uses.
-const FAMILY={liquid:['液体','Liquid'],sand:['沙','Sand'],glitter:['亮片','Glitter'],split:['分色','Split'],splatter:['泼溅','Splatter'],starburst:['爆发','Starburst'],blob:['色块','Blob'],pinwheel:['风车','Pinwheel'],ripple:['波纹','Ripple'],swirl:['旋涡','Swirl'],smoke:['烟雾','Smoke'],marble:['大理石','Marble'],tiedye:['扎染','Tie-dye'],ghostly:['云雾','Ghostly']};
+const FAMILY={liquid:['液体','Liquid'],sand:['沙','Sand'],glitter:['亮片','Glitter'],split:['分色','Split'],splatter:['泼溅','Splatter'],starburst:['爆发','Starburst'],blob:['色块','Blob'],pinwheel:['风车','Pinwheel'],ripple:['波纹','Ripple'],swirl:['旋涡','Swirl'],smoke:['烟雾','Smoke'],marble:['大理石','Marble'],tiedye:['扎染','Tie-dye'],ghostly:['云雾','Ghostly'],halo:['光环','Halo']};
 // The palette mode (split / main + accent / tonal) stays internal: the controls below already follow it.
 const patternLabel=m=>m?`${tr(...(FAMILY[m.family]??[m.family,m.family]))} · ${m.id}`:tr('纯色','Solid');
 const splitThumbs=new Map();

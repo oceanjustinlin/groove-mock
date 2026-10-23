@@ -1,0 +1,83 @@
+{
+  "version": 1,
+  "jacket": {
+    "type": "single",
+    "finish": "satin"
+  },
+  "records": {
+    "sleeve": {
+      "on": false
+    },
+    "count": 2,
+    "disc1": {
+      "vinyl": "color",
+      "color": "#c46a32",
+      "pattern": {
+        "id": "smoke-01"
+      },
+      "recordOut": 30
+    },
+    "disc2": {
+      "vinyl": "color",
+      "color": "#e7c39a",
+      "pattern": {
+        "id": "split-half",
+        "color": "#c46a32"
+      },
+      "recordOut": 52,
+      "sameAsDisc1": false
+    }
+  },
+  "insert": {
+    "out": 0
+  },
+  "obi": {
+    "on": false
+  },
+  "wrap": {
+    "on": false
+  },
+  "sticker": {
+    "on": true,
+    "color": "cover",
+    "template": "first-press"
+  },
+  "number": {
+    "on": false
+  },
+  "camera": {
+    "view": "quarter",
+    "zoom": 1.05
+  },
+  "output": {
+    "background": "#ece9e2",
+    "width": 1600,
+    "height": 900
+  },
+  "animation": {
+    "preset": "swing",
+    "duration": 6.8,
+    "fps": 30,
+    "angle": 25,
+    "direction": "left",
+    "aspect": "16:9",
+    "size": 720
+  },
+  "meta": {
+    "title": "Landing hero reel, variant u04 (sample artwork)",
+    "assets": {
+      "front": {
+        "source": "composite",
+        "note": "Unsplash photo by Wolfgang Hasselmann, https://unsplash.com/photos/rolling-sand-dunes-in-desert-landscape-pVr6wvUneMk (Unsplash License), title typeset by tools/typeset-hero-covers.mjs"
+      },
+      "spine": {
+        "source": "composite",
+        "note": "Unsplash photo by Wolfgang Hasselmann, https://unsplash.com/photos/rolling-sand-dunes-in-desert-landscape-pVr6wvUneMk (Unsplash License), title typeset by tools/typeset-hero-covers.mjs"
+      }
+    }
+  },
+  "images": {
+    "front": "art/u04-front.png",
+    "spine": "art/u04-spine.png"
+  }
+}
