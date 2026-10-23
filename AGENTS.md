@@ -41,6 +41,7 @@ cd cli && npm install
 
 | 想做的事 | 字段 |
 |---|---|
+| 7 寸单曲 | `format: "7in"`（也接受 `7`）：封套 184 mm、唱片 Ø175 mm、标签 Ø90 mm、内袋和插页 178 mm，转速 45。默认 `12in`。`records.centerHole: "large"` 换成 Ø38 mm 大孔（美式 45 转），标签图中间这一圈会被挖掉。单开、双开、2 张、内袋、插页、塑封、Obi、贴纸、编号都能用 |
 | 换封面、背面、书脊 | `images.front` / `images.back` / `images.spine` |
 | 双开及内页 | `jacket.type: "gatefold"`，`images.innerLeft` / `innerRight`，`jacket.gateOpen` 为 0–180 |
 | 2LP | `records.count: 2`，`records.disc2.*`，标签用 `images.labelC` / `labelD`。单开时两张叠在同一个口袋；双开时按 `records.layout` 分装：`split`（默认）左右两扇各装一张，第 2 张在左扇（封面）里，打开后向左抽出；`stacked` 两张叠在右扇。第 2 张默认沿用第 1 张的胶色和纹路（`records.disc2.sameAsDisc1: true`）；写了 `disc2` 的 `vinyl` / `color` / `transparency` / `pattern` 就视为分别设置 |
@@ -54,7 +55,7 @@ cd cli && npm install
 | 塑封、贴纸、Obi | `wrap.*`、`sticker.*`、`obi.*`，图片为 `images.sticker` / `images.obi` |
 | 贴纸模板 | `sticker.template` 选模板库里的预设（可选值见 `schema`），`sticker.lines` 从上到下写每行文字（不写用默认，空字符串去掉该行），`sticker.color` 配色（`cover` 从封面取色）。用模板时形状由模板决定，`images.sticker` 和 `sticker.shape` 不生效。方括号里的默认文字是占位，要换成真实信息 |
 | 限量编号 | `number.current` / `total` / `format` / `place` / `finish` / `font`，自定义字体用 `number.fontFile` |
-| 构图 | `camera.view`：quarter / front / side，再用 `zoom`、`azimuth`、`elevation` 微调，用 `panX` / `panY`（mm）平移画面中心；拍背面用 `view: front` + `azimuth: 180` + `panX: -90` |
+| 构图 | `camera.view`：quarter / front / side，再用 `zoom`、`azimuth`、`elevation` 微调，用 `panX` / `panY`（mm）平移画面中心；拍背面用 `view: front` + `azimuth: 180` + `panX: -90`（7 寸用 `-53`） |
 | 输出 | `output.width` / `height`（px，最大 4096），`output.background`：`"transparent"` 或 `#rrggbb` |
 | 视频 / 动图 | `animation.preset`：`turntable` 转一整圈 / `swing` 左右摆 `angle` 度（不露背面）/ `spin` 唱片自转（标签要露出来）/ `gatefold` 双开封面打开再合上（开到 `jacket.gateOpen`，为 0 时 160°）/ `pull` 内袋和唱片抽出再推回（抽到 `sleeveOut` / `recordOut`，都为 0 时用常见值）；`direction` 只用于 turntable 和 swing，`duration`（秒），`aspect`：`16:9` / `1:1` / `9:16`，`size` 短边 px。用 `video spec.json -o x.mp4`（或 `.gif`）出片，构图沿用 `camera.*`，镜头自动拉远到整段不出画。网页工作台的 ▶ 播放同一段动画 |
 | 素材来源 | `meta.assets.<贴图位>.source`，渲染器不读，`render` 会在结果的 `assets` 里汇总 |
@@ -75,4 +76,5 @@ cd cli && npm install
 - 转台会转到背面，没给 `images.back` 时出现的是示例图；没有背面素材就用 `animation.preset: "swing"`。
 - 检查视频时不要看第一帧就算数：GIF 和 MP4 都要抽几帧看（比如 0、1/4、1/2、3/4 处），确认转到侧面和背面时没有穿帮。
 - 液体胶的色块会往上浮一些；唱片自转时液体跟着唱片一起转，只有轻微晃动。2LP 的两张即使样式相同，分布也不一样。液体和沙在封套里看不见，要把唱片抽出来或者用 `scene.mode: "disc"`。
+- 换成 `format: "7in"` 时，spec 里没写的贴纸位置和尺寸、编号位置和字高、Obi 宽度按封套等比缩小（×0.586）；写了的值按原样用，是 7 寸封套上的 mm。镜头取景也按封套缩放，所以 7 寸和 12 寸出图时画面里的大小差不多，看起来不会更小。
 - 批量出编号图：`node cli/record-mockup.mjs numbers spec.json --from 1 --to 50 --dir out/`。

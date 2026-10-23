@@ -340,7 +340,7 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
 
 <div class="app">
   <header class="bar">
-    <div class="brand"><h1>Record Mockup</h1><span class="spec">12″ LP · 封套 314 × 314 mm · 唱片 Ø302 mm</span></div>
+    <div class="brand"><h1>Record Mockup</h1><span class="spec" id="brand-spec">12″ LP · 封套 314 × 314 mm · 唱片 Ø302 mm</span></div>
     <div class="views" role="group" aria-label="视角">
       <button class="chip" data-view="quarter" aria-pressed="true">斜侧</button>
       <button class="chip" data-view="front" aria-pressed="false">正面</button>
@@ -412,6 +412,9 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
           <p class="note disc-note">只看唱片时，这一页的内容不显示。<button class="chip" type="button" data-disc-exit>显示完整包装</button></p>
           <section class="group">
             <h2>封套 <small id="jacket-spec">单开 · 书脊 4 mm</small></h2>
+            <div class="row"><span class="lbl">规格</span>
+              <div class="seg" id="format"><button data-v="12in" aria-pressed="true">12″ LP</button><button data-v="7in" aria-pressed="false">7″ 单曲</button></div>
+            </div>
             <div class="row"><span class="lbl">类型</span>
               <div class="seg" id="jacket-type"><button data-v="single" aria-pressed="true">单开</button><button data-v="gatefold" aria-pressed="false">双开</button></div>
             </div>
@@ -435,7 +438,7 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
         </div>
         <div class="page" id="page-records" data-page="records" role="tabpanel" aria-labelledby="tab-records" hidden>
           <section class="group">
-            <h2>唱片与内袋 <small>33⅓ RPM · 标签 Ø100</small></h2>
+            <h2>唱片与内袋 <small id="records-spec">33⅓ RPM · 标签 Ø100</small></h2>
             <label class="switch"><input type="checkbox" id="disc-only">只看唱片</label>
             <p class="note" id="disc-only-note" hidden>只显示唱片本体（盘面和标签）；封套、内袋、插页、塑封、Obi、贴纸和编号都不显示，关掉后原样恢复。</p>
             <div class="row" id="disc-show-row" hidden><span class="lbl">展示</span>
@@ -443,6 +446,9 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
             </div>
             <div class="row"><span class="lbl">数量</span>
               <div class="seg" id="lp-count"><button data-v="1" aria-pressed="true">单 LP</button><button data-v="2" aria-pressed="false">2LP</button></div>
+            </div>
+            <div class="row" id="hole-row" hidden><span class="lbl">中孔</span>
+              <div class="seg" id="center-hole"><button data-v="small" aria-pressed="true">小孔 7 mm</button><button data-v="large" aria-pressed="false">大孔 38 mm</button></div>
             </div>
             <div class="row pkg-only" id="lp-layout-row" hidden><span class="lbl">分装</span>
               <div class="seg" id="lp-layout"><button data-v="split" aria-pressed="true">左右各一张</button><button data-v="stacked" aria-pressed="false">同一口袋</button></div>
@@ -531,7 +537,7 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
         <div class="page" id="page-insert" data-page="insert" role="tabpanel" aria-labelledby="tab-insert" hidden>
           <p class="note disc-note">只看唱片时，这一页的内容不显示。<button class="chip" type="button" data-disc-exit>显示完整包装</button></p>
           <section class="group">
-            <h2>Insert 插页 <small>304 × 304 mm · 双面</small></h2>
+            <h2>Insert 插页 <small id="insert-spec">304 × 304 mm · 双面</small></h2>
             <label class="switch"><input type="checkbox" id="insert-on" checked>放入插页</label>
             <div class="sub" id="insert-sub">
               <div class="tiles two">
@@ -553,7 +559,7 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
                 <div class="tiles one" style="flex:0 0 31%"><label class="tile" data-slot="obi"><span class="thumb contain"><span class="tag">示例</span></span><input id="up-obi" type="file" accept="image/*" aria-label="上传侧标展开图">展开图</label></div>
                 <p class="note" style="flex:1">上传一张竖长条图，从左到右依次是：背面、书脊、正面。正面和背面宽度相同。</p>
               </div>
-              <div class="slider"><label for="obi-width">正面宽度</label><input type="range" id="obi-width" min="20" max="80" value="32"><output id="obi-width-v">32 mm</output></div>
+              <div class="slider"><label for="obi-width">正面宽度</label><input type="range" id="obi-width" min="12" max="80" value="32"><output id="obi-width-v">32 mm</output></div>
             </div>
           </section>
           <section class="group">
@@ -583,7 +589,7 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
                 <div class="tiles one" style="flex:0 0 72px"><label class="tile" data-slot="sticker"><span class="thumb"><span class="tag">示例</span></span><input id="up-sticker" type="file" accept="image/*" aria-label="上传贴纸">贴纸图</label></div>
                 <div class="seg" id="sticker-shape" style="flex:1 1 auto"><button data-v="circle" aria-pressed="true">圆形</button><button data-v="rect" aria-pressed="false">长方形</button><button data-v="square" aria-pressed="false">方形</button></div>
               </div>
-              <div class="slider"><label for="sticker-size">尺寸</label><input type="range" id="sticker-size" min="40" max="140" value="76"><output id="sticker-size-v">76 mm</output></div>
+              <div class="slider"><label for="sticker-size">尺寸</label><input type="range" id="sticker-size" min="20" max="140" value="76"><output id="sticker-size-v">76 mm</output></div>
               <div class="slider"><label for="sticker-x">水平</label><input type="range" id="sticker-x" min="-120" max="120" value="88"><output id="sticker-x-v">88 mm</output></div>
               <div class="slider"><label for="sticker-y">垂直</label><input type="range" id="sticker-y" min="-120" max="120" value="92"><output id="sticker-y-v">92 mm</output></div>
               <div class="slider"><label for="sticker-rot">角度</label><input type="range" id="sticker-rot" min="-45" max="45" value="0"><output id="sticker-rot-v">0°</output></div>
@@ -629,7 +635,7 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
               </div>
               <div class="slider"><label for="num-x">水平</label><input type="range" id="num-x" min="-150" max="150" value="105"><output id="num-x-v">105 mm</output></div>
               <div class="slider"><label for="num-y">垂直</label><input type="range" id="num-y" min="-150" max="150" value="-136"><output id="num-y-v">-136 mm</output></div>
-              <div class="slider"><label for="num-size">字高</label><input type="range" id="num-size" min="3" max="20" value="5"><output id="num-size-v">5 mm</output></div>
+              <div class="slider"><label for="num-size">字高</label><input type="range" id="num-size" min="2" max="20" value="5"><output id="num-size-v">5 mm</output></div>
               <div class="slider"><label for="num-rot">角度</label><input type="range" id="num-rot" min="-90" max="90" value="0"><output id="num-rot-v">0°</output></div>
               <p class="note">切换位置时，坐标会回到该位置的默认值。烫金在转动视角时会反光。只含英文的字体遇到中文时，会用黑体补齐。上传的字体只在本地使用。</p>
             </div>
@@ -744,7 +750,15 @@ const WRAP = {pad:0.11, extra:0.12};                      // shrink wrap envelop
 const INS = {s:30.4, t:0.012, z:-0.12};                   // printed insert, rides behind the inner sleeve
 const LP = {r:15.1, t:0.13, label:5.0, hole:0.362};       // 302 mm disc, 100 mm label, 7.24 mm spindle hole
 const SLV = {s:30.6, hole:4.5, z:0.09};                   // paper inner sleeve
-const GROUND_Y = -WRAP.pad - J.h/2;
+// Sizes that change with the format; applyFormat() writes them into J / INS / LP / SLV and rebuilds.
+// groove: run-out and lead-in radius and where the outer rim starts. 7": 175 mm disc, 90 mm label, 184 mm
+// jacket; its large hole is the 38.24 mm "dinked" centre of US jukebox 45s.
+const FORMATS={
+  '12in':{w:31.4,ins:30.4,r:15.1,label:5.0,slv:30.6,slvHole:4.5,groove:[6.1,14.72,14.95],rpm:'33⅓'},
+  '7in':{w:18.4,ins:17.8,r:8.75,label:4.5,slv:17.8,slvHole:3.9,groove:[5.4,8.35,8.6],rpm:'45'}};
+const HOLE={small:.362,large:1.912};
+const FMT_SCALE=f=>FORMATS[f].w/FORMATS['12in'].w;      // sticker / number / Obi / framing scale with the jacket
+let GROUND_Y = -WRAP.pad - J.h/2;
 
 const $ = id => document.getElementById(id);
 
@@ -776,6 +790,7 @@ const EN={
   '位置':'Position','贴纸':'Sticker','工艺':'Finish','印刷':'Print','印章':'Stamp','烫金':'Foil','手写':'Hand','编号颜色':'Number colour',
   '水平':'Horizontal','垂直':'Vertical','字高':'Height','角度':'Angle',
   '切换位置时，坐标会回到该位置的默认值。烫金在转动视角时会反光。只含英文的字体遇到中文时，会用黑体补齐。上传的字体只在本地使用。':'Switching position resets the coordinates to that position’s defaults. Foil catches the light as you turn the view. Latin-only fonts fall back to a Chinese sans for CJK characters. Uploaded fonts stay on your device.',
+  '规格':'Size','7″ 单曲':'7″ single','中孔':'Centre hole','小孔 7 mm':'Small 7 mm','大孔 38 mm':'Large 38 mm',
   '唱片与内袋':'Records & sleeves','33⅓ RPM · 标签 Ø100':'33⅓ RPM · Label Ø100','数量':'Count','分装':'Layout','左右各一张':'One per panel','同一口袋':'Both in one pocket','单 LP':'1LP','标签角度':'Label angle',
   '显示内袋':'Show inner sleeve','只看唱片':'Disc only','展示':'Show','显示完整包装':'Show the full package','只显示唱片本体（盘面和标签）；封套、内袋、插页、塑封、Obi、贴纸和编号都不显示，关掉后原样恢复。':'Only the record itself, vinyl and labels. The jacket, inner sleeve, insert, film, obi, sticker and number are hidden, and come back as they were when you turn this off.','只看唱片时，这一页的内容不显示。':'In disc-only mode, nothing on this page is shown.','上传内袋印刷图':'Upload inner sleeve art','印刷图':'Artwork','内袋颜色':'Sleeve colour',
   '第 1 张':'Disc 1','A / B 面':'Sides A / B','上传 A 面标签':'Upload side A label','上传 B 面标签':'Upload side B label','A 面标签':'Side A label','B 面标签':'Side B label',
@@ -833,6 +848,7 @@ const state = {
   stickerOn:true, stickerShape:'circle', stickerTemplate:'none', stickerLines:null, stickerColor:'yellow', stickerSize:7.6, stickerX:8.8, stickerY:9.2, stickerRot:0,
   numOn:true, numCur:123, numTotal:1000, numPrefix:'No.', numFormat:'slash', numFont:'auto', numPlace:'back', numFinish:'stamp', numColor:'#25336f',
   numX:10.5, numY:-13.6, numSize:.5, numRot:0,
+  format:'12in', centerHole:'small',
   jacketType:'single', gateOpen:0, lpCount:1, lpLayout:'split', sleeve2X:0, record2X:.7, obiOn:true, obiWidth:3.2, insertOn:true, insertX:0,
   sceneMode:'package', sceneDisc:1,   // 'disc': the record alone, sceneDisc picks which on 2LP
   bg:'transparent', bgColor:'#e6e3dc', scale:2, view:'quarter',
@@ -850,7 +866,8 @@ const frontZ=()=>isGate()?J.d/2+coverDepth():J.d/2;      // outer face of the fr
 const jacketDepth=()=>frontZ()+J.d/2;
 const gateOpened=()=>isGate()&&state.gateOpen>.5;
 const discOnly=()=>state.sceneMode==='disc';
-const specText=()=>`${isGate()?tr('双开','Gatefold'):tr('单开','Single')} · ${state.lpCount===2?'2LP':tr('单 LP','1LP')} · ${tr('书脊','Spine')} ${+(jacketDepth()*10).toFixed(1)} mm`;
+const is7=()=>state.format==='7in';
+const specText=()=>`${is7()?'7″ · ':''}${isGate()?tr('双开','Gatefold'):tr('单开','Single')} · ${state.lpCount===2?(is7()?'2 × 7″':'2LP'):is7()?tr('单张','1 disc'):tr('单 LP','1LP')} · ${tr('书脊','Spine')} ${+(jacketDepth()*10).toFixed(1)} mm`;
 
 // ---------- Seeded random ----------
 function rng(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
@@ -870,7 +887,7 @@ function sampleFront(){const s=2048,c=canvas(s,s),g=c.getContext('2d');
   g.beginPath();g.arc(cx,cy,s*.008,0,Math.PI*2);g.fillStyle='#1f3b2d';g.fill();
   g.fillStyle='#efe9d8';g.font=`800 ${s*.11}px ${DISPLAY}`;g.textBaseline='alphabetic';
   g.fillText('NIGHT',s*.07,s*.18);g.fillText('PRESSING',s*.07,s*.29);
-  g.font=`500 ${s*.026}px ${MONO}`;g.fillText('GM-001  ·  12″ LP  ·  33⅓ RPM',s*.07,s*.345);
+  g.font=`500 ${s*.026}px ${MONO}`;g.fillText(`GM-001  ·  ${state.format==='7in'?'7″  ·  45':'12″ LP  ·  33⅓'} RPM`,s*.07,s*.345);
   g.font=`500 ${s*.024}px ${BODY}`;g.fillStyle='rgba(239,233,216,.7)';g.fillText(tr('示例封面 · 上传图片后替换','SAMPLE COVER · UPLOAD TO REPLACE'),s*.07,s*.94);
   return c}
 function sampleBack(){const s=2048,c=canvas(s,s),g=c.getContext('2d');
@@ -890,9 +907,11 @@ function sampleLabel(side){const s=1024,c=canvas(s,s),g=c.getContext('2d'),m=s/2
   g.fillStyle=side==='A'?'#e7ad45':side==='C'?'#d98a4e':'#efe9d8';g.fillRect(0,0,s,s);
   g.strokeStyle='#1f3b2d';g.lineWidth=4;g.beginPath();g.arc(m,m,s*.46,0,Math.PI*2);g.stroke();
   g.fillStyle='#1f3b2d';g.textAlign='center';
-  g.font=`800 ${s*.075}px ${DISPLAY}`;g.fillText('NIGHT PRESSING',m,s*.27);
+  // A 7" large hole cuts the middle away, so the top lines move up out of it.
+  const big=state.format==='7in'&&state.centerHole==='large';
+  g.font=`800 ${s*.075}px ${DISPLAY}`;g.fillText('NIGHT PRESSING',m,s*(big?.19:.27));
   g.font=`800 ${s*.13}px ${DISPLAY}`;g.fillText('SIDE '+side,m,s*.8);
-  g.font=`500 ${s*.04}px ${MONO}`;g.fillText('33⅓ RPM · STEREO · GM-001',m,s*.35);
+  g.font=`500 ${s*.04}px ${MONO}`;g.fillText(`${FORMATS[state.format].rpm} RPM · STEREO · GM-001`,m,s*(big?.25:.35));
   g.font=`500 ${s*.036}px ${BODY}`;g.fillText(tr('示例标签','SAMPLE LABEL'),m,s*.66);
   return c}
 function sampleSticker(shape){const w=1024,h=shape==='rect'?640:1024,c=canvas(w,h),g=c.getContext('2d');
@@ -1058,17 +1077,17 @@ function fitImage(src,w,h,{rotateIfWide=false}={}){
 // Vinyl: roughness (G) and anisotropy (RG = radial direction, B = strength) from one radial profile.
 // Tracks are cut at a constant pitch, so equal radial widths mean equal playing time. One map per track count.
 const grooveCache=new Map();
-function grooveMaps(tracks){if(!grooveCache.has(tracks))grooveCache.set(tracks,makeGrooveMaps(tracks));return grooveCache.get(tracks)}
+function grooveMaps(tracks){const k=state.format+':'+tracks;if(!grooveCache.has(k))grooveCache.set(k,makeGrooveMaps(tracks));return grooveCache.get(k)}
 function makeGrooveMaps(tracks){
   const N=2048,R=LP.r,bins=4096,rough=new Float32Array(bins),aniso=new Float32Array(bins),r=rng(11);
-  // Track boundaries, evenly spaced between run-out (≈61 mm) and lead-in (≈147 mm radius).
-  const runOut=6.1,leadIn=14.72,gaps=Array.from({length:tracks-1},(_,k)=>runOut+(k+1)*(leadIn-runOut)/tracks).map(x=>[x-.035,x+.035]);
+  // Track boundaries, evenly spaced between run-out and lead-in (12": ≈61 and ≈147 mm radius).
+  const [runOut,leadIn,rim]=FORMATS[state.format].groove,gaps=Array.from({length:tracks-1},(_,k)=>runOut+(k+1)*(leadIn-runOut)/tracks).map(x=>[x-.035,x+.035]);
   let noise=0;
   for(let i=0;i<bins;i++){const rr=i/bins*R;noise=noise*.55+(r()*2-1)*.45;
     let gap=0;
     if(rr<LP.label+.02)gap=1;
     else if(rr<runOut)gap=.92;                // run-out / dead wax
-    else if(rr>14.95)gap=1;                  // outer rim
+    else if(rr>rim)gap=1;                    // outer rim
     else if(rr>leadIn)gap=.55;                // lead-in
     for(const[a,b]of gaps)if(rr>a&&rr<b)gap=Math.max(gap,.9);
     rough[i]=THREE.MathUtils.lerp(.34+.07*noise,.09,gap);
@@ -1192,14 +1211,15 @@ const stockInner=new THREE.MeshStandardMaterial({color:0xb9b3a4,roughness:.95});
 function applyFinish(){const f=state.finish;for(const m of[frontMat,backMat,spineMat,innerLeftMat,innerRightMat,insertFrontMat,insertBackMat]){m.roughness=f==='gloss'?.26:f==='matte'?.92:.6;m.clearcoat=f==='gloss'?.55:.03;m.clearcoatRoughness=f==='gloss'?.1:.4;m.bumpScale=f==='gloss'?.12:.35}}
 
 // Each disc gets its own face/edge materials, so a 2LP can mix black and coloured vinyl.
+const shellR={value:LP.r};   // disc radius for the shell shader; applyFormat() updates it
 function vinylMats(){const face=new THREE.MeshPhysicalMaterial({color:0x0b0b0c,metalness:0,roughness:1,anisotropy:.9,envMap:studioEnv,envMapIntensity:.32,side:THREE.FrontSide});
   // A filled disc's clear shell is darker and denser towards its rim, where light crosses more of the disc,
   // with a thin outline at the very edge. shellEdge is 1 only for liquid and sand patterns.
   const edge={value:0};face.userData.shellEdge=edge;
-  face.onBeforeCompile=sh=>{sh.uniforms.shellEdge=edge;
+  face.onBeforeCompile=sh=>{sh.uniforms.shellEdge=edge;sh.uniforms.shellR=shellR;
     sh.vertexShader='varying float vShellR;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\n  vShellR=length(position.xy);');
-    sh.fragmentShader='uniform float shellEdge;varying float vShellR;\n'+sh.fragmentShader.replace('#include <alphamap_fragment>',`#include <alphamap_fragment>
-  float shE=pow(smoothstep(${LP.r}-1.,${LP.r},vShellR),1.5),shO=smoothstep(${LP.r}-.08,${LP.r}-.01,vShellR);
+    sh.fragmentShader='uniform float shellEdge,shellR;varying float vShellR;\n'+sh.fragmentShader.replace('#include <alphamap_fragment>',`#include <alphamap_fragment>
+  float shE=pow(smoothstep(shellR-1.,shellR,vShellR),1.5),shO=smoothstep(shellR-.08,shellR-.01,vShellR);
   diffuseColor.rgb*=1.-shellEdge*(.38*shE+.35*shO);
   diffuseColor.a+=(1.-diffuseColor.a)*shellEdge*(.55*shE+.6*shO);`)};
   face.customProgramCacheKey=()=>'vinyl-face-v1';
@@ -1516,15 +1536,17 @@ function lqThreshold(fn,share,o,inner,outer){
     v.sort();if(lqQuantCache.size>64)lqQuantCache.clear();lqQuantCache.set(k,v)}
   if(share<=0)return v[v.length-1]+1;if(share>=1)return v[0]-1;
   return v[Math.min(v.length-1,Math.floor((1-share)*v.length))]}
+// Fills are laid out on a 12" disc; a smaller disc maps its own points onto that layout.
+const lqDiscScale={value:1};
 let liquidClock=0,liquidSpin=0;   // clip frame being drawn: loop phase, and how far the disc has spun (degrees); 0 for stills
 function fillMaterial(){
   const u={lqType:{value:0},lqC1:{value:new THREE.Color()},lqC2:{value:new THREE.Color()},lqGlitC:{value:new THREE.Color()},
     lqAmountT:{value:2},lqPhase2:{value:.5},lqCount:{value:0},lqRot:{value:0},lqFull:{value:0},lqDrops:{value:0},lqCircles:{value:null},lqBubbles:{value:0},lqSettle:{value:0},lqInner:{value:5.3},lqOuter:{value:14.6},
     lqGlitter:{value:0},lqTime:{value:0},lqSeed:{value:new THREE.Vector2()},lqDown:{value:new THREE.Vector2(0,1)}};
   const m=new THREE.MeshPhysicalMaterial({color:0xffffff,metalness:0,roughness:.12,transparent:true,depthWrite:false,side:THREE.DoubleSide,envMap:studioEnv,envMapIntensity:.55});
-  m.onBeforeCompile=sh=>{Object.assign(sh.uniforms,u);
-    sh.vertexShader='varying vec2 vLqPos;varying vec3 vLqTx,vLqTy;\n'+sh.vertexShader.replace('#include <uv_vertex>',`#include <uv_vertex>
-      vLqPos=position.xy;vLqTx=normalize((modelViewMatrix*vec4(1.,0.,0.,0.)).xyz);vLqTy=normalize((modelViewMatrix*vec4(0.,1.,0.,0.)).xyz);`);
+  m.onBeforeCompile=sh=>{Object.assign(sh.uniforms,u,{lqDiscScale});
+    sh.vertexShader='uniform float lqDiscScale;varying vec2 vLqPos;varying vec3 vLqTx,vLqTy;\n'+sh.vertexShader.replace('#include <uv_vertex>',`#include <uv_vertex>
+      vLqPos=position.xy*lqDiscScale;vLqTx=normalize((modelViewMatrix*vec4(1.,0.,0.,0.)).xyz);vLqTy=normalize((modelViewMatrix*vec4(0.,1.,0.,0.)).xyz);`);
     sh.fragmentShader=`uniform int lqType;uniform vec3 lqC1,lqC2,lqGlitC;
 uniform sampler2D lqCircles;uniform int lqCount;uniform float lqRot,lqFull,lqDrops,lqAmountT,lqPhase2,lqBubbles,lqSettle,lqInner,lqOuter,lqGlitter,lqTime;uniform vec2 lqSeed,lqDown;
 varying vec2 vLqPos;varying vec3 vLqTx,vLqTy;${FILL_GLSL}\n`+sh.fragmentShader
@@ -1698,7 +1720,7 @@ const coverPivot=new THREE.Group();coverPivot.position.set(-J.w/2,0,J.d/2);scene
 let coverFront;
 function buildCover(){
   for(const c of[...coverPivot.children])if(c.isMesh){c.geometry.dispose();coverPivot.remove(c)}
-  const {w,h,board:t}=J,c=coverDepth();coverPivot.position.z=J.d/2;
+  const {w,h,board:t}=J,c=coverDepth();coverPivot.position.set(-w/2,0,J.d/2);
   if(!isSplit()){coverFront=mesh(new THREE.BoxGeometry(w,h,t),[stock,stock,stock,stock,frontMat,innerLeftMat]);coverFront.position.set(w/2,0,t/2);coverPivot.add(coverFront);return}
   coverFront=mesh(new THREE.BoxGeometry(w,h,t),[stock,stock,stock,stock,frontMat,stockInner]);coverFront.position.set(w/2,0,c-t/2);
   const inner=mesh(new THREE.BoxGeometry(w,h,t),[stock,stock,stock,stock,stockInner,innerLeftMat]);inner.position.set(w/2,0,t/2);
@@ -1725,17 +1747,20 @@ function buildObi(){
 function obiTexture(){const {total}=obiLayout(),h=2048,w=Math.max(64,Math.round(h*total/J.h)),c=userObi.img?fitImage(userObi.img,w,h):sampleObi(w,h);setTex('obi',colorTex(c),obiMat);if(!userObi.img)thumb('obi',c.toDataURL('image/jpeg',.6))}
 
 // Inner sleeve: two paper faces with the centre hole that shows the label.
-function makeSleeve(){const group=new THREE.Group(),s=SLV.s,shape=new THREE.Shape();shape.moveTo(-s/2,-s/2);shape.lineTo(s/2,-s/2);shape.lineTo(s/2,s/2);shape.lineTo(-s/2,s/2);shape.closePath();
+// Clears a group's meshes so applyFormat() can build it again at the new size.
+function clearGroup(g){for(const c of[...g.children]){c.geometry?.dispose();g.remove(c)}}
+function makeSleeve(){const group=new THREE.Group();group.userData.build=()=>buildSleeve(group);group.userData.build();scene.add(group);return group}
+function buildSleeve(group){clearGroup(group);const s=SLV.s,shape=new THREE.Shape();shape.moveTo(-s/2,-s/2);shape.lineTo(s/2,-s/2);shape.lineTo(s/2,s/2);shape.lineTo(-s/2,s/2);shape.closePath();
   const hole=new THREE.Path();hole.absarc(0,0,SLV.hole,0,Math.PI*2,true);shape.holes.push(hole);
   const geo=remapUV(new THREE.ShapeGeometry(shape,64),s);
   const a=mesh(geo,sleeveMat);a.position.z=SLV.z;const b=mesh(geo,sleeveMat);b.position.z=-SLV.z;b.rotation.y=Math.PI;
   group.add(a,b);
-  for(const side of[-1,1]){const seam=mesh(new THREE.BoxGeometry(s,.04,SLV.z*2),sleeveMat);seam.position.y=side*(s/2-.02);group.add(seam)}
-  scene.add(group);return group}
+  for(const side of[-1,1]){const seam=mesh(new THREE.BoxGeometry(s,.04,SLV.z*2),sleeveMat);seam.position.y=side*(s/2-.02);group.add(seam)}}
 const sleeve=makeSleeve(),sleeve2=makeSleeve();
 
 // LP: grooved faces, rim, two labels, spindle hole.
-function makeRecord(matA,matB,vm,fm){const group=new THREE.Group(),{r,t,label,hole}=LP;
+function makeRecord(matA,matB,vm,fm){const group=new THREE.Group();group.userData.build=()=>buildRecord(group,matA,matB,vm,fm);group.userData.build();scene.add(group);return group}
+function buildRecord(group,matA,matB,vm,fm){clearGroup(group);const {r,t,label,hole}=LP;
   const face=remapUV(new THREE.RingGeometry(label,r,256,6),r*2);
   // The back face is the front turned over (x flipped), so its U is flipped too: both faces then sample the
   // pattern at the same point of the disc, and a see-through disc shows the same pattern through it.
@@ -1749,7 +1774,7 @@ function makeRecord(matA,matB,vm,fm){const group=new THREE.Group(),{r,t,label,ho
   const ring=new THREE.RingGeometry(label,r,256,4),mid=mesh(ring,fm.mat,{cast:false,receive:false});mid.visible=false;mid.onBeforeRender=fillOnBeforeRender(fm);fm.mesh=mid;
   // Glitter sits just under each face instead, so it also shows in opaque vinyl.
   fm.glitter=[1,-1].map(side=>{const g=mesh(ring,fm.mat,{cast:false,receive:false});g.position.z=side*(t/2+.003);if(side<0)g.rotation.y=Math.PI;g.visible=false;g.onBeforeRender=mid.onBeforeRender;return g});
-  group.add(top,bot,edge,la,lb,bore,mid,...fm.glitter);scene.add(group);return group}
+  group.add(top,bot,edge,la,lb,bore,mid,...fm.glitter)}
 const record=makeRecord(labelMatA,labelMatB,vinyl1,fill1),record2=makeRecord(labelMatC,labelMatD,vinyl2,fill2);
 
 // Shrink wrap shell: displaced box. Faces stay tight at the box edges (no cracks), wrinkle near edges and corners.
@@ -1810,6 +1835,7 @@ function stickerTexture(){
 // A decal: a transparent plane laid on the chosen face with its own material, so foil can be metallic
 // and the uploaded artwork underneath is never altered.
 const NUM_DEFAULTS={back:{x:10.5,y:-13.6,size:.5,rot:0},front:{x:10.5,y:-13.6,size:.5,rot:0},obi:{x:0,y:-12.6,size:.4,rot:90},sticker:{x:0,y:-2.9,size:.35,rot:0}};
+const numDefaults=p=>{const d=NUM_DEFAULTS[p],k=FMT_SCALE(state.format);return{x:d.x*k,y:d.y*k,size:Math.max(.2,d.size*k),rot:d.rot}};
 const NUM_INK={print:'#1a1e1b',stamp:'#25336f',foil:'#e0b85c',hand:'#1a1e1b'};
 function numberText(){
   const total=Math.max(1,Math.round(state.numTotal)||1),cur=Math.min(total,Math.max(1,Math.round(state.numCur)||1)),c=String(cur).padStart(String(total).length,'0'),pre=state.numPrefix.trim();
@@ -1862,13 +1888,14 @@ function placeNumber(){
 // How far a disc's sleeve and record sit from the pocket centre. With the sleeve shown, sleeve out (24 at
 // 100%) and record out of the sleeve (27) add up; without it, record out alone is the share of the way out
 // of the jacket, 100% lying fully clear on the ground, and sleeve out takes no part.
-const OUT_FULL=J.w/2+LP.r+1.5;
-const travel=(sX,rX)=>{const x=state.sleeveOn?sX*24:0;return[x,state.sleeveOn?x+rX*27:rX*OUT_FULL]};
+// The 12" lengths shrink with a 7" jacket.
+const outFull=()=>J.w/2+LP.r+1.5,TRAVEL={sleeve:24,record:27,insert:25},travelLen=k=>TRAVEL[k]*FMT_SCALE(state.format);
+const travel=(sX,rX)=>{const x=state.sleeveOn?sX*travelLen('sleeve'):0;return[x,state.sleeveOn?x+rX*travelLen('record'):rX*outFull()]};
 // Showing or hiding the sleeve keeps each record where it is: its travel moves between the two sliders,
 // split evenly between sleeve and record when the sleeve comes back.
 function foldSleeve(discs=['','2']){for(const s of discs){const sk=`sleeve${s}X`,rk=`record${s}X`;
-  if(state.sleeveOn){const rx=state[rk]*OUT_FULL;state[sk]=Math.min(1,rx/48);state[rk]=Math.min(1,rx/54)}
-  else{state[rk]=Math.min(1,(state[sk]*24+state[rk]*27)/OUT_FULL);state[sk]=0}}}
+  if(state.sleeveOn){const rx=state[rk]*outFull();state[sk]=Math.min(1,rx/(2*travelLen('sleeve')));state[rk]=Math.min(1,rx/(2*travelLen('record')))}
+  else{state[rk]=Math.min(1,(state[sk]*travelLen('sleeve')+state[rk]*travelLen('record'))/outFull());state[sk]=0}}}
 function pose(){
   const gate=isGate(),opened=gateOpened();
   pocketFront.material[4]=gate?innerRightMat:frontMat;
@@ -1893,7 +1920,7 @@ function pose(){
   // 90°. A gatefold clip fixes the face for its whole loop (disc2Flip) so the label never swaps mid-swing.
   if(split)placeSet(sleeve2,record2,state.sleeve2X,state.record2X,coverDepth()/2,true,coverPivot,J.w/2,(state.disc2Flip??state.gateOpen>90)?Math.PI:0);
   else placeSet(sleeve2,record2,state.sleeve2X,state.record2X,-zc,two);
-  const ix=state.insertX*25;
+  const ix=state.insertX*travelLen('insert');
   insert.visible=state.insertOn;insert.position.set(ix,THREE.MathUtils.lerp(jacketFloor+INS.s/2,GROUND_Y+INS.s/2,settle(ix-INS.s/2-J.w/2)),two&&!split?-.23:INS.z);
   const mouthOpen=travel(state.sleeveX,state.recordX)[1]>.1||(state.insertOn&&state.insertX>.005)||(two&&travel(state.sleeve2X,state.record2X)[1]>.1);
   const wrapZ=gate?coverDepth()/2:0,wrapFront=wrapZ+(jacketDepth()+WRAP.extra)/2;
@@ -1910,6 +1937,26 @@ function pose(){
     if(show.parent!==scene)scene.add(show);
     show.visible=true;show.position.set(0,GROUND_Y+LP.r,0);show.rotation.set(0,0,THREE.MathUtils.degToRad(state.recordRot))}
 }
+// Format: writes the size table into the shared specs and rebuilds what was built at a fixed size.
+// The jacket, wrap and Obi follow in applyJacketType(); the groove maps in applyVinyl().
+function applyFormat(){const f=FORMATS[state.format];
+  J.w=J.h=f.w;INS.s=f.ins;LP.r=f.r;LP.label=f.label;LP.hole=is7()?HOLE[state.centerHole]:HOLE.small;SLV.s=f.slv;SLV.hole=f.slvHole;
+  GROUND_Y=-WRAP.pad-J.h/2;ground.position.y=GROUND_Y;shellR.value=LP.r;lqDiscScale.value=FORMATS['12in'].r/LP.r;
+  for(const g of[record,record2,sleeve,sleeve2])g.userData.build();
+  insert.geometry.dispose();insert.geometry=new THREE.BoxGeometry(INS.s,INS.s,INS.t);
+  $('hole-row').hidden=!is7();formatTexts();
+  const key=state.format+state.centerHole;if(key!==sampleKey){sampleKey=key;redrawSamples()}
+}
+let sampleKey='12insmall';
+function formatTexts(){const f=FORMATS[state.format],mm=v=>Math.round(v*10);
+  $('records-spec').textContent=`${f.rpm} RPM · ${tr('标签','Label')} Ø${mm(LP.label*2)}`;
+  const [one,two]=$('lp-count').children;one.textContent=is7()?tr('单张','1 disc'):tr('单 LP','1LP');two.textContent=is7()?tr('2 张','2 discs'):'2LP';
+  $('insert-spec').textContent=`${mm(INS.s)} × ${mm(INS.s)} mm · ${tr('双面','double-sided')}`;
+  $('brand-spec').textContent=`${is7()?'7″':'12″ LP'} · ${tr('封套','Jacket')} ${mm(J.w)} × ${mm(J.h)} mm · ${tr('唱片','Disc')} Ø${mm(LP.r*2)} mm`}
+// Moving between formats carries the sticker, number and Obi over at the same place on the smaller jacket.
+const FMT_SCALED=['stickerX','stickerY','stickerSize','numX','numY','numSize','obiWidth'];
+function rescaleFormat(from,to,keep=[]){const k=FMT_SCALE(to)/FMT_SCALE(from);if(k===1)return;
+  for(const key of FMT_SCALED)if(!keep.includes(key))state[key]*=k}
 function applyLpCount(){
   $('lp2-sub').hidden=state.lpCount!==2;applyJacketType();syncDiscMode();
 }
@@ -1928,7 +1975,7 @@ const VIEWS={quarter:{t:[9,-.5,0],dir:[-.36,.1,1],fit:[62,35]},front:{t:[9,0,0],
 // Side looks in from the left, along the spine. Once a gatefold opens, the cover swings into that line of
 // sight, so side looks in from the right instead, across the mouth onto the inner pages.
 const viewDir=name=>{const d=VIEWS[name].dir;return name==='side'&&gateOpened()&&!discOnly()?[-d[0],d[1],d[2]]:d};
-function setView(name){userMoved=false;const v=VIEWS[name],half=Math.tan(THREE.MathUtils.degToRad(camera.fov/2)),margin=1.06;
+function setView(name){userMoved=false;const k=FMT_SCALE(state.format),v={t:VIEWS[name].t.map(x=>x*k),fit:VIEWS[name].fit.map(x=>x*k)},half=Math.tan(THREE.MathUtils.degToRad(camera.fov/2)),margin=1.06;
   const d=new THREE.Vector3(...viewDir(name)).normalize(),r=new THREE.Vector3().crossVectors(d.clone().negate(),camera.up).normalize(),u=new THREE.Vector3().crossVectors(r,d.clone().negate());
   // The preset frames a v.fit box about v.t. An open gatefold's cover (and on a split 2LP, disc 2 pulled from
   // it) swings out of that box, toward the camera below 90°: frame the box together with the open jacket's
@@ -2477,6 +2524,10 @@ seg('finish','finish',applyFinish);
 seg('jacket-type','jacketType',()=>{applyJacketType();
   if(!isGate()&&state.animPreset==='gatefold'){state.animPreset='turntable';for(const b of $('anim-preset').children)b.setAttribute('aria-pressed',b.dataset.v==='turntable');if(previewActive())fitPreview()}
   syncAnimPanel()});
+// A new format rebuilds everything at the new size; the camera re-frames unless the viewer moved it.
+let panelFormat=state.format;
+seg('format','format',()=>{rescaleFormat(panelFormat,state.format);panelFormat=state.format;refreshAll();if(previewActive())fitPreview()});
+seg('center-hole','centerHole',()=>{applyFormat();pose()});
 seg('lp-count','lpCount',applyLpCount);seg('lp-layout','lpLayout',applyJacketType);
 // Black -> colour takes the cover's colours unless this disc's colour was already set (by hand, by the
 // eyedropper or by a spec); a cover that gives nothing keeps the defaults. Disc 2 starts one candidate on.
@@ -2672,7 +2723,7 @@ $('up-font').addEventListener('change',async e=>{const file=e.target.files[0];if
   catch(err){alertNote(tr(`没能读取这个字体文件（${file.name}）。请换成 TTF、OTF、WOFF 或 WOFF2 再试。`,`Couldn’t read this font file (${file.name}). Try a TTF, OTF, WOFF or WOFF2.`))}
   e.target.value=''});
 seg('num-finish','numFinish',()=>{state.numColor=NUM_INK[state.numFinish];$('num-color').value=state.numColor;numTexture()});
-seg('num-place','numPlace',()=>{const d=NUM_DEFAULTS[state.numPlace];setSlider('num-x',Math.round(d.x*10));setSlider('num-y',Math.round(d.y*10));setSlider('num-size',Math.round(d.size*10));setSlider('num-rot',d.rot)});
+seg('num-place','numPlace',()=>{const d=numDefaults(state.numPlace);setSlider('num-x',Math.round(d.x*10));setSlider('num-y',Math.round(d.y*10));setSlider('num-size',Math.round(d.size*10));setSlider('num-rot',d.rot)});
 $('num-color').addEventListener('input',e=>{state.numColor=e.target.value;numMat.color.set(state.numColor)});field('num-color','numColor');
 slider('num-x','numX','mm',placeNumber);
 slider('num-y','numY','mm',placeNumber);
@@ -2736,6 +2787,8 @@ const boolF=(path,key,desc)=>({path,key,type:'boolean',desc});
 const colorF=(path,key,desc)=>({path,key,type:'color',desc});
 const strF=(path,key,desc,maxLength)=>({path,key,type:'string',desc,maxLength});
 const SPEC_FIELDS=[
+  enumF('format','format',['12in','7in'],'唱片规格：12in 为 12 寸 LP（默认，封套 314 mm、唱片 Ø302 mm、标签 Ø100 mm）；7in 为 7 寸单曲（封套 184 mm、唱片 Ø175 mm、标签 Ø90 mm、内袋 178 mm）。换成 7in 时，没写的贴纸、编号位置和 Obi 宽度按封套等比缩小。也接受 7 / 12'),
+  enumF('records.centerHole','centerHole',['small','large'],'中孔：small 小孔 Ø7.24 mm（默认）；large 大孔 Ø38 mm（美式点唱机 45 转）。只在 format=7in 时生效'),
   enumF('scene.mode','sceneMode',['package','disc'],'场景模式：package 完整包装（默认）；disc 只看唱片，只显示盘面和标签，封套、内袋、插页、塑封、Obi、贴纸、编号都不显示，它们的设置保留'),
   numF('scene.disc','sceneDisc',1,2,1,'scene.mode=disc 且 records.count=2 时展示哪一张：1 为 A / B 面，2 为 C / D 面',true),
   enumF('jacket.type','jacketType',['single','gatefold'],'封套类型：single 单开，gatefold 双开'),
@@ -2764,7 +2817,7 @@ const SPEC_FIELDS=[
   boolF('insert.on','insertOn','是否放入双面插页'),
   numF('insert.out','insertX',0,100,.01,'插页抽出比例（%）。插页在内袋后面，需要比内袋抽得多才看得到'),
   boolF('obi.on','obiOn','是否显示 Obi 侧标'),
-  numF('obi.width','obiWidth',20,80,.1,'Obi 正面宽度（mm），背面同宽'),
+  numF('obi.width','obiWidth',12,80,.1,'Obi 正面宽度（mm），背面同宽'),
   boolF('wrap.on','wrapOn','是否套塑封膜'),
   numF('wrap.wrinkle','wrinkle',0,200,.01,'塑封褶皱强度（%），100 为默认'),
   numF('wrap.gloss','gloss',0,200,.01,'塑封反光强度（%），100 为默认'),
@@ -2772,7 +2825,7 @@ const SPEC_FIELDS=[
   enumF('sticker.shape','stickerShape',['circle','rect','square'],'贴纸形状：circle 圆形，rect 圆角长方形（宽高比 1.6:1），square 圆角正方形'),
   enumF('sticker.template','stickerTemplate',['none',...STICKER_TEMPLATES.map(t=>t.id)],'贴纸模板。none 不用模板，贴纸用 images.sticker（没给时用示例图）。用模板时形状由模板决定，sticker.shape 不生效；文字写在 sticker.lines，配色写在 sticker.color。可选：'+STICKER_TEMPLATES.map(t=>`${t.id} ${t.name[0]}（${{circle:'圆形',rect:'长方形',square:'方形',burst:'异形星爆'}[t.shape]}）`).join('，')),
   enumF('sticker.color','stickerColor',Object.keys(STICKER_COLORS),'模板配色：yellow 黄底黑字，red 红底白字，black 黑底浅色字，white 白底红字，cover 从封面取主色。只在用模板时生效；只写 template 时用该模板的默认配色'),
-  numF('sticker.size','stickerSize',40,140,.1,'贴纸尺寸（mm）：圆形为直径，长方形为高度'),
+  numF('sticker.size','stickerSize',20,140,.1,'贴纸尺寸（mm）：圆形为直径，长方形为高度'),
   numF('sticker.x','stickerX',-120,120,.1,'贴纸中心相对封套中心的水平位置（mm，向右为正）'),
   numF('sticker.y','stickerY',-120,120,.1,'贴纸中心相对封套中心的垂直位置（mm，向上为正）'),
   numF('sticker.rotation','stickerRot',-45,45,1,'贴纸旋转角度（度，逆时针为正）'),
@@ -2787,15 +2840,15 @@ const SPEC_FIELDS=[
   colorF('number.color','numColor','编号颜色；烫金时就是金属的颜色'),
   numF('number.x','numX',-150,150,.1,'编号中心相对所在面中心的水平位置（mm，向右为正；背面以从背后看为准）'),
   numF('number.y','numY',-150,150,.1,'编号中心相对所在面中心的垂直位置（mm，向上为正）'),
-  numF('number.size','numSize',3,20,.1,'编号字高（mm）'),
+  numF('number.size','numSize',2,20,.1,'编号字高（mm）'),
   numF('number.rotation','numRot',-90,90,1,'编号旋转角度（度，逆时针为正）'),
 ];
 const IMAGE_SLOTS={
-  front:'封套正面（方图，314 × 314 mm）',back:'封套背面（方图）',spine:'书脊（竖长条；横图会自动转 90°）',
+  front:'封套正面（方图，12 寸 314 × 314 mm，7 寸 184 × 184 mm）',back:'封套背面（方图）',spine:'书脊（竖长条；横图会自动转 90°）',
   innerLeft:'双开内页左（方图）',innerRight:'双开内页右（方图）',
   obi:'Obi 展开图（竖长条，从左到右依次为背面 | 书脊 | 正面）',sleeve:'内袋印刷图（方图，中孔 Ø90 mm 处会被挖空）',
   labelA:'A 面标签（方图，只显示中间 Ø100 mm 圆形）',labelB:'B 面标签',labelC:'C 面标签（2LP）',labelD:'D 面标签（2LP）',
-  insertFront:'插页正面（方图，304 × 304 mm）',insertBack:'插页背面（方图）',sticker:'Hype sticker 图（圆形会被裁成圆）'};
+  insertFront:'插页正面（方图，12 寸 304 × 304 mm，7 寸 178 × 178 mm）',insertBack:'插页背面（方图）',sticker:'Hype sticker 图（圆形会被裁成圆）'};
 const CAMERA_VIEWS=['quarter','front','side'];
 // Per-slot production guide for agents preparing artwork: canvas size, physical size, what the viewer
 // actually sees, what covers it in the current scene, and whether the slot suits image generation,
@@ -2811,18 +2864,19 @@ function slotGuideAll(){
   const obiFront=state.obiOn?[`Obi 盖住左侧 ${obiMm} mm`]:[],obiBack=state.obiOn?[`Obi 盖住右侧 ${obiMm} mm（从背后看）`]:[];
   const num=p=>state.numOn&&state.numPlace===p?[`编号在中心偏 (${mm(state.numX)}, ${mm(state.numY)}) mm 处，字高 ${mm(state.numSize)} mm`]:[];
   const stickerCover=state.stickerOn&&state.wrapOn?[`hype sticker 盖在中心偏 (${mm(state.stickerX)}, ${mm(state.stickerY)}) mm 处，尺寸 ${mm(state.stickerSize)} mm`]:[];
+  const W=mm(J.w),lab=mm(LP.label*2),hole=mm(LP.hole*2);
   const square=(slot,label,sizeMm,recommend,extra={})=>({slot,label,px:[2048,2048],mm:[sizeMm,sizeMm],visible:'整张可见',covered:[],recommend,used:true,notes:'',...extra});
   return[
-    square('front','封套正面',314,'user',{covered:[...obiFront,...stickerCover,...num('front')],notes:'真实发行请用正式封面，不要生成'}),
-    square('back','封套背面',314,'composite',{covered:[...obiBack,...num('back')],notes:'生图只出无字底图，曲目、厂牌、条码位用代码排版'}),
-    {slot:'spine',label:'书脊',px:[64,4096],mm:[depth,314],visible:`整条可见，但只有 ${depth} mm 宽`,covered:state.obiOn?['Obi 书脊段盖住整条书脊']:[],recommend:'typeset',used:true,notes:'取封面主色做底，文字竖排从上往下读；横图会被自动转 90°'},
-    square('innerLeft','双开内页左',314,'composite',{used:isGate(),notes:'可生成 2:1 跨页后从中间切开；中线是折痕，避开人脸和主体'}),
-    square('innerRight','双开内页右',314,'composite',{used:isGate(),notes:'右页适合留给歌词排版'}),
-    {slot:'obi',label:'Obi 展开图',px:[obiPx,2048],mm:[Math.round(total*10*10)/10,314],visible:`从左到右：背面 ${obiMm} mm | 书脊 ${mm(obiLayout().s)} mm | 正面 ${obiMm} mm`,covered:[],recommend:'typeset',used:state.obiOn,notes:'文字为主，不建议生图'},
-    {...square('sleeve','内袋印刷',306,'generated'),visible:'中心 Ø90 mm 圆孔被挖空，抽出时只露出一部分',used:state.sleeveOn,notes:'低对比底纹即可，一般不放文字'},
-    ...['A','B','C','D'].map(k=>({slot:'label'+k,label:`${k} 面标签`,px:[1024,1024],mm:[100,100],visible:'只显示方图的内切圆（Ø100 mm）；正中 Ø7.24 mm 是中孔',covered:[],recommend:'composite',used:k<'C'||state.lpCount===2,notes:'底图可生成俯视平面圆形纹理，标题、面号、转速用排版'})),
-    square('insertFront','插页正面',304,'composite',{used:state.insertOn,notes:'歌词、制作名单用排版'}),
-    square('insertBack','插页背面',304,'composite',{used:state.insertOn}),
+    square('front','封套正面',W,'user',{covered:[...obiFront,...stickerCover,...num('front')],notes:'真实发行请用正式封面，不要生成'}),
+    square('back','封套背面',W,'composite',{covered:[...obiBack,...num('back')],notes:'生图只出无字底图，曲目、厂牌、条码位用代码排版'}),
+    {slot:'spine',label:'书脊',px:[64,4096],mm:[depth,W],visible:`整条可见，但只有 ${depth} mm 宽`,covered:state.obiOn?['Obi 书脊段盖住整条书脊']:[],recommend:'typeset',used:true,notes:'取封面主色做底，文字竖排从上往下读；横图会被自动转 90°'},
+    square('innerLeft','双开内页左',W,'composite',{used:isGate(),notes:'可生成 2:1 跨页后从中间切开；中线是折痕，避开人脸和主体'}),
+    square('innerRight','双开内页右',W,'composite',{used:isGate(),notes:'右页适合留给歌词排版'}),
+    {slot:'obi',label:'Obi 展开图',px:[obiPx,2048],mm:[Math.round(total*10*10)/10,W],visible:`从左到右：背面 ${obiMm} mm | 书脊 ${mm(obiLayout().s)} mm | 正面 ${obiMm} mm`,covered:[],recommend:'typeset',used:state.obiOn,notes:'文字为主，不建议生图'},
+    {...square('sleeve','内袋印刷',mm(SLV.s),'generated'),visible:`中心 Ø${mm(SLV.hole*2)} mm 圆孔被挖空，抽出时只露出一部分`,used:state.sleeveOn,notes:'低对比底纹即可，一般不放文字'},
+    ...['A','B','C','D'].map(k=>({slot:'label'+k,label:`${k} 面标签`,px:[1024,1024],mm:[lab,lab],visible:`只显示方图的内切圆（Ø${lab} mm）；正中 Ø${hole} mm 是中孔${hole>10?'，这一圈的图会被挖掉':''}`,covered:[],recommend:'composite',used:k<'C'||state.lpCount===2,notes:'底图可生成俯视平面圆形纹理，标题、面号、转速用排版'})),
+    square('insertFront','插页正面',mm(INS.s),'composite',{used:state.insertOn,notes:'歌词、制作名单用排版'}),
+    square('insertBack','插页背面',mm(INS.s),'composite',{used:state.insertOn}),
     {slot:'sticker',label:'Hype sticker',px:state.stickerShape==='rect'?[1024,640]:[1024,1024],mm:state.stickerShape==='rect'?[mm(state.stickerSize*1.6),mm(state.stickerSize)]:[mm(state.stickerSize),mm(state.stickerSize)],
       visible:stickerTpl()?'模板自带外形，不用贴图':state.stickerShape==='circle'?'只显示内切圆':'整张可见，圆角',covered:num('sticker'),recommend:'typeset',used:state.stickerOn&&!stickerTpl(),notes:stickerTpl()?`正在用模板 ${state.stickerTemplate}，文字用 sticker.lines 改，不需要贴图`:'文字为主，不建议生图；常见文案可以直接用 sticker.template 选模板'},
   ]}
@@ -2836,6 +2890,7 @@ function specFromState(){
   if(state.vinylSame)for(const k of['vinyl','color','transparency','pattern'])delete s.records.disc2[k];
   if(!state.sleeveOn)for(const i of[1,2])delete s.records[`disc${i}`].sleeveOut;
   if(!discOnly()||state.lpCount!==2)delete s.scene.disc;
+  if(!is7())delete s.records.centerHole;
   // Plain black has no colour, transparency or pattern; solid colour has no pattern.
   for(const i of[1,2]){const d=s.records[`disc${i}`],sx=i===1?'':'2';if(!('vinyl' in d))continue;
     if(state['vinyl'+sx]==='black')for(const k of['color','transparency','pattern'])delete d[k];
@@ -2882,7 +2937,7 @@ function buildSchema(){
     width:{type:'integer',minimum:256,maximum:4096,default:DEFAULT_STATE.outW,description:'输出宽度（px）'},
     height:{type:'integer',minimum:256,maximum:4096,default:DEFAULT_STATE.outH,description:'输出高度（px）'}}};
   root.properties.animation={type:'object',additionalProperties:false,description:'旋转视频 / 动图（record-mockup video 读取，render 不读）。相机按 camera.view 等设置取景，并自动拉远到整段动画都不出画',properties:{
-    preset:{enum:ANIM_PRESETS,default:'turntable',description:'turntable 转台：匀速转一整圈；swing 摆动：左右来回摆 angle 度，不露背面；spin 唱片自转（33⅓ 转/分，需唱片已抽出）；gatefold 双开封面打开再合上，开到 jacket.gateOpen（为 0 时 160°），全程不显示塑封、贴纸和 Obi；pull 内袋和唱片抽出再推回，抽到 records.discN 的 sleeveOut / recordOut（都为 0 时用常见值）。都是首尾相接的循环'},
+    preset:{enum:ANIM_PRESETS,default:'turntable',description:'turntable 转台：匀速转一整圈；swing 摆动：左右来回摆 angle 度，不露背面；spin 唱片自转（33⅓ 转/分，7 寸为 45，需唱片已抽出）；gatefold 双开封面打开再合上，开到 jacket.gateOpen（为 0 时 160°），全程不显示塑封、贴纸和 Obi；pull 内袋和唱片抽出再推回，抽到 records.discN 的 sleeveOut / recordOut（都为 0 时用常见值）。都是首尾相接的循环'},
     duration:{type:'number',minimum:1,maximum:30,default:6,description:'一个循环的时长（秒）'},
     fps:{type:'integer',minimum:10,maximum:60,description:'帧率。不写时 MP4 为 30，GIF 为 20'},
     direction:{enum:['left','right'],default:'left',description:'正面朝哪边转（从镜头看），只用于 turntable 和 swing'},
@@ -2905,7 +2960,9 @@ async function applySpec(spec){
     if(integer)n=Math.round(n);const c=Math.min(max,Math.max(min,n));if(c!==n)warnings.push(`${path}=${n} 超出范围 ${min}–${max}，已改为 ${c}`);return c};
   for(const k of['title','artist','album']){const v=spec.meta?.[k];if(v===undefined)continue;
     if(typeof v==='string'&&v.trim())sceneMeta[k]=v.trim().slice(0,120);else delete sceneMeta[k]}
-  const sleeveWas=state.sleeveOn;
+  const sleeveWas=state.sleeveOn,formatWas=state.format;
+  // 7, "7", 7" and the like name the same format.
+  {const v=spec.format;if(v!==undefined&&!FORMATS[v]){const n=parseInt(String(v),10);if(n===7||n===12)spec.format=n+'in'}}
   for(const f of SPEC_FIELDS){const v=getPath(spec,f.path);if(v===undefined)continue;
     if(f.type==='enum'){if(!f.values.includes(v)){warnings.push(`${f.path}=${JSON.stringify(v)} 无效，可选值：${f.values.join(' / ')}`);continue}state[f.key]=v}
     else if(f.type==='number'){const c=clampNum(f.path,v,f.min,f.max,f.integer);if(c!==null)state[f.key]=c*f.k}
@@ -2918,8 +2975,12 @@ async function applySpec(spec){
   if(state.sleeveOn!==sleeveWas)foldSleeve(unplaced);
   if(!state.sleeveOn)for(const i of[1,2]){const pre=`records.disc${i}`;if(!has(pre+'.sleeveOut'))continue;state[`sleeve${i===1?'':'2'}X`]=0;
     warnings.push(`records.sleeve.on=false 时不显示内袋，${pre}.sleeveOut 已忽略；唱片抽出封套多少只看 ${pre}.recordOut`)}
+  // A new format carries what the spec doesn't place over to the same spot on the new jacket.
+  {const paths={stickerX:'sticker.x',stickerY:'sticker.y',stickerSize:'sticker.size',numX:'number.x',numY:'number.y',numSize:'number.size',obiWidth:'obi.width'};
+    rescaleFormat(formatWas,state.format,FMT_SCALED.filter(k=>has(paths[k])));panelFormat=state.format}
+  if(has('records.centerHole')&&!is7())warnings.push('records.centerHole 只在 format=7in 时生效，12 寸唱片用小孔');
   // Same conveniences as the panel: a new place brings its own default position, a new finish its default ink.
-  if(has('number.place')){const d=NUM_DEFAULTS[state.numPlace];if(!has('number.x'))state.numX=d.x;if(!has('number.y'))state.numY=d.y;if(!has('number.size'))state.numSize=d.size;if(!has('number.rotation'))state.numRot=d.rot}
+  if(has('number.place')){const d=numDefaults(state.numPlace);if(!has('number.x'))state.numX=d.x;if(!has('number.y'))state.numY=d.y;if(!has('number.size'))state.numSize=d.size;if(!has('number.rotation'))state.numRot=d.rot}
   if(has('number.finish')&&!has('number.color'))state.numColor=NUM_INK[state.numFinish];
   // A template brings its own colour and default text unless the spec writes them.
   if(has('sticker.template')){const t=stickerTpl();if(!has('sticker.lines'))state.stickerLines=null;if(t&&!has('sticker.color'))state.stickerColor=t.color}
@@ -2992,7 +3053,7 @@ async function applySpec(spec){
 
 // Rebuild every derived object from state; used after a spec lands.
 function refreshAll(){
-  applyFinish();applyVinyl();sleeveMat.color.set(tex.sleeve?'#ffffff':state.sleeveColor);
+  applyFormat();applyFinish();applyVinyl();sleeveMat.color.set(tex.sleeve?'#ffffff':state.sleeveColor);
   buildSticker();stickerTexture();numTexture();
   applyJacketType();applyBg();syncUI();
 }
@@ -3040,8 +3101,8 @@ function animPose(u){
   const p=state.animPreset,dir=state.animDir==='left'?-1:1;
   if(p==='turntable')return{turn:dir*2*Math.PI*u};
   if(p==='swing')return{turn:dir*THREE.MathUtils.degToRad(state.animAngle)*Math.sin(2*Math.PI*u)};
-  // Records turn clockwise seen from the label side, a whole number of turns per loop at 33⅓ rpm.
-  if(p==='spin')return{set:{recordRot:state.recordRot-360*Math.max(1,Math.round(state.animDuration*SPIN_RPM/60))*u}};
+  // Records turn clockwise seen from the label side, a whole number of turns per loop at 33⅓ rpm (7": 45).
+  if(p==='spin')return{set:{recordRot:state.recordRot-360*Math.max(1,Math.round(state.animDuration*(is7()?45:SPIN_RPM)/60))*u}};
   const k=outAndBack(u);
   // An opening gatefold has lost its film, sticker and obi, at every frame rather than popping off at 0.5°.
   if(p==='gatefold'){const end=state.gateOpen>.5?state.gateOpen:GATE_OPEN_DEFAULT;return{set:{gateOpen:end*k,disc2Flip:end>90,wrapOn:false,obiOn:false,stickerOn:false}}}
@@ -3337,7 +3398,7 @@ function redrawSamples(){
 }
 const fontsSettled=Promise.all([document.fonts?.ready,TPL_FONTS_READY]).then(redrawSamples);
 $('lang-btn').addEventListener('click',()=>{lang=lang==='en'?'zh':'en';try{localStorage.setItem('gm-lang',lang)}catch(e){}
-  translateStatic();$('jacket-spec').textContent=specText();lp2Where();if(!userFontFace)$('num-font-custom').textContent=tr('自定义（未上传）','Custom (none uploaded)');
+  translateStatic();$('jacket-spec').textContent=specText();formatTexts();lp2Where();if(!userFontFace)$('num-font-custom').textContent=tr('自定义（未上传）','Custom (none uploaded)');
   else $('num-font-custom').textContent=$('num-font-custom').textContent.replace(/^(自定义|Custom) · /,tr('自定义 · ','Custom · '));redrawSamples();
   for(const s of['','2'])buildPicker(s);syncPatterns();
   for(const t of document.querySelectorAll('.tag.lib'))t.textContent=tr('曲库','Library');syncStickerPanel();if(!$('tpl-lib').hidden)renderTplLib();if($('lib-view').innerHTML)libView?.()});
