@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "meta": {
+    "title": "Liquid-filled LP"
+  },
+  "records": {
+    "disc1": {
+      "vinyl": "color",
+      "color": "#1f9ee2",
+      "recordOut": 75,
+      "pattern": {
+        "id": "liquid-02"
+      }
+    }
+  },
+  "camera": {
+    "view": "quarter"
+  },
+  "output": {
+    "width": 2400,
+    "height": 1600,
+    "background": "#e6e3dc"
+  }
+}

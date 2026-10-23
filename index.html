@@ -1192,8 +1192,18 @@ const stockInner=new THREE.MeshStandardMaterial({color:0xb9b3a4,roughness:.95});
 function applyFinish(){const f=state.finish;for(const m of[frontMat,backMat,spineMat,innerLeftMat,innerRightMat,insertFrontMat,insertBackMat]){m.roughness=f==='gloss'?.26:f==='matte'?.92:.6;m.clearcoat=f==='gloss'?.55:.03;m.clearcoatRoughness=f==='gloss'?.1:.4;m.bumpScale=f==='gloss'?.12:.35}}
 
 // Each disc gets its own face/edge materials, so a 2LP can mix black and coloured vinyl.
-function vinylMats(){return{face:new THREE.MeshPhysicalMaterial({color:0x0b0b0c,metalness:0,roughness:1,anisotropy:.9,envMap:studioEnv,envMapIntensity:.32,side:THREE.FrontSide}),
-  edge:new THREE.MeshPhysicalMaterial({color:0x0b0b0c,metalness:0,roughness:.3,envMap:studioEnv,envMapIntensity:.3})}}
+function vinylMats(){const face=new THREE.MeshPhysicalMaterial({color:0x0b0b0c,metalness:0,roughness:1,anisotropy:.9,envMap:studioEnv,envMapIntensity:.32,side:THREE.FrontSide});
+  // A filled disc's clear shell is darker and denser towards its rim, where light crosses more of the disc,
+  // with a thin outline at the very edge. shellEdge is 1 only for liquid and sand patterns.
+  const edge={value:0};face.userData.shellEdge=edge;
+  face.onBeforeCompile=sh=>{sh.uniforms.shellEdge=edge;
+    sh.vertexShader='varying float vShellR;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\n  vShellR=length(position.xy);');
+    sh.fragmentShader='uniform float shellEdge;varying float vShellR;\n'+sh.fragmentShader.replace('#include <alphamap_fragment>',`#include <alphamap_fragment>
+  float shE=pow(smoothstep(${LP.r}-1.,${LP.r},vShellR),1.5),shO=smoothstep(${LP.r}-.08,${LP.r}-.01,vShellR);
+  diffuseColor.rgb*=1.-shellEdge*(.38*shE+.35*shO);
+  diffuseColor.a+=(1.-diffuseColor.a)*shellEdge*(.55*shE+.6*shO);`)};
+  face.customProgramCacheKey=()=>'vinyl-face-v1';
+  return{face,edge:new THREE.MeshPhysicalMaterial({color:0x0b0b0c,metalness:0,roughness:.3,envMap:studioEnv,envMapIntensity:.3})}}
 const vinyl1=vinylMats(),vinyl2=vinylMats();
 const labelMatA=new THREE.MeshStandardMaterial({map:tex.labelA,roughness:.62});
 const labelMatB=new THREE.MeshStandardMaterial({map:tex.labelB,roughness:.62});
@@ -1211,7 +1221,26 @@ const SPLITS=[
   {id:'split-half',family:'split',role:'layout',palette:{mode:'regions'},accents:1,base:'#f2efe6',colors:['#c8392b']},
   {id:'split-tri',family:'split',role:'layout',palette:{mode:'regions'},accents:2,base:'#f2c14e',colors:['#e4572e','#2a6f4e']},
   {id:'split-quad',family:'split',role:'layout',palette:{mode:'regions'},accents:1,base:'#f2efe6',colors:['#1b4f9c']}];
-const MASKS=[...SPLITS,...await fetch('vinyl-masks/manifest.json').then(r=>r.ok?r.json():{masks:[]}).then(j=>j.masks).catch(()=>[])];
+// Filled vinyl and glitter: procedural patterns drawn by the fill layer (see "Filled vinyl" below) instead
+// of a mask. Liquids are tonal: blobs and droplets of the base colour and of one shade derived from it, in a
+// clear liquid. Sand and glitter are main + accent (two sand colours; vinyl colour and flakes). Each look's
+// shape (share, detail, settling, layout seed) is fixed, and liquid and sand have no transparency controls:
+// their shell is always clear.
+//   share: area of the coloured liquid (liquid) or weight of the second grain tone (sand); alt: the derived
+//   shade's part of it; detail: droplets, specks and air bubbles; settle: how far the coloured liquid floats
+//   up (sand: sinks); amount: sand's cover; full: the base-colour liquid fills the cavity at this opacity;
+//   drops: a dense field of derived-shade droplets on top of the blobs (0..1), clustered and thickest round the label.
+const FILLS=[
+  // Three shapes, not colours (the colour is the user's): blobs in clear liquid; a full cavity with light blobs;
+  // a full cavity crowded with darker droplets. full is the base-colour liquid's opacity when it fills the cavity.
+  {id:'liquid-01',family:'liquid',base:'#e0900f',palette:{mode:'tonal',derive:[{dL:.2,dC:-.07}]},fill:{type:'liquid',share:.55,alt:.35,detail:.25,settle:.2,seed:1}},
+  {id:'liquid-02',family:'liquid',base:'#2477b8',palette:{mode:'tonal',derive:[{dL:.4,dC:-.1}]},fill:{type:'liquid',full:.8,share:.32,alt:1,detail:.45,settle:.25,seed:2}},
+  {id:'liquid-03',family:'liquid',base:'#7fd3a6',palette:{mode:'tonal',derive:[{dL:-.28,dC:.02}]},fill:{type:'liquid',full:.6,share:.2,alt:1,detail:.3,drops:.85,settle:.1,seed:7}},
+  {id:'sand-01',family:'sand',base:'#c9a57c',colors:['#7f6045'],fill:{type:'dry',amount:.62,share:.5,settle:.7,seed:3}},
+  {id:'glitter-01',family:'glitter',base:'#d8d2c8',colors:['#e9e9ee'],fill:{type:'none',glitter:.35,seed:5}},
+  {id:'glitter-02',family:'glitter',base:'#1d2a4a',colors:['#e2c26a'],fill:{type:'none',glitter:.8,seed:6}}
+].map(m=>({role:'layout',palette:{mode:'accent',derive:[]},accents:1,colors:[],...m}));
+const MASKS=[...SPLITS,...FILLS,...await fetch('vinyl-masks/manifest.json').then(r=>r.ok?r.json():{masks:[]}).then(j=>j.masks).catch(()=>[])];
 const maskById=id=>MASKS.find(m=>m.id===id);
 const patternIds=mode=>MASKS.filter(m=>m.palette.mode===mode).map(m=>m.id).join(' / ')||'暂无';
 // Hard wedges per channel, then a slight blur: two vinyl colours meet with a narrow blended seam.
@@ -1234,6 +1263,7 @@ function unstackMask(bmp,accents){const N=bmp.width,src=canvas(N,bmp.height).get
 const maskCache=new Map(),maskDone=new Set();
 function loadMask(id){
   const m=maskById(id);
+  if(m.fill){maskDone.add(id);return Promise.resolve(null)}
   if(!maskCache.has(id))maskCache.set(id,(!m.file?Promise.resolve(splitMask(id)):fetch('vinyl-masks/'+m.file).then(r=>{if(!r.ok)throw new Error(`HTTP ${r.status}`);return r.blob()}).then(b=>createImageBitmap(b,{colorSpaceConversion:'none',premultiplyAlpha:'none'}))
     .then(bmp=>bmp.height>bmp.width?unstackMask(bmp,m.accents):bmp))
     .then(img=>{maskDone.add(id);return img},e=>{maskCache.delete(id);throw e}));
@@ -1357,21 +1387,26 @@ const STYLE_KEYS=['vinyl#','vinyl#Color','vinyl#Clear','pattern#','pattern#Color
 // colour as its base, either one optionally see-through. Only main + accent patterns have a pattern
 // transparency (pclear): split regions and tonal shades are all part of the base.
 function discLook(i){const s=styleSfx(i),black=state['vinyl'+s]==='black',mask=black?null:maskById(state['pattern'+s]);
-  return{s,black,base:black?VINYL_BLACK:state[`vinyl${s}Color`],clear:black?0:state[`vinyl${s}Clear`],mask,pclear:mask?.palette.mode==='accent'?state[`pattern${s}Clear`]:0}}
+  return{s,black,base:black?VINYL_BLACK:state[`vinyl${s}Color`],clear:black?0:state[`vinyl${s}Clear`],mask,pclear:mask?.palette.mode==='accent'&&!mask.fill?state[`pattern${s}Clear`]:0}}
 async function applyPatternTo(i,mats){
   const{s,base,clear,pclear,mask:m}=discLook(i),token=++patternToken[i-1];
   const drop=()=>{for(const t of[mats.face.map,mats.face.alphaMap])t?.dispose();mats.face.map=mats.face.alphaMap=null;mats.face.needsUpdate=true};
   // Until the mask lands (or if it never does) the face keeps the plain colour and opacity set by applyVinylTo.
-  if(!m){drop();return}
+  if(!m||m.fill){drop();return}
   const img=await loadMask(m.id);if(token!==patternToken[i-1])return;
   const colors=derivePattern(m,base,state[`pattern${s}Color`],state[`pattern${s}Alt`],state[`pattern${s}Contrast`]);
   const t=patternTextures(img,base,colors,state[`pattern${s}Rot`],clear,pclear);
   drop();mats.face.map=t.map;mats.face.alphaMap=t.alpha;mats.face.color.setScalar(VINYL_LIFT);if(t.alpha)mats.face.opacity=1;mats.face.needsUpdate=true}
 function applyVinylTo(i,mats){
-  const{black,base,clear,mask}=discLook(i),see=clear>0;
-  for(const m of[mats.face,mats.edge]){m.color.set(base).multiplyScalar(VINYL_LIFT);m.transparent=see;m.opacity=1-clear;m.depthWrite=!see;m.needsUpdate=true}
+  const{black,base,clear,mask}=discLook(i),sealed=!!mask?.fill&&mask.fill.type!=='none',see=clear>0||sealed;
+  // A liquid or sand disc is a clear shell barely tinted by the fill's colour; the fill does the colouring.
+  const shell=sealed?'#'+new THREE.Color(base).lerp(new THREE.Color('#f4f3f0'),.88).getHexString():base,shellClear=sealed?.8:clear;
+  for(const m of[mats.face,mats.edge]){m.color.set(shell).multiplyScalar(VINYL_LIFT);m.transparent=see;m.opacity=1-shellClear;m.depthWrite=!see;m.needsUpdate=true}
   // A see-through disc shows its far face through the near one, so the inside of each face is drawn too.
   mats.face.side=see?THREE.DoubleSide:THREE.FrontSide;
+  // A liquid or sand disc's clear shell is seen through its whole width at the rim: darker and nearly opaque.
+  mats.face.userData.shellEdge.value=sealed?1:0;
+  if(sealed){mats.edge.color.multiplyScalar(.7);mats.edge.opacity=1-shellClear*.3}
   mats.face.envMapIntensity=black?.32:.22;
   const g=grooveMaps(state[i===2?'tracks2':'tracks']);
   if(mats.face.roughnessMap!==g.rough){mats.face.roughnessMap=g.rough;mats.face.anisotropyMap=g.aniso;mats.face.needsUpdate=true}
@@ -1380,8 +1415,236 @@ function applyVinylTo(i,mats){
 // Resolves once both discs carry their pattern textures; spec rendering waits on it.
 let vinylReady=Promise.resolve();
 function applyVinyl(){
+  applyFillTo(1,fill1);applyFillTo(2,fill2);
   vinylReady=Promise.all([applyVinylTo(1,vinyl1),applyVinylTo(2,vinyl2)]);
   vinylReady.catch(e=>console.warn('vinyl pattern',e));return vinylReady}
+
+// ---------- Filled vinyl ----------
+const FILL_TYPES=['none','liquid','dry'];
+// A liquid- or dry-filled record is a see-through shell with a sealed cavity across the groove area. The fill
+// is a ring at the disc's mid-plane, between the two faces, drawn by a shader in a frame whose "down" points at
+// the floor, so the fill settles and stays put while the disc spins. A liquid is a tinted carrier filling the
+// cavity with a light, milky phase in it: rounded blobs built from overlapping circles, some flattened along
+// the cavity walls, round droplets of every size around them, and specks of carrier caught inside. Dry fill
+// is a noise field cut at a threshold. Glitter flakes ride the same ring and also work with no fill.
+// The fields, in GLSL and again in JS: the JS copy only measures them, so the fill share and blob share can be
+// turned into thresholds (a quantile over the cavity) and mean what they say whatever the seed and settling.
+const FILL_GLSL=`
+float lqHash(vec2 p){vec3 p3=fract(vec3(p.xyx)*.1031);p3+=dot(p3,p3.yzx+33.33);return fract((p3.x+p3.y)*p3.z);}
+vec2 lqHash2(vec2 p){vec3 p3=fract(vec3(p.xyx)*vec3(.1031,.1030,.0973));p3+=dot(p3,p3.yzx+33.33);return fract((p3.xx+p3.yz)*p3.zy);}
+float lqNoise(vec2 p){vec2 i=floor(p),f=fract(p),u=f*f*f*(f*(f*6.-15.)+10.);
+  return mix(mix(lqHash(i),lqHash(i+vec2(1,0)),u.x),mix(lqHash(i+vec2(0,1)),lqHash(i+vec2(1,1)),u.x),u.y);}
+float lqFbm(vec2 p,int n){float s=0.,a=.5,t=0.;for(int i=0;i<5;i++){if(i>=n)break;s+=a*lqNoise(p);t+=a;p=mat2(1.6,1.2,-1.2,1.6)*p+17.3;a*=.5;}return s/t;}
+// Carrier: warped fbm, raised where the disc is low (q.y > 0 is down) so it pools there.
+float lqCarrier(vec2 q){vec2 w=q*.11+lqSeed;
+  vec2 warp=vec2(lqFbm(w*.6+3.1,2),lqFbm(w*.6+7.7,2))-.5;
+  float h=lqFbm(w+1.1*warp,2);
+  if(lqType==2)h+=(lqFbm(q*1.6+4.,3)-.5)*.12;
+  return h+lqSettle*.5*q.y/15.1;}
+float lqSmin(float a,float b,float k){float h=max(k-abs(a-b),0.)/k;return min(a,b)-h*h*k*.25;}
+// Signed distances (cm, negative inside) to the base-colour (x) and derived-shade (y) blobs: a smooth union of
+// each one's circles, minus the specks.
+// Big circles melt into one another over a wide blend, so a blob's outline is smooth; droplets stay round.
+// In clips the liquid shears slowly as a whole: a small swirl, the inner ring turning a little more than the
+// outer, plus a faint breathing per droplet; it returns to rest at the end of the loop.
+vec2 lqBlobSD(vec2 q){float d=1e3,d2=1e3,hole=1e3,t=6.2831853*lqTime,sw=sin(t);
+  for(int i=0;i<256;i++){if(i>=lqCount)break;vec4 c=texelFetch(lqCircles,ivec2(i,0),0);
+    float th=.06*sw*(1.15-length(c.xy)/15.),cs=cos(th),sn=sin(th);
+    vec2 off=vec2(cs*c.x-sn*c.y,sn*c.x+cs*c.y)-c.xy+vec2(sin(t+c.w)-sin(c.w),cos(t+c.w)-cos(c.w))*.04/(.3+abs(c.z));
+    bool alt=c.w>=10.;
+    float di=length(q-c.xy-off)-abs(c.z);
+    if(c.z<0.)hole=min(hole,di);else if(alt)d2=lqSmin(d2,di,clamp(.5*c.z,.06,.8));else d=lqSmin(d,di,clamp(.5*c.z,.06,.8));}
+  return vec2(max(d,-hole),max(d2,-hole));}`;
+const lqFract=x=>x-Math.floor(x);
+function lqHashJS(x,y){const a=lqFract(x*.1031),b=lqFract(y*.1031),c=a,d=a*(b+33.33)+b*(c+33.33)+c*(a+33.33);return lqFract((a+d+b+d)*(c+d))}
+function lqNoiseJS(x,y){const ix=Math.floor(x),iy=Math.floor(y),fx=x-ix,fy=y-iy,ux=fx*fx*fx*(fx*(fx*6-15)+10),uy=fy*fy*fy*(fy*(fy*6-15)+10),m=(a,b,t)=>a+(b-a)*t;
+  return m(m(lqHashJS(ix,iy),lqHashJS(ix+1,iy),ux),m(lqHashJS(ix,iy+1),lqHashJS(ix+1,iy+1),ux),uy)}
+function lqFbmJS(x,y,n){let s=0,a=.5,t=0;for(let i=0;i<n;i++){s+=a*lqNoiseJS(x,y);t+=a;[x,y]=[1.6*x-1.2*y+17.3,1.2*x+1.6*y+17.3];a*=.5}return s/t}
+function lqCarrierJS(qx,qy,{seed,settle,dry}){const wx=qx*.11+seed[0],wy=qy*.11+seed[1];
+  const ax=lqFbmJS(wx*.6+3.1,wy*.6+3.1,2)-.5,ay=lqFbmJS(wx*.6+7.7,wy*.6+7.7,2)-.5;
+  let h=lqFbmJS(wx+1.1*ax,wy+1.1*ay,2);if(dry)h+=(lqFbmJS(qx*1.6+4,qy*1.6+4,3)-.5)*.12;return h+settle*.5*qy/15.1}
+// A liquid's coloured blobs as circles [x, y, r, w] in the disc frame (cm, +y down at rest); r < 0 marks a speck
+// of clear liquid cut out of a blob; w is the circle's drift phase, plus 10 when it has the derived shade (alt
+// of the blobs do, a blob's droplets mostly keep its shade). Built to cover share of the cavity: walls first,
+// then blobs, then droplets.
+function liquidLayout({seed,inner,outer,share,alt=0,settle,specks}){
+  if(share<=0)return[];
+  const r=rng(seed*7919+13),big=[],small=[],holes=[],scale=Math.sqrt(share/.25);
+  // Coverage is counted on fixed sample points, so overlaps and the walls don't inflate it.
+  const pr=rng(3),N=1500,px=new Float32Array(N),py=new Float32Array(N),hit=new Uint8Array(N);let covered=0;
+  for(let i=0;i<N;i++){const rr=Math.sqrt(pr()*(outer*outer-inner*inner)+inner*inner),a=pr()*Math.PI*2;px[i]=rr*Math.cos(a);py[i]=rr*Math.sin(a)}
+  const frac=()=>covered/N;
+  // A point in the cavity; with settling the coloured liquid favours the top (-y).
+  const anywhere=()=>{for(let k=0;k<40;k++){const rr=Math.sqrt(r()*(outer*outer-inner*inner)+inner*inner),a=r()*Math.PI*2,x=rr*Math.cos(a),y=rr*Math.sin(a);
+    if(r()<Math.exp(-settle*1.6*(y/outer+1)))return[x,y]}return[0,-(inner+outer)/2]};
+  // Blobs gather: most start near one of a few centres, leaving wide stretches of the cavity open.
+  const centres=Array.from({length:2+Math.floor(r()*3)},anywhere);
+  const spot=()=>{if(r()<.25)return anywhere();const[cx,cy]=centres[Math.floor(r()*centres.length)];
+    for(let k=0;k<20;k++){const a=r()*Math.PI*2,d=r()**.7*4.5,x=cx+Math.cos(a)*d,y=cy+Math.sin(a)*d,rr=Math.hypot(x,y);if(rr>inner+.3&&rr<outer-.3)return[x,y]}return[cx,cy]};
+  const put=(list,x,y,rad,tone=0)=>{list.push([x,y,rad,r()*6.283+10*tone]);
+    for(let i=0;i<N;i++)if(!hit[i]&&(px[i]-x)**2+(py[i]-y)**2<rad*rad){hit[i]=1;covered++}};
+  // Along a wall: circles centred just inside it, so the blob spreads flat against the wall.
+  const shade=()=>r()<alt?1:0;
+  const wall=(R,side,a0,span)=>{const n=Math.max(2,Math.round(span*R/1.1)),tone=shade();
+    for(let k=0;k<n;k++){const rad=(.6+.7*r())*scale,a=a0+span*k/n,rr=R+side*rad*.5;put(big,rr*Math.cos(a),rr*Math.sin(a),rad,tone)}};
+  // A blob: a short random walk of overlapping circles, so it comes out lobed and now and then elongated.
+  const blob=()=>{let[x,y]=spot(),ang=r()*Math.PI*2;const n=1+Math.floor(r()*r()*6),tone=shade();
+    for(let k=0;k<n;k++){const rad=(.55+1.6*r()**1.4)*scale;put(big,x,y,rad,tone);ang+=(r()-.5)*1.6;const step=rad*(.75+.45*r());
+      x+=Math.cos(ang)*step;y+=Math.sin(ang)*step;const d=Math.hypot(x,y);if(d>outer-.3||d<inner+.3)ang+=Math.PI*.7}};
+  if(r()<.65)wall(inner,1,r()*Math.PI*2,.6+r()*2.2);
+  if(r()<.5)wall(outer,-1,-Math.PI/2-.4+(r()-.5)*(1-settle)*Math.PI*2,.3+r()*.7);
+  // specks also sets how much of the share goes to droplets, and how many there can be.
+  const dropShare=.08+.3*specks,maxDrops=30+Math.round(300*specks);
+  while(frac()<share*(1-dropShare)&&big.length<90)blob();
+  // Droplets, many small and few large: beside a blob, in a band round the label, or anywhere.
+  while(frac()<share&&small.length<maxDrops){const rad=.05+.5*r()**2.5,u=r();let x,y,tone=shade();
+    if(u<.5&&big.length){const p=big[Math.floor(r()*big.length)],a=r()*Math.PI*2,d=p[2]+rad+.08+r()**2*1.6;x=p[0]+Math.cos(a)*d;y=p[1]+Math.sin(a)*d;if(r()<.8)tone=p[3]>=10?1:0}
+    else if(u<.75){const rr=inner+.25+r()*1.8,a=r()*Math.PI*2;x=rr*Math.cos(a);y=rr*Math.sin(a)}
+    else[x,y]=spot();
+    put(small,x,y,rad,tone)}
+  // Specks of carrier inside the larger blobs; they drift with their blob.
+  const host=big.filter(c=>c[2]>.45);
+  for(let k=0;k<Math.round(specks*60)&&host.length;k++){const p=host[Math.floor(r()*host.length)],a=r()*Math.PI*2,d=Math.sqrt(r())*(p[2]-.15);
+    holes.push([p[0]+Math.cos(a)*d,p[1]+Math.sin(a)*d,-(.025+.07*r()**2),p[3]])}
+  return[...big,...holes,...small].slice(0,256)}
+// Threshold that leaves share of the cavity above it. Fixed sample points, so a slider never flickers.
+const lqQuantCache=new Map();
+function lqThreshold(fn,share,o,inner,outer){
+  const k=[fn.name,o.seed,o.settle,o.dry,inner,outer].join('|');let v=lqQuantCache.get(k);
+  if(!v){const r=rng(7),N=2400;v=new Float32Array(N);
+    for(let i=0;i<N;i++){const rr=Math.sqrt(r()*(outer*outer-inner*inner)+inner*inner),a=r()*Math.PI*2;v[i]=fn(rr*Math.cos(a),rr*Math.sin(a),o)}
+    v.sort();if(lqQuantCache.size>64)lqQuantCache.clear();lqQuantCache.set(k,v)}
+  if(share<=0)return v[v.length-1]+1;if(share>=1)return v[0]-1;
+  return v[Math.min(v.length-1,Math.floor((1-share)*v.length))]}
+let liquidClock=0,liquidSpin=0;   // clip frame being drawn: loop phase, and how far the disc has spun (degrees); 0 for stills
+function fillMaterial(){
+  const u={lqType:{value:0},lqC1:{value:new THREE.Color()},lqC2:{value:new THREE.Color()},lqGlitC:{value:new THREE.Color()},
+    lqAmountT:{value:2},lqPhase2:{value:.5},lqCount:{value:0},lqRot:{value:0},lqFull:{value:0},lqDrops:{value:0},lqCircles:{value:null},lqBubbles:{value:0},lqSettle:{value:0},lqInner:{value:5.3},lqOuter:{value:14.6},
+    lqGlitter:{value:0},lqTime:{value:0},lqSeed:{value:new THREE.Vector2()},lqDown:{value:new THREE.Vector2(0,1)}};
+  const m=new THREE.MeshPhysicalMaterial({color:0xffffff,metalness:0,roughness:.12,transparent:true,depthWrite:false,side:THREE.DoubleSide,envMap:studioEnv,envMapIntensity:.55});
+  m.onBeforeCompile=sh=>{Object.assign(sh.uniforms,u);
+    sh.vertexShader='varying vec2 vLqPos;varying vec3 vLqTx,vLqTy;\n'+sh.vertexShader.replace('#include <uv_vertex>',`#include <uv_vertex>
+      vLqPos=position.xy;vLqTx=normalize((modelViewMatrix*vec4(1.,0.,0.,0.)).xyz);vLqTy=normalize((modelViewMatrix*vec4(0.,1.,0.,0.)).xyz);`);
+    sh.fragmentShader=`uniform int lqType;uniform vec3 lqC1,lqC2,lqGlitC;
+uniform sampler2D lqCircles;uniform int lqCount;uniform float lqRot,lqFull,lqDrops,lqAmountT,lqPhase2,lqBubbles,lqSettle,lqInner,lqOuter,lqGlitter,lqTime;uniform vec2 lqSeed,lqDown;
+varying vec2 vLqPos;varying vec3 vLqTx,vLqTy;${FILL_GLSL}\n`+sh.fragmentShader
+      .replace('#include <map_fragment>',`#include <map_fragment>
+  // q: disc coordinates (cm) turned so +y points at the floor.
+  vec2 lqP=vLqPos,lqDn=vec2(cos(lqRot)*lqDown.x-sin(lqRot)*lqDown.y,sin(lqRot)*lqDown.x+cos(lqRot)*lqDown.y),lqRight=vec2(-lqDn.y,lqDn.x),q=vec2(dot(lqP,lqRight),dot(lqP,lqDn));
+  float lqR=length(lqP),lqPx=max(length(fwidth(lqP)),.002),lqA=0.,lqTilt=0.,lqRough=.12,lqGlit=0.;
+  vec3 lqCol=vec3(0.);vec2 lqOut=vec2(0.),lqGlitN=vec2(0.);
+  if(lqType>0){
+    float cav=smoothstep(lqInner,lqInner+.05,lqR)*(1.-smoothstep(lqOuter-.05,lqOuter,lqR)),e=.03;
+    // The cavity's walls: a thin dark line each, where the shell's sealed seam catches the light.
+    float wall=exp(-abs(lqR-lqOuter)/max(.025,lqPx))+exp(-abs(lqR-lqInner)/max(.025,lqPx));
+    if(lqType==2){
+      // Dry fill: packed grains, rough and nearly opaque, two tones in clumps plus per-grain speckle.
+      float h=lqCarrier(q);vec2 g=vec2(lqCarrier(q+vec2(e,0.))-h,lqCarrier(q+vec2(0.,e))-h)/e;
+      float d=(h-lqAmountT)/max(length(g),1e-4),inA=smoothstep(-lqPx,lqPx,d)*cav;   // d: cm to the edge, + inside
+      float tone=lqFbm(q*.9+9.,2),grain=lqHash(floor(q*40.)+lqSeed),fine=clamp(1.5-lqPx*40.,0.,1.);
+      lqCol=mix(lqC1,lqC2,clamp(lqPhase2*1.6*tone+(grain-.5)*.6*fine,0.,1.))*mix(.82,1.,smoothstep(0.,.15,d))*(1.+(grain-.5)*.25*fine);
+      lqA=inA*.97;lqRough=.9;lqTilt=.5*exp(-max(d,0.)/.08)*inA;lqOut=-normalize(lqRight*g.x+lqDown*g.y+1e-6);
+    }else{
+      // The cavity's liquid: clear (only its bubbles and the coloured blobs show), or the base colour when full.
+      float inA=cav;vec3 cA=lqFull>0.?lqC1:mix(vec3(1.),lqC1,.12);float aA=inA*(lqFull>0.?lqFull:.04);
+      // Coloured blobs, base colour or its derived shade: a flattened pillow, thin and see-through at the edge.
+      vec2 sd=lqBlobSD(q);
+      // A dense droplet field, more than the circle list can hold: one droplet per cell at most on three grids
+      // of different sizes, each turned and offset so no row or column shows, kept to irregular clusters of a
+      // noise field and thickest in a band round the label.
+      if(lqDrops>0.){float n=lqFbm(q*.3+lqSeed*.3+3.,3)+.22*exp(-(lqR-lqInner)/2.2)+.12*(lqFbm(q*1.3+9.,2)-.5);
+        float dens=lqDrops*smoothstep(.42,.66,n);
+        for(int k=0;k<3;k++){float fk=float(k),sc=k==0?1.:k==1?1.9:3.5,an=.7+1.3*fk,ca=cos(an),sa=sin(an);
+          vec2 g=mat2(ca,sa,-sa,ca)*q*sc+lqSeed*(1.+fk)+fk*.37,cl=floor(g),fr=fract(g);
+          float rad=mix(.08,.4,pow(lqHash(cl+31.+fk),2.2));vec2 cc=.5+(lqHash2(cl+57.+fk)-.5)*(1.-2.*rad);
+          if(lqHash(cl+71.+fk)<dens*(k==0?.45:k==1?.7:.85))sd.y=min(sd.y,(length(fr-cc)-rad)/sc);}}
+      float d1=-sd.x,d2=-sd.y,db=max(d1,d2);
+      float in1=smoothstep(-lqPx,lqPx,d1)*inA,in2=smoothstep(-lqPx,lqPx,d2)*inA*(1.-in1),inB=in1+in2;
+      vec3 cB=mix(lqC1,lqC2,in2/max(inB,1e-4))*mix(.86,1.,smoothstep(0.,.35,db));float aB=mix(.5,.94,smoothstep(0.,.3,db));
+      lqCol=mix(cA,cB,inB);lqA=mix(aA,aB*inA,inB);
+      // The rim's normal from the distance field's screen-space slope, turned back into the gravity frame.
+      mat2 J=mat2(dFdx(q),dFdy(q));float det=determinant(J);
+      vec2 gq=abs(det)>1e-12?inverse(transpose(J))*vec2(dFdx(db),dFdy(db)):vec2(0.);
+      float tB=(.55*exp(-max(db,0.)/.07)+.45*exp(-max(db,0.)/.35))*inB;
+      if(tB>0.){lqTilt=tB;vec2 o=-normalize(gq+1e-9);lqOut=lqRight*o.x+lqDown*o.y;}
+      // Air bubbles: one per cell at most, more of them near the top, only in the carrier.
+      vec2 bq=q*1.1+lqSeed*3.,cell=floor(bq),f=fract(bq);
+      float top=smoothstep(10.,-12.,q.y),rad=mix(.08,.3,pow(lqHash(cell+5.),2.));
+      vec2 c=.5+(lqHash2(cell+41.)-.5)*(1.-2.*rad);
+      float on=step(lqHash(cell+7.),lqBubbles*(.1+.3*top))*inA*(1.-inB),bd=(length(f-c)-rad)/1.1;
+      float inside=on*(1.-smoothstep(-lqPx,lqPx,bd)),ring=on*exp(-abs(bd)/max(.012,lqPx));
+      lqCol=mix(lqCol,lqC1*.5+.5,inside*.5);lqA=mix(lqA,.12,inside);lqA=max(lqA,.85*ring);lqCol=mix(lqCol,vec3(1.),.35*ring);
+      float tb=.9*exp(-abs(bd)/.04)*on;if(tb>lqTilt){lqTilt=tb;vec2 dq=normalize(f-c+1e-6);lqOut=lqRight*dq.x+lqDown*dq.y;}
+    }
+    lqCol=mix(lqCol,lqC1*.45,.6*wall*(1.-lqA*.3));lqA=max(lqA,.55*wall);
+  }
+  if(lqGlitter>0.){
+    // Flakes ~0.6 mm, each with its own tilt; far away they fade instead of flickering.
+    vec2 gq=lqP*16.+lqSeed*5.,cell=floor(gq),c=.3+.4*lqHash2(cell+8.);
+    float on=step(lqHash(cell+3.1),lqGlitter*.45)*(1.-smoothstep(.16,.24,length(fract(gq)-c)));
+    float px=length(fwidth(gq));lqGlit=on/(1.+px*px);lqGlitN=(lqHash2(cell+27.)*2.-1.)*.75;
+    lqCol=mix(lqCol,lqGlitC*.9,lqGlit);lqA=max(lqA,.95*lqGlit);
+  }
+  if(lqA<.003)discard;
+  diffuseColor.rgb=lqCol;diffuseColor.a*=lqA;`)
+      .replace('#include <roughnessmap_fragment>','#include <roughnessmap_fragment>\n  roughnessFactor=lqRough;')
+      .replace('#include <normal_fragment_maps>',`#include <normal_fragment_maps>
+  if(lqTilt>0.)normal=normalize(normal*(1.-.6*lqTilt)+(vLqTx*lqOut.x+vLqTy*lqOut.y)*lqTilt);`)
+      .replace('#include <opaque_fragment>',`if(lqGlit>0.){vec3 fn=normalize(normal+vLqTx*lqGlitN.x+vLqTy*lqGlitN.y);vec3 sp=vec3(0.);
+    #ifdef USE_ENVMAP
+    sp+=getIBLRadiance(geometryViewDir,fn,.06)*4.;
+    #endif
+    #if NUM_DIR_LIGHTS > 0
+    for(int i=0;i<NUM_DIR_LIGHTS;i++)sp+=directionalLights[i].color*pow(max(dot(fn,normalize(directionalLights[i].direction+geometryViewDir)),0.),300.)*6.;
+    #endif
+    outgoingLight+=lqGlit*lqGlitC*sp;}
+  #include <opaque_fragment>`)};
+  m.customProgramCacheKey=()=>'filled-vinyl-v2';
+  // Circles of the light phase, one texel each (see liquidLayout).
+  const circles=new THREE.DataTexture(new Float32Array(256*4),256,1,THREE.RGBAFormat,THREE.FloatType);circles.needsUpdate=true;u.lqCircles.value=circles;
+  return{mat:m,uniforms:u,mesh:null,circles,layoutKey:''}}
+const fill1=fillMaterial(),fill2=fillMaterial();
+// Picker swatch for a fill pattern, drawn flat from the same layout as the disc (liquid) or field (sand).
+function fillThumb(m,N=160){
+  const c=canvas(N,N),g=c.getContext('2d'),d=g.createImageData(N,N),f=m.fill,R=15.1,rgb=h=>[1,3,5].map(k=>parseInt(h.slice(k,k+2),16));
+  const B=rgb(m.base),A=rgb(f.type==='liquid'?derivePattern(m,m.base,'','',1)[0]:m.colors[0]),shell=[236,233,226],sv=[(f.seed*12.9898)%97,(f.seed*78.233)%89];
+  const cs=f.type==='liquid'?liquidLayout({seed:f.seed,inner:5.3,outer:14.6,share:f.share,alt:f.alt,settle:f.settle,specks:f.detail}):[];
+  const T=f.type==='dry'?lqThreshold(lqCarrierJS,f.amount,{seed:sv,settle:f.settle,dry:true},5.3,14.6):0,r=rng(f.seed);
+  const smin=(a,b,k)=>{const h=Math.max(k-Math.abs(a-b),0)/k;return Math.min(a,b)-h*h*k*.25};
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++){const qx=((x+.5)/N-.5)*2*R,qy=((y+.5)/N-.5)*2*R,i=(y*N+x)*4;let col=B;
+    if(f.type==='liquid'){let d1=1e3,d2=1e3,hole=1e3;col=f.full?B:shell;
+      for(const[cx,cy,cr,w]of cs){const di=Math.hypot(qx-cx,qy-cy)-Math.abs(cr),k=Math.min(.8,Math.max(.06,.5*cr));if(cr<0)hole=Math.min(hole,di);else if(w>=10)d2=smin(d2,di,k);else d1=smin(d1,di,k)}
+      if(Math.max(d1,-hole)<0)col=B;else if(Math.max(d2,-hole)<0)col=A}
+    else if(f.type==='dry')col=lqCarrierJS(qx,qy,{seed:sv,settle:f.settle,dry:true})>T?(r()<f.share*.6?A:B):shell;
+    else if(r()<f.glitter*.08)col=A;
+    d.data.set([...col,255],i)}
+  g.putImageData(d,0,0);return c}
+const lqQuat=new THREE.Quaternion(),lqDown3=new THREE.Vector3(),lqScale=new THREE.Vector3();
+// Gravity in the disc's own frame, every draw: the disc's pose (pulled out, flipped, spun, turned for a clip)
+// decides where the fill sits.
+function fillOnBeforeRender(f){return function(){
+  this.matrixWorld.decompose(lqDown3,lqQuat,lqScale);lqDown3.set(0,-1,0).applyQuaternion(lqQuat.invert());
+  const v=f.uniforms.lqDown.value.set(lqDown3.x,lqDown3.y);if(v.lengthSq()<1e-6)v.set(0,-1);v.normalize();
+  // A spinning disc carries its liquid round with it (the layer is a millimetre thin): settle by the pose at
+  // rest, then turn with the disc.
+  if(liquidSpin)v.rotateAround(new THREE.Vector2(),THREE.MathUtils.degToRad(liquidSpin));
+  f.uniforms.lqTime.value=liquidClock}}
+// A fill pattern's look on disc i: the liquid takes the base colour and the milky phase the pattern colour.
+function applyFillTo(i,f){
+  const{s,black,base,mask:m}=discLook(i),spec=!black&&m?.fill,type=spec?spec.type:'none',u=f.uniforms;
+  if(f.mesh){f.mesh.visible=!!spec&&type!=='none';for(const g of f.glitter)g.visible=!!spec&&type==='none'}
+  if(!spec)return;
+  const color=derivePattern(m,base,state[`pattern${s}Color`],state[`pattern${s}Alt`],state[`pattern${s}Contrast`])[0];
+  // Each disc of a 2LP is pressed on its own, so disc 2 gets a different fill even with a shared style.
+  const seed=spec.seed+(i-1)*101,sv=[(seed*12.9898)%97,(seed*78.233)%89],inner=5.3,outer=14.6,settle=spec.settle??0;
+  u.lqType.value=FILL_TYPES.indexOf(type);u.lqSeed.value.set(...sv);u.lqRot.value=THREE.MathUtils.degToRad(state[`pattern${s}Rot`]);
+  u.lqC1.value.set(base);u.lqC2.value.set(color);u.lqGlitC.value.set(color);u.lqFull.value=spec.full??0;u.lqDrops.value=spec.drops??0;
+  u.lqPhase2.value=spec.share??0;u.lqBubbles.value=spec.detail??0;u.lqSettle.value=settle;
+  u.lqInner.value=inner;u.lqOuter.value=outer;u.lqGlitter.value=spec.glitter??0;
+  if(type==='dry')u.lqAmountT.value=lqThreshold(lqCarrierJS,spec.amount,{seed:sv,settle,dry:true},inner,outer);
+  if(type==='liquid'){
+    const lay={seed,inner,outer,share:spec.share,alt:spec.alt,settle,specks:spec.detail},key=JSON.stringify(lay);
+    if(key!==f.layoutKey){f.layoutKey=key;const cs=liquidLayout(lay),d=f.circles.image.data;d.fill(0);cs.forEach((c,k)=>d.set(c,k*4));f.circles.needsUpdate=true;u.lqCount.value=cs.length}}}
 const sleeveMat=new THREE.MeshStandardMaterial({color:state.sleeveColor,roughness:.88,side:THREE.DoubleSide,bumpMap:bump,bumpScale:.25});
 
 // Shrink wrap: alpha comes from the film's own reflections, so the film stays invisible where it reflects
@@ -1472,7 +1735,7 @@ function makeSleeve(){const group=new THREE.Group(),s=SLV.s,shape=new THREE.Shap
 const sleeve=makeSleeve(),sleeve2=makeSleeve();
 
 // LP: grooved faces, rim, two labels, spindle hole.
-function makeRecord(matA,matB,vm){const group=new THREE.Group(),{r,t,label,hole}=LP;
+function makeRecord(matA,matB,vm,fm){const group=new THREE.Group(),{r,t,label,hole}=LP;
   const face=remapUV(new THREE.RingGeometry(label,r,256,6),r*2);
   // The back face is the front turned over (x flipped), so its U is flipped too: both faces then sample the
   // pattern at the same point of the disc, and a see-through disc shows the same pattern through it.
@@ -1482,8 +1745,12 @@ function makeRecord(matA,matB,vm){const group=new THREE.Group(),{r,t,label,hole}
   const lab=remapUV(new THREE.RingGeometry(hole,label,128,2),label*2);
   const la=mesh(lab,matA);la.position.z=t/2;const lb=mesh(lab,matB);lb.position.z=-t/2;lb.rotation.y=Math.PI;
   const bore=mesh(new THREE.CylinderGeometry(hole,hole,t,48,1,true),holeMat);bore.rotation.x=Math.PI/2;
-  group.add(top,bot,edge,la,lb,bore);scene.add(group);return group}
-const record=makeRecord(labelMatA,labelMatB,vinyl1),record2=makeRecord(labelMatC,labelMatD,vinyl2);
+  // Fill / glitter layer at the mid-plane, between the faces; hidden until the disc has one.
+  const ring=new THREE.RingGeometry(label,r,256,4),mid=mesh(ring,fm.mat,{cast:false,receive:false});mid.visible=false;mid.onBeforeRender=fillOnBeforeRender(fm);fm.mesh=mid;
+  // Glitter sits just under each face instead, so it also shows in opaque vinyl.
+  fm.glitter=[1,-1].map(side=>{const g=mesh(ring,fm.mat,{cast:false,receive:false});g.position.z=side*(t/2+.003);if(side<0)g.rotation.y=Math.PI;g.visible=false;g.onBeforeRender=mid.onBeforeRender;return g});
+  group.add(top,bot,edge,la,lb,bore,mid,...fm.glitter);scene.add(group);return group}
+const record=makeRecord(labelMatA,labelMatB,vinyl1,fill1),record2=makeRecord(labelMatC,labelMatD,vinyl2,fill2);
 
 // Shrink wrap shell: displaced box. Faces stay tight at the box edges (no cracks), wrinkle near edges and corners.
 const wrap=new THREE.Mesh(undefined,[wrapMouthMat,wrapMat,wrapMat,wrapMat,wrapMat,wrapMat]);wrap.renderOrder=2;scene.add(wrap);
@@ -2229,11 +2496,12 @@ $('bg-color').addEventListener('input',e=>{state.bgColor=e.target.value;state.bg
 $('sleeve-color').addEventListener('input',e=>{state.sleeveColor=e.target.value;sleeveMat.color.set(tex.sleeve?'#ffffff':e.target.value)});
 field('vinyl-color','vinylColor');field('vinyl2-color','vinyl2Color');field('bg-color','bgColor');field('sleeve-color','sleeveColor');
 // Pattern panel: a thumbnail picker per disc, then only the controls the pattern's palette mode uses.
-const FAMILY={split:['分色','Split'],splatter:['泼溅','Splatter'],starburst:['爆发','Starburst'],blob:['色块','Blob'],pinwheel:['风车','Pinwheel'],ripple:['波纹','Ripple'],swirl:['旋涡','Swirl'],smoke:['烟雾','Smoke'],marble:['大理石','Marble'],tiedye:['扎染','Tie-dye'],ghostly:['云雾','Ghostly'],halo:['光环','Halo']};
+const FAMILY={liquid:['液体','Liquid'],sand:['沙','Sand'],glitter:['亮片','Glitter'],split:['分色','Split'],splatter:['泼溅','Splatter'],starburst:['爆发','Starburst'],blob:['色块','Blob'],pinwheel:['风车','Pinwheel'],ripple:['波纹','Ripple'],swirl:['旋涡','Swirl'],smoke:['烟雾','Smoke'],marble:['大理石','Marble'],tiedye:['扎染','Tie-dye'],ghostly:['云雾','Ghostly'],halo:['光环','Halo']};
 // The palette mode (split / main + accent / tonal) stays internal: the controls below already follow it.
 const patternLabel=m=>m?`${tr(...(FAMILY[m.family]??[m.family,m.family]))} · ${m.id}`:tr('纯色','Solid');
 const splitThumbs=new Map();
 function thumbUrl(m){if(m.thumb)return'vinyl-masks/'+m.thumb;
+  if(m.fill){if(!splitThumbs.has(m.id))splitThumbs.set(m.id,fillThumb(m).toDataURL('image/jpeg',.82));return splitThumbs.get(m.id)}
   if(!splitThumbs.has(m.id))splitThumbs.set(m.id,compositePattern(splitMask(m.id,160),m.base,derivePattern(m,m.base,m.colors[0],m.colors[1],1),0).color.toDataURL('image/jpeg',.82));
   return splitThumbs.get(m.id)}
 function buildPicker(s){const root=$(`pattern${s}-pick`);root.textContent='';
@@ -2257,10 +2525,12 @@ function syncPatterns(){for(const i of[1,2]){const s=i===1?'':'2',black=state['v
   $(`vinyl${s}-color-lbl`).textContent=!m?tr('颜色','Colour'):mode==='regions'?tr('第一块','First region'):tr('底色','Base');
   // Two transparencies only when there are two layers to tell apart: base and pattern.
   $(`vinyl${s}-clear-lbl`).textContent=mode==='accent'?tr('底色透明度','Base transparency'):tr('透明度','Transparency');
+  // Liquid and sand sit in a clear shell of their own: no transparency to set.
+  $(`vinyl${s}-clear`).parentElement.hidden=!!m?.fill&&m.fill.type!=='none';
   for(const b of $(`pattern${s}-pick`).children)b.setAttribute('aria-checked',String(b.dataset.id===m?.id));
   if(!m)continue;
   $(`pattern${s}-name`).textContent=patternLabel(m);
-  $(`pattern${s}-colors`).hidden=mode==='tonal';$(`pattern${s}-alt`).hidden=!(mode==='regions'&&m.accents===2);$(`pattern${s}-contrast-row`).hidden=mode!=='tonal';$(`pattern${s}-clear-row`).hidden=mode!=='accent';
+  $(`pattern${s}-colors`).hidden=mode==='tonal';$(`pattern${s}-alt`).hidden=!(mode==='regions'&&m.accents===2);$(`pattern${s}-contrast-row`).hidden=mode!=='tonal';$(`pattern${s}-clear-row`).hidden=mode!=='accent'||!!m.fill;
   $(`pattern${s}-colors-lbl`).textContent=mode==='regions'?tr('其余几块','Other regions'):tr('纹路色','Pattern colour');
   $(`pattern${s}-hint`).textContent=mode==='regions'?tr('第一块用上面的底色，下面选其余几块。','The first region uses the base colour; pick the others below.')
     :mode==='accent'?tr('选好底色和纹路色，其余色层自动搭配。','Pick the base and pattern colours; the other layers follow them.')
@@ -2483,7 +2753,7 @@ const SPEC_FIELDS=[
     numF(`records.disc${i}.sleeveOut`,`sleeve${s}X`,0,100,.01,`第 ${i} 张内袋连同唱片从封套开口抽出的比例（%），只在 records.sleeve.on=true 时生效，内袋不显示时写了会被忽略并给出警告${note}${i===2?'。双开且 records.layout=split 时从左扇的开口抽出：合上时朝右，打开后朝左':''}`),
     numF(`records.disc${i}.recordOut`,`record${s}X`,0,100,.01,`第 ${i} 张唱片抽出的比例（%）。显示内袋时是唱片再从内袋里抽出的比例；不显示内袋时是唱片直接抽出封套的比例，100 为完全抽出、落在地面${note}`),
     numF(`records.disc${i}.tracks`,`tracks${s}`,1,20,1,`第 ${i} 张每面的音轨数，盘面按等宽分成这么多圈，相邻音轨之间有一道亮环；两面相同${note}`,true),
-    enumF(`records.disc${i}.pattern.id`,`pattern${s}`,['none',...MASKS.map(m=>m.id)],`第 ${i} 张彩胶纹路，none 或不写为纯色，只在 vinyl=color 时生效。按配色方式分三类——分色（底色是第一块，pattern.color 第二块，三块的纹路（split-tri、tiedye-*）再用 pattern.color2 第三块；split-quad 对角同色）：${patternIds('regions')}；主次（底色 + pattern.color，其余色层自动推算）：${patternIds('accent')}；同色系（只用底色，纹路是它的深浅变化，pattern.contrast 调反差）：${patternIds('tonal')}。底色是 color；写了 color 而没写 pattern.color / pattern.color2 时，纹路色按底色推算；color 也没写时，用这款纹路的默认配色${note}`),
+    enumF(`records.disc${i}.pattern.id`,`pattern${s}`,['none',...MASKS.map(m=>m.id)],`第 ${i} 张彩胶纹路，none 或不写为纯色，只在 vinyl=color 时生效。按配色方式分三类——分色（底色是第一块，pattern.color 第二块，三块的纹路（split-tri、tiedye-*）再用 pattern.color2 第三块；split-quad 对角同色）：${patternIds('regions')}；主次（底色 + pattern.color，其余色层自动推算）：${patternIds('accent')}；同色系（只用底色，纹路是它的深浅变化，pattern.contrast 调反差）：${patternIds('tonal')}。液体胶 liquid-* 是同色系，三款形态不同：liquid-01 透明清液里漂着底色和推算色两种大块；liquid-02 底色液体铺满空腔，漂着推算色的大块；liquid-03 底色液体铺满空腔，满是推算色的大小液滴。pattern.contrast 调两者反差，不用 transparency，液体随唱片转动；沙 sand-01 和亮片 glitter-* 是主次类：沙的底色和 pattern.color 是两种沙色，不用透明度；亮片的底色是胶色（可配合 transparency），pattern.color 是亮片颜色。底色是 color；写了 color 而没写 pattern.color / pattern.color2 时，纹路色按底色推算；color 也没写时，用这款纹路的默认配色${note}`),
     colorF(`records.disc${i}.pattern.color`,`pattern${s}Color`,`第 ${i} 张纹路色：主次类为纹路颜色，分色类为第二块颜色；同色系不使用${note}`),
     numF(`records.disc${i}.pattern.transparency`,`pattern${s}Clear`,0,80,.01,`第 ${i} 张纹路的透明度（%），默认 0 为不透明；纹路色和由它推算的色层一起变透明。底色不透明时纹路会透出底色、变淡；底色也透明时（transparency）纹路同样透光。仅主次类（${patternIds('accent')}）使用，分色类和同色系忽略并给出警告${note}`),
     colorF(`records.disc${i}.pattern.color2`,`pattern${s}Alt`,`第 ${i} 张分色第三块颜色，仅三块的分色纹路（split-tri、tiedye-*）使用${note}`),
@@ -2570,7 +2840,7 @@ function specFromState(){
   for(const i of[1,2]){const d=s.records[`disc${i}`],sx=i===1?'':'2';if(!('vinyl' in d))continue;
     if(state['vinyl'+sx]==='black')for(const k of['color','transparency','pattern'])delete d[k];
     else if(!maskById(state['pattern'+sx]))delete d.pattern;
-    else if(maskById(state['pattern'+sx]).palette.mode!=='accent')delete d.pattern.transparency}
+    else{const m=maskById(state['pattern'+sx]);if(m.palette.mode!=='accent'||m.fill)delete d.pattern.transparency;if(m.fill&&m.fill.type!=='none')delete d.transparency}}
   {const t=stickerTpl();if(t){delete s.sticker.shape;s.sticker.lines=tplLines(t,state.stickerLines)}else delete s.sticker.color}
   s.camera={view:state.view,zoom:state.camZoom,azimuth:state.camAz,elevation:state.camEl,panX:state.camPanX,panY:state.camPanY};
   s.output={background:state.bg==='transparent'?'transparent':state.bgColor,width:state.outW,height:state.outH};
@@ -2677,6 +2947,8 @@ async function applySpec(spec){
       if(!has(`${pre}.color`)&&m.base)state[`vinyl${s}Color`]=m.base}
     if(has(`${pre}.pattern.color`)&&mode==='tonal')warnings.push(`${pre}.pattern.color 无效：${m.id} 是同色系纹路，只用底色 ${pre}.color`);
     if(has(`${pre}.pattern.color2`)&&!tri)warnings.push(`${pre}.pattern.color2 无效：只有三块的分色纹路（split-tri、tiedye-*）使用第三块颜色`);
+    if(m.fill&&has(`${pre}.pattern.transparency`))warnings.push(`${pre}.pattern.transparency 无效：${m.id} 没有纹路透明度`);
+    if(m.fill&&m.fill.type!=='none'&&has(`${pre}.transparency`))warnings.push(`${pre}.transparency 无效：${m.id} 的外壳总是透明的，液体或沙的通透程度由纹路决定`);
     if(has(`${pre}.pattern.transparency`)&&mode!=='accent')warnings.push(`${pre}.pattern.transparency 无效：只有主次类纹路（${patternIds('accent')}）有单独的纹路透明度；${m.id} 是${mode==='regions'?'分色':'同色系'}纹路，透明度只用 ${pre}.transparency`);
     if(has(`${pre}.pattern.contrast`)&&mode!=='tonal')warnings.push(`${pre}.pattern.contrast 无效：只有同色系纹路（${patternIds('tonal')}）使用反差`);
     if(i===2&&state.lpCount!==2&&has(`${pre}.pattern.id`))warnings.push(`${pre}.pattern 仅在 records.count=2 时可见`)}
@@ -2763,7 +3035,8 @@ function pullTargets(){
   return t}
 // One frame of the clip at loop phase u in [0, 1): turn is the product's turn (radians about the vertical
 // axis); set holds state keys posed for this frame only. Stage preview and video export both draw from it.
-function animFrame(u){
+function animFrame(u){return{...animPose(u),u}}
+function animPose(u){
   const p=state.animPreset,dir=state.animDir==='left'?-1:1;
   if(p==='turntable')return{turn:dir*2*Math.PI*u};
   if(p==='swing')return{turn:dir*THREE.MathUtils.degToRad(state.animAngle)*Math.sin(2*Math.PI*u)};
@@ -2858,7 +3131,8 @@ function renderTurned(angle,c){
   for(const o of parts){o.position.sub(c).applyQuaternion(turn).add(c);o.quaternion.premultiply(turn)}
   try{renderer.render(scene,camera)}finally{parts.forEach((o,i)=>{o.position.copy(saved[i][0]);o.quaternion.copy(saved[i][1])})}}
 // Draws one clip frame: poses it, turns it about the rest pose's centre, then restores both.
-function renderAnimFrame(f,pivot){withPose(f.set,()=>renderTurned(f.turn||0,pivot))}
+function renderAnimFrame(f,pivot){liquidClock=f.u??0;liquidSpin=f.set?.recordRot!==undefined?f.set.recordRot-state.recordRot:0;
+  try{withPose(f.set,()=>renderTurned(f.turn||0,pivot))}finally{liquidClock=liquidSpin=0}}
 function renderStage(){if(previewActive())renderAnimFrame(animFrame(preview.phase),restPivot());else renderer.render(scene,camera)}
 // The key light's shadow box must cover the product in every frame, not only at rest; 0 restores it.
 function shadowReach(r){const sh=key.shadow.camera;Object.assign(sh,r?{left:-r,right:r,top:r,bottom:-r}:SHADOW_BOX);sh.updateProjectionMatrix()}
