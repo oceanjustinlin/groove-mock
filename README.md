@@ -22,6 +22,7 @@ Record Mockup renders photorealistic **3D vinyl record mockups**: LP jackets, ga
 <sub>Pattern vinyl: a translucent splatter disc and a pinwheel disc, from [`docs/specs/patterns.json`](docs/specs/patterns.json).</sub>
 
 - **Jackets:** single sleeve or gatefold at real 12″ dimensions (314 × 314 mm), matte, satin or gloss paper, printed front, back, spine and inner spread.
+- **Formats:** 12" LP (314 mm jacket, 302 mm disc) or 7" single (`format: "7in"`: 184 mm jacket, 175 mm disc at 45 rpm, with an optional 38 mm large centre hole).
 - **Records:** 1LP or 2LP, grooves with track gaps, A/B/C/D labels, 1–20 tracks per side, black, coloured or translucent vinyl per disc, inner sleeves and a double-sided insert that slide out of the jacket. A gatefold 2LP puts one record in each panel, or stacks both in the right panel.
 - **Disc only:** switch the scene to the record alone, vinyl and labels with nothing else in frame, to design the disc itself; on 2LP pick which disc to show (`scene.mode: "disc"`).
 - **Filled vinyl and glitter:** liquid-filled patterns (rounded blobs and droplets in one colour and a shade of it, carried round as the disc spins), sand, and glitter, picked like any other pattern.
