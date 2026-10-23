@@ -81,6 +81,7 @@ button,input,select{font:inherit;color:inherit}
 .play[aria-pressed="true"] .i-pause{display:block}
 .chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;cursor:pointer;font-size:13px}
 .chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.ex-link{text-decoration:none;color:var(--ink)}
 .gh{display:inline-grid;place-items:center;width:30px;height:30px;padding:0;color:var(--ink)}
 .gh svg{width:16px;height:16px;fill:currentColor}
 .primary{background:var(--accent);color:var(--accent-ink);border:0;border-radius:8px;padding:8px 16px;font-weight:700;cursor:pointer}
@@ -301,7 +302,7 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
   .app{height:100vh;height:100dvh;padding-block:8px calc(8px + env(safe-area-inset-bottom,0px));gap:8px}
   .bar{flex-wrap:nowrap;gap:8px}
   .brand h1{font-size:20px}
-  .brand .spec{display:none}
+  .brand .spec,.ex-link{display:none}
   .bar .primary{padding:6px 12px}
   #export-btn{padding:6px 10px}
   #export-btn span{display:none}
@@ -348,6 +349,7 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
       <span class="play-split"><button class="chip play" data-play aria-pressed="false"><svg class="i-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 2.5v11l9-5.5z"/></svg><svg class="i-pause" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 2.5h3v11h-3zM9.5 2.5h3v11h-3z"/></svg></button><button class="chip play-more" data-play-menu aria-haspopup="menu" aria-expanded="false" aria-label="选择动画" title="选择动画"><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2 3.5h6L5 7z"/></svg></button></span>
       <button class="chip" data-play-reset hidden>复位</button>
     </div>
+    <a class="chip ex-link" href="examples/" title="用 Record Mockup 做的样图">案例</a>
     <a class="chip gh" href="https://github.com/oceanjustinlin/record-mockup" target="_blank" rel="noopener" title="源码、命令行和 Agent 用法" aria-label="源码、命令行和 Agent 用法（GitHub）"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
     <button class="chip" id="new-btn" title="清空当前场景，从默认开始">新建</button>
     <button class="chip" id="lang-btn" lang="en" aria-label="Switch language">EN</button>
@@ -676,7 +678,7 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
               <div class="export-action"><button class="primary" id="png-btn" data-export-png type="button"><span>导出 PNG</span></button><span class="export-sum" id="png-sum"></span></div>
               <div class="export-action"><button class="primary" id="video-btn" type="button">导出视频</button><span class="export-sum" id="video-sum"></span></div>
             </div>
-            <p class="note">上传的图片和导出只在浏览器里处理，不会上传给本站。曲库图片的版权归原权利方；公开或商业使用前请取得所需许可。用于预售时，请核对模型图与实际商品一致。<a href="privacy/" target="_blank" rel="noopener">隐私与版权说明</a></p>
+            <p class="note">上传的图片和导出只在浏览器里处理，不会上传给本站。曲库图片的版权归原权利方；公开或商业使用前请取得所需许可。用于预售时，请核对模型图与实际商品一致。<a href="privacy/" target="_blank" rel="noopener">隐私与版权说明</a> · <a href="examples/" target="_blank" rel="noopener">案例</a></p>
           </section>
         </div>
       </div>
@@ -761,7 +763,7 @@ const EN={
   '曲库':'Record library','曲库搜索':'Record library search','艺人':'Artist','专辑名':'Album','搜索':'Search',
   '搜到专辑后选一个版本（黑胶优先，其他版本只取图片），再给每张图选用途。图片版权归原权利方，仅供预览。':'Find an album, pick a release (vinyl first; other formats lend images only), then choose where each image goes. Images belong to their rights holders and are for preview only.',
   '上传的图片和导出只在浏览器里处理，不会上传给本站。曲库图片的版权归原权利方；公开或商业使用前请取得所需许可。用于预售时，请核对模型图与实际商品一致。':'Uploaded images and exports are processed in your browser, not sent to this site. Library images belong to their rights holders; obtain the required permission before public or commercial use. For preorders, check that the mockup matches the actual product.',
-  '隐私与版权说明':'Privacy & copyright',
+  '隐私与版权说明':'Privacy & copyright','案例':'Examples','用 Record Mockup 做的样图':'Mockups made with Record Mockup',
   '设置':'Settings','封套':'Jacket','类型':'Type','单开':'Single','双开':'Gatefold','示例':'Sample',
   '上传封套正面':'Upload jacket front','上传封套背面':'Upload jacket back','上传书脊':'Upload spine',
   '背面':'Back','书脊':'Spine','上传内页左':'Upload inner left','上传内页右':'Upload inner right','内页左':'Inner left','内页右':'Inner right',
