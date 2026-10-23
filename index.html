@@ -65,6 +65,8 @@ button,input,select{font:inherit;color:inherit}
 :root[data-disc-only] .disc-note{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:0 0 8px}
 :root[data-disc-only] .pkg-only,:root[data-disc-only] [data-pkg]{display:none!important}
 :root[data-disc-only] :is(#page-jacket,#page-insert,#page-pack,#page-number)>:not(.disc-note){opacity:.5}
+.chip.disc-toggle,.stage .views .chip.disc-toggle{display:inline-grid;place-items:center;width:30px;padding:0}
+.disc-toggle svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.5}
 :root[data-disc-only] .rail :is([data-page=jacket],[data-page=insert],[data-page=pack],[data-page=number]){opacity:.55}
 #export-btn{display:inline-flex;align-items:center;gap:6px}
 .i-export{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none}
@@ -346,6 +348,7 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
       <button class="chip" data-view="quarter" aria-pressed="true">斜侧</button>
       <button class="chip" data-view="front" aria-pressed="false">正面</button>
       <button class="chip" data-view="side" aria-pressed="false">侧面</button>
+      <button class="chip disc-toggle" type="button" data-disc-toggle aria-pressed="false" aria-label="只看唱片" title="只看唱片"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6"/><circle cx="8" cy="8" r="1.6"/></svg></button>
       <span class="play-split"><button class="chip play" data-play aria-pressed="false"><svg class="i-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 2.5v11l9-5.5z"/></svg><svg class="i-pause" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 2.5h3v11h-3zM9.5 2.5h3v11h-3z"/></svg></button><button class="chip play-more" data-play-menu aria-haspopup="menu" aria-expanded="false" aria-label="选择动画" title="选择动画"><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2 3.5h6L5 7z"/></svg></button></span>
       <button class="chip" data-play-reset hidden>复位</button>
     </div>
@@ -365,6 +368,7 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
         <button class="chip" data-view="quarter" aria-pressed="true">斜侧</button>
         <button class="chip" data-view="front" aria-pressed="false">正面</button>
         <button class="chip" data-view="side" aria-pressed="false">侧面</button>
+        <button class="chip disc-toggle" type="button" data-disc-toggle aria-pressed="false" aria-label="只看唱片" title="只看唱片"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6"/><circle cx="8" cy="8" r="1.6"/></svg></button>
         <span class="play-split"><button class="chip play" data-play aria-pressed="false"><svg class="i-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 2.5v11l9-5.5z"/></svg><svg class="i-pause" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 2.5h3v11h-3zM9.5 2.5h3v11h-3z"/></svg></button><button class="chip play-more" data-play-menu aria-haspopup="menu" aria-expanded="false" aria-label="选择动画" title="选择动画"><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2 3.5h6L5 7z"/></svg></button></span>
         <button class="chip" data-play-reset hidden>复位</button>
     </div>
@@ -414,9 +418,6 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
           <p class="note disc-note">只看唱片时，这一页的内容不显示。<button class="chip" type="button" data-disc-exit>显示完整包装</button></p>
           <section class="group">
             <h2>封套 <small id="jacket-spec">单开 · 书脊 4 mm</small></h2>
-            <div class="row"><span class="lbl">规格</span>
-              <div class="seg" id="format"><button data-v="12in" aria-pressed="true">12″ LP</button><button data-v="7in" aria-pressed="false">7″ 单曲</button></div>
-            </div>
             <div class="row"><span class="lbl">类型</span>
               <div class="seg" id="jacket-type"><button data-v="single" aria-pressed="true">单开</button><button data-v="gatefold" aria-pressed="false">双开</button></div>
             </div>
@@ -441,10 +442,12 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
         <div class="page" id="page-records" data-page="records" role="tabpanel" aria-labelledby="tab-records" hidden>
           <section class="group">
             <h2>唱片与内袋 <small id="records-spec">33⅓ RPM · 标签 Ø100</small></h2>
-            <label class="switch"><input type="checkbox" id="disc-only">只看唱片</label>
             <p class="note" id="disc-only-note" hidden>只显示唱片本体（盘面和标签）；封套、内袋、插页、塑封、Obi、贴纸和编号都不显示，关掉后原样恢复。</p>
             <div class="row" id="disc-show-row" hidden><span class="lbl">展示</span>
               <div class="seg" id="disc-show"><button data-v="1" aria-pressed="true">第 1 张</button><button data-v="2" aria-pressed="false">第 2 张</button></div>
+            </div>
+            <div class="row"><span class="lbl">规格</span>
+              <div class="seg" id="format"><button data-v="12in" aria-pressed="true">12″ LP</button><button data-v="7in" aria-pressed="false">7″ 单曲</button></div>
             </div>
             <div class="row"><span class="lbl">数量</span>
               <div class="seg" id="lp-count"><button data-v="1" aria-pressed="true">单 LP</button><button data-v="2" aria-pressed="false">2LP</button></div>
@@ -2510,13 +2513,16 @@ function syncUI(){
   $('lp2-sub').hidden=state.lpCount!==2;$('vinyl-same').checked=state.vinylSame;$('vinyl2-own').hidden=state.vinylSame;$('gate-sub').hidden=!isGate();$('jacket-spec').textContent=specText();syncAnimPanel();syncExportSummary();
   for(const b of document.querySelectorAll('[data-view]'))b.setAttribute('aria-pressed',b.dataset.view===state.view);
   syncPatterns();syncStickerPanel();syncDiscMode()}
-// Disc only: the switch, the 2LP disc picker, and the page-level attribute the CSS keys off.
+// Disc only: the view-bar toggles, the 2LP disc picker, and the page-level attribute the CSS keys off.
 function syncDiscMode(){const on=discOnly();document.documentElement.toggleAttribute('data-disc-only',on);
-  $('disc-only').checked=on;$('disc-only-note').hidden=!on;$('disc-show-row').hidden=!(on&&state.lpCount===2);
+  for(const b of document.querySelectorAll('[data-disc-toggle]'))b.setAttribute('aria-pressed',String(on));
+  // Dimmed package settings are out of reach until the package is shown again.
+  for(const pg of['jacket','insert','pack','number'])for(const el of $(`page-${pg}`).children)if(!el.classList.contains('disc-note'))el.inert=on;
+  $('disc-only-note').hidden=!on;$('disc-show-row').hidden=!(on&&state.lpCount===2);
   for(const b of $('disc-show').children)b.setAttribute('aria-pressed',String(+b.dataset.v===state.sceneDisc))}
 function setDiscOnly(on){state.sceneMode=on?'disc':'package';pose();syncDiscMode();syncAnimPanel();libRefreshTargets();
   if(previewActive())fitPreview();else if(!userMoved)setView(state.view)}
-$('disc-only').addEventListener('change',e=>setDiscOnly(e.target.checked));
+for(const b of document.querySelectorAll('[data-disc-toggle]'))b.addEventListener('click',()=>setDiscOnly(!discOnly()));
 for(const b of document.querySelectorAll('[data-disc-exit]'))b.addEventListener('click',()=>setDiscOnly(false));
 $('disc-show').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;state.sceneDisc=+b.dataset.v;pose();syncDiscMode();
   if(previewActive())fitPreview();else if(!userMoved)setView(state.view)});
