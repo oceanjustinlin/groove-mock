@@ -450,6 +450,19 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
             <div class="row" id="hole-row" hidden><span class="lbl">中孔</span>
               <div class="seg" id="center-hole"><button data-v="small" aria-pressed="true">小孔 7 mm</button><button data-v="large" aria-pressed="false">大孔 38 mm</button></div>
             </div>
+            <div class="row"><label class="lbl" for="disc-shape">外形</label>
+              <select class="field select" id="disc-shape">
+                <option value="none" selected>圆形</option>
+                <option value="heart">心形</option>
+                <option value="star">五角星</option>
+                <option value="square">圆角方形</option>
+                <option value="octagon">八边形</option>
+                <option value="oval">椭圆</option>
+                <option value="scallop">花瓣边</option>
+                <option value="shield">盾形</option>
+              </select>
+            </div>
+            <p class="note" id="shape-note" hidden>异形胶：外形是冲切出来的，音槽仍是居中的圆，外圈不刻槽。两张共用同一外形。</p>
             <div class="row pkg-only" id="lp-layout-row" hidden><span class="lbl">分装</span>
               <div class="seg" id="lp-layout"><button data-v="split" aria-pressed="true">左右各一张</button><button data-v="stacked" aria-pressed="false">同一口袋</button></div>
             </div>
@@ -760,6 +773,49 @@ const HOLE={small:.362,large:1.912};
 const FMT_SCALE=f=>FORMATS[f].w/FORMATS['12in'].w;      // sticker / number / Obi / framing scale with the jacket
 let GROUND_Y = -WRAP.pad - J.h/2;
 
+// Shaped vinyl: the disc is die-cut to an outline, the grooves stay a centred circle inside it.
+// Each outline is drawn once, then moved so the spindle hole sits where the largest circle fits
+// (its centre of the widest inscribed circle) and scaled so its farthest point is 1 (= LP.r).
+// inR is that circle's radius in the same unit: the groove band ends a little inside it.
+const SHAPE_IDS=['none','heart','star','square','octagon','oval','scallop','shield'];
+const SHAPES=(()=>{const N=360,poly=f=>Array.from({length:N},(_,i)=>f(i/N*Math.PI*2));
+  // Rounds every corner of a polygon by cutting it at r along each side and bending a quadratic through it.
+  const rounded=(pts,r,seg=10)=>pts.flatMap((p,i)=>{const a=pts.at(i-1),b=pts[(i+1)%pts.length],
+    toward=(q,t)=>{const d=Math.hypot(q[0]-p[0],q[1]-p[1]),k=Math.min(t,d/2)/d;return[p[0]+(q[0]-p[0])*k,p[1]+(q[1]-p[1])*k]},s0=toward(a,r),s1=toward(b,r);
+    return Array.from({length:seg+1},(_,j)=>{const t=j/seg,u=1-t;return[u*u*s0[0]+2*u*t*p[0]+t*t*s1[0],u*u*s0[1]+2*u*t*p[1]+t*t*s1[1]]})});
+  const ngon=(n,r0,r1=r0,turn=Math.PI/2)=>{const m=n*(r1===r0?1:2);return Array.from({length:m},(_,i)=>{const a=turn+i/m*Math.PI*2,r=r1===r0||i%2===0?r0:r1;return[Math.cos(a)*r,Math.sin(a)*r]})};
+  const raw={
+    // Two round lobes meeting in a notch, straight sides tangent to them down to the point: rounder than the
+    // textbook curve, so the grooves get room.
+    heart:(()=>{const c=.45,r=.58,h=1,ny=Math.sqrt(r*r-c*c),a0=Math.atan2(h,c)+Math.acos(r/Math.hypot(c,h))-Math.PI,aN=Math.atan2(ny,-c);
+      const arc=Array.from({length:61},(_,k)=>{const t=a0+(aN-a0)*k/60;return[c+r*Math.cos(t),r*Math.sin(t)]});
+      return rounded([[0,-h],...arc,...arc.slice(0,-1).reverse().map(([x,y])=>[-x,y])],.08,8)})(),
+    star:rounded(ngon(5,1,.62),.16),
+    square:rounded(ngon(4,1,1,Math.PI/4),.22),
+    octagon:rounded(ngon(8,1,1,Math.PI/8),.06),
+    oval:poly(t=>[Math.cos(t),.78*Math.sin(t)]),
+    scallop:poly(t=>{const r=.9+.1*Math.abs(Math.cos(5*t))**.6;return[Math.cos(t)*r,Math.sin(t)*r]}),
+    shield:rounded([[-.82,.86],[0,.78],[.82,.86],[.8,.05],[.42,-.62],[0,-1],[-.42,-.62],[-.8,.05]],.12)};
+  const edgeDist=(pts,x,y)=>{let d=Infinity;for(let i=0;i<pts.length;i++){const[ax,ay]=pts[i],[bx,by]=pts[(i+1)%pts.length],vx=bx-ax,vy=by-ay,
+    t=Math.max(0,Math.min(1,((x-ax)*vx+(y-ay)*vy)/(vx*vx+vy*vy||1)));d=Math.min(d,Math.hypot(x-ax-t*vx,y-ay-t*vy))}return d};
+  const inside=(pts,x,y)=>{let c=false;for(let i=0,j=pts.length-1;i<pts.length;j=i++){const[xi,yi]=pts[i],[xj,yj]=pts[j];if((yi>y)!==(yj>y)&&x<(xj-xi)*(y-yi)/(yj-yi)+xi)c=!c}return c};
+  const out={};
+  for(const[id,pts]of Object.entries(raw)){
+    const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]),x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);
+    // Coarse grid, then a finer one around the best point: the hole goes where the inscribed circle is widest.
+    let best=[0,0,-1];
+    for(const[step,cx,cy,span]of[[ (x1-x0)/40,(x0+x1)/2,(y0+y1)/2,Math.max(x1-x0,y1-y0)/2 ]]){
+      for(let x=cx-span;x<=cx+span;x+=step)for(let y=cy-span;y<=cy+span;y+=step)if(inside(pts,x,y)){const d=edgeDist(pts,x,y);if(d>best[2])best=[x,y,d]}}
+    {const step=(x1-x0)/400,[cx,cy]=best;for(let x=cx-step*10;x<=cx+step*10;x+=step)for(let y=cy-step*10;y<=cy+step*10;y+=step)if(inside(pts,x,y)){const d=edgeDist(pts,x,y);if(d>best[2])best=[x,y,d]}}
+    const moved=pts.map(([x,y])=>[x-best[0],y-best[1]]),far=Math.max(...moved.map(p=>Math.hypot(...p)));
+    out[id]={pts:moved.map(([x,y])=>[x/far,y/far]),inR:best[2]/far}}
+  return out})();
+const shapeOn=()=>state.shape!=='none'&&!!SHAPES[state.shape];
+// Groove band of a shaped disc: ends 4% inside the widest circle and at most 60% of the disc's diameter
+// (a 12" die-cut carries about 7" of grooves), so the smooth die-cut margin always shows.
+// Read from the size table, not LP, so a spec can check it before applyFormat() has run.
+const shapeGrooveR=()=>{const f=FORMATS[state.format];return Math.min(.6*f.r,SHAPES[state.shape].inR*f.r*.96)};
+
 const $ = id => document.getElementById(id);
 
 // ---------- Language ----------
@@ -790,6 +846,7 @@ const EN={
   '位置':'Position','贴纸':'Sticker','工艺':'Finish','印刷':'Print','印章':'Stamp','烫金':'Foil','手写':'Hand','编号颜色':'Number colour',
   '水平':'Horizontal','垂直':'Vertical','字高':'Height','角度':'Angle',
   '切换位置时，坐标会回到该位置的默认值。烫金在转动视角时会反光。只含英文的字体遇到中文时，会用黑体补齐。上传的字体只在本地使用。':'Switching position resets the coordinates to that position’s defaults. Foil catches the light as you turn the view. Latin-only fonts fall back to a Chinese sans for CJK characters. Uploaded fonts stay on your device.',
+  '外形':'Shape','心形':'Heart','五角星':'Star','圆角方形':'Rounded square','八边形':'Octagon','椭圆':'Oval','花瓣边':'Scalloped','盾形':'Shield','异形胶：外形是冲切出来的，音槽仍是居中的圆，外圈不刻槽。两张共用同一外形。':'Shaped vinyl: the outline is die-cut, the grooves stay a centred circle and the area outside it is smooth. Both discs share the shape.',
   '规格':'Size','7″ 单曲':'7″ single','中孔':'Centre hole','小孔 7 mm':'Small 7 mm','大孔 38 mm':'Large 38 mm',
   '唱片与内袋':'Records & sleeves','33⅓ RPM · 标签 Ø100':'33⅓ RPM · Label Ø100','数量':'Count','分装':'Layout','左右各一张':'One per panel','同一口袋':'Both in one pocket','单 LP':'1LP','标签角度':'Label angle',
   '显示内袋':'Show inner sleeve','只看唱片':'Disc only','展示':'Show','显示完整包装':'Show the full package','只显示唱片本体（盘面和标签）；封套、内袋、插页、塑封、Obi、贴纸和编号都不显示，关掉后原样恢复。':'Only the record itself, vinyl and labels. The jacket, inner sleeve, insert, film, obi, sticker and number are hidden, and come back as they were when you turn this off.','只看唱片时，这一页的内容不显示。':'In disc-only mode, nothing on this page is shown.','上传内袋印刷图':'Upload inner sleeve art','印刷图':'Artwork','内袋颜色':'Sleeve colour',
@@ -848,7 +905,7 @@ const state = {
   stickerOn:true, stickerShape:'circle', stickerTemplate:'none', stickerLines:null, stickerColor:'yellow', stickerSize:7.6, stickerX:8.8, stickerY:9.2, stickerRot:0,
   numOn:true, numCur:123, numTotal:1000, numPrefix:'No.', numFormat:'slash', numFont:'auto', numPlace:'back', numFinish:'stamp', numColor:'#25336f',
   numX:10.5, numY:-13.6, numSize:.5, numRot:0,
-  format:'12in', centerHole:'small',
+  format:'12in', centerHole:'small', shape:'none', shapeSpin:false,
   jacketType:'single', gateOpen:0, lpCount:1, lpLayout:'split', sleeve2X:0, record2X:.7, obiOn:true, obiWidth:3.2, insertOn:true, insertX:0,
   sceneMode:'package', sceneDisc:1,   // 'disc': the record alone, sceneDisc picks which on 2LP
   bg:'transparent', bgColor:'#e6e3dc', scale:2, view:'quarter',
@@ -1077,11 +1134,12 @@ function fitImage(src,w,h,{rotateIfWide=false}={}){
 // Vinyl: roughness (G) and anisotropy (RG = radial direction, B = strength) from one radial profile.
 // Tracks are cut at a constant pitch, so equal radial widths mean equal playing time. One map per track count.
 const grooveCache=new Map();
-function grooveMaps(tracks){const k=state.format+':'+tracks;if(!grooveCache.has(k))grooveCache.set(k,makeGrooveMaps(tracks));return grooveCache.get(k)}
+function grooveMaps(tracks){const k=[state.format,state.shape,tracks].join(':');if(!grooveCache.has(k))grooveCache.set(k,makeGrooveMaps(tracks));return grooveCache.get(k)}
 function makeGrooveMaps(tracks){
   const N=2048,R=LP.r,bins=4096,rough=new Float32Array(bins),aniso=new Float32Array(bins),r=rng(11);
   // Track boundaries, evenly spaced between run-out and lead-in (12": ≈61 and ≈147 mm radius).
-  const [runOut,leadIn,rim]=FORMATS[state.format].groove,gaps=Array.from({length:tracks-1},(_,k)=>runOut+(k+1)*(leadIn-runOut)/tracks).map(x=>[x-.035,x+.035]);
+  // A shaped disc ends its grooves at its widest inner circle; outside it the vinyl is smooth.
+  const [runOut0,leadIn0,rim0]=FORMATS[state.format].groove,shaped=shapeOn(),rim=shaped?shapeGrooveR():rim0,leadIn=shaped?Math.min(leadIn0,rim-.25):leadIn0,runOut=shaped?Math.min(runOut0,leadIn-1.5):runOut0,gaps=Array.from({length:tracks-1},(_,k)=>runOut+(k+1)*(leadIn-runOut)/tracks).map(x=>[x-.035,x+.035]);
   let noise=0;
   for(let i=0;i<bins;i++){const rr=i/bins*R;noise=noise*.55+(r()*2-1)*.45;
     let gap=0;
@@ -1760,20 +1818,30 @@ const sleeve=makeSleeve(),sleeve2=makeSleeve();
 
 // LP: grooved faces, rim, two labels, spindle hole.
 function makeRecord(matA,matB,vm,fm){const group=new THREE.Group();group.userData.build=()=>buildRecord(group,matA,matB,vm,fm);group.userData.build();scene.add(group);return group}
-function buildRecord(group,matA,matB,vm,fm){clearGroup(group);const {r,t,label,hole}=LP;
-  const face=remapUV(new THREE.RingGeometry(label,r,256,6),r*2);
+// Outline of a shaped disc at radius r with the label cut out; mirror gives the back face's copy, which is
+// turned over (rotation.y = π) and so has to be drawn flipped to land on the front's outline.
+function shapeOutline(r,label,mirror=false){const sh=new THREE.Shape(SHAPES[state.shape].pts.map(([x,y])=>new THREE.Vector2((mirror?-x:x)*r,y*r)));
+  if(label){const h=new THREE.Path();h.absarc(0,0,label,0,Math.PI*2,true);sh.holes.push(h)}return sh}
+function buildRecord(group,matA,matB,vm,fm){clearGroup(group);const {r,t,label,hole}=LP,shaped=shapeOn();
+  const faceGeo=mirror=>shaped?new THREE.ShapeGeometry(shapeOutline(r,label,mirror),48):new THREE.RingGeometry(label,r,256,6);
+  const face=remapUV(faceGeo(false),r*2);
   // The back face is the front turned over (x flipped), so its U is flipped too: both faces then sample the
   // pattern at the same point of the disc, and a see-through disc shows the same pattern through it.
-  const back=remapUV(new THREE.RingGeometry(label,r,256,6),-r*2,r*2);
+  const back=remapUV(faceGeo(true),-r*2,r*2);
   const top=mesh(face,vm.face);top.position.z=t/2;const bot=mesh(back,vm.face);bot.position.z=-t/2;bot.rotation.y=Math.PI;
-  const edge=mesh(new THREE.CylinderGeometry(r,r,t,256,1,true),vm.edge);edge.rotation.x=Math.PI/2;
+  let edge;
+  if(shaped){// Only the extrusion's walls: the faces above already cover its caps.
+    const g=new THREE.ExtrudeGeometry(shapeOutline(r,0),{depth:t,bevelEnabled:false,curveSegments:48});g.groups=g.groups.filter(x=>x.materialIndex===1);
+    edge=mesh(g,[vm.edge,vm.edge]);edge.position.z=-t/2}
+  else{edge=mesh(new THREE.CylinderGeometry(r,r,t,256,1,true),vm.edge);edge.rotation.x=Math.PI/2}
   const lab=remapUV(new THREE.RingGeometry(hole,label,128,2),label*2);
   const la=mesh(lab,matA);la.position.z=t/2;const lb=mesh(lab,matB);lb.position.z=-t/2;lb.rotation.y=Math.PI;
   const bore=mesh(new THREE.CylinderGeometry(hole,hole,t,48,1,true),holeMat);bore.rotation.x=Math.PI/2;
   // Fill / glitter layer at the mid-plane, between the faces; hidden until the disc has one.
-  const ring=new THREE.RingGeometry(label,r,256,4),mid=mesh(ring,fm.mat,{cast:false,receive:false});mid.visible=false;mid.onBeforeRender=fillOnBeforeRender(fm);fm.mesh=mid;
+  // A shaped disc's fill cavity is the groove circle; its glitter spreads over the whole outline.
+  const ring=new THREE.RingGeometry(label,shaped?shapeGrooveR():r,256,4),mid=mesh(ring,fm.mat,{cast:false,receive:false});mid.visible=false;mid.onBeforeRender=fillOnBeforeRender(fm);fm.mesh=mid;
   // Glitter sits just under each face instead, so it also shows in opaque vinyl.
-  fm.glitter=[1,-1].map(side=>{const g=mesh(ring,fm.mat,{cast:false,receive:false});g.position.z=side*(t/2+.003);if(side<0)g.rotation.y=Math.PI;g.visible=false;g.onBeforeRender=mid.onBeforeRender;return g});
+  fm.glitter=[1,-1].map(side=>{const g=mesh(shaped?new THREE.ShapeGeometry(shapeOutline(r,label,side<0),48):ring,fm.mat,{cast:false,receive:false});g.position.z=side*(t/2+.003);if(side<0)g.rotation.y=Math.PI;g.visible=false;g.onBeforeRender=mid.onBeforeRender;return g});
   group.add(top,bot,edge,la,lb,bore,mid,...fm.glitter)}
 const record=makeRecord(labelMatA,labelMatB,vinyl1,fill1),record2=makeRecord(labelMatC,labelMatD,vinyl2,fill2);
 
@@ -1896,6 +1964,13 @@ const travel=(sX,rX)=>{const x=state.sleeveOn?sX*travelLen('sleeve'):0;return[x,
 function foldSleeve(discs=['','2']){for(const s of discs){const sk=`sleeve${s}X`,rk=`record${s}X`;
   if(state.sleeveOn){const rx=state[rk]*outFull();state[sk]=Math.min(1,rx/(2*travelLen('sleeve')));state[rk]=Math.min(1,rx/(2*travelLen('record')))}
   else{state[rk]=Math.min(1,(state[sk]*travelLen('sleeve')+state[rk]*travelLen('record'))/outFull());state[sk]=0}}}
+// How far a disc reaches below its hole and to either side, turned by the label rotation: a shaped disc
+// stands on its lowest point. While it spins in a clip it turns about the hole at its farthest reach instead,
+// so it doesn't bob up and down.
+function discReach(){const R=LP.r;if(!shapeOn()||state.shapeSpin)return{down:R,side:R};
+  const a=THREE.MathUtils.degToRad(state.recordRot),c=Math.cos(a),sn=Math.sin(a);let down=0,side=0;
+  for(const[x,y]of SHAPES[state.shape].pts){down=Math.max(down,-(x*sn+y*c));side=Math.max(side,Math.abs(x*c-y*sn))}
+  return{down:down*R,side:side*R}}
 function pose(){
   const gate=isGate(),opened=gateOpened();
   pocketFront.material[4]=gate?innerRightMat:frontMat;
@@ -1913,7 +1988,8 @@ function pose(){
     const S=SLV.s,[x,rx]=travel(sX,rX),sy=THREE.MathUtils.lerp(jacketFloor+S/2,GROUND_Y+S/2,settle(x-S/2-J.w/2));
     sl.visible=on&&state.sleeveOn;sl.position.set(ox+x,sy,z);sl.rotation.y=flip;rec.visible=on;
     const floor=state.sleeveOn?sy-S/2+.04:jacketFloor,mouth=state.sleeveOn?x+S/2:J.w/2;
-    rec.position.set(ox+rx,THREE.MathUtils.lerp(floor+LP.r,GROUND_Y+LP.r,settle(rx-LP.r-mouth)),z);
+    const {down,side}=discReach();
+    rec.position.set(ox+rx,THREE.MathUtils.lerp(floor+down,GROUND_Y+down,settle(rx-side-mouth)),z);
     rec.rotation.set(0,flip,THREE.MathUtils.degToRad(state.recordRot))};
   placeSet(sleeve,record,state.sleeveX,state.recordX,zc,true);
   // Disc 2 shows side C to the camera: facing out while the cover is shut, turned over once it opens past
@@ -1935,16 +2011,18 @@ function pose(){
   if(discOnly()){const show=state.lpCount===2&&state.sceneDisc===2?record2:record;
     for(const o of[jacket,coverPivot,sleeve,sleeve2,insert,wrap,obi,sticker,numAnchor,record,record2])o.visible=false;
     if(show.parent!==scene)scene.add(show);
-    show.visible=true;show.position.set(0,GROUND_Y+LP.r,0);show.rotation.set(0,0,THREE.MathUtils.degToRad(state.recordRot))}
+    show.visible=true;show.position.set(0,GROUND_Y+discReach().down,0);show.rotation.set(0,0,THREE.MathUtils.degToRad(state.recordRot))}
 }
 // Format: writes the size table into the shared specs and rebuilds what was built at a fixed size.
 // The jacket, wrap and Obi follow in applyJacketType(); the groove maps in applyVinyl().
 function applyFormat(){const f=FORMATS[state.format];
   J.w=J.h=f.w;INS.s=f.ins;LP.r=f.r;LP.label=f.label;LP.hole=is7()?HOLE[state.centerHole]:HOLE.small;SLV.s=f.slv;SLV.hole=f.slvHole;
-  GROUND_Y=-WRAP.pad-J.h/2;ground.position.y=GROUND_Y;shellR.value=LP.r;lqDiscScale.value=FORMATS['12in'].r/LP.r;
+  GROUND_Y=-WRAP.pad-J.h/2;ground.position.y=GROUND_Y;
+  // A shaped disc has no round rim to darken, and its fill cavity is the groove circle.
+  shellR.value=shapeOn()?1e3:LP.r;lqDiscScale.value=shapeOn()?14.6/shapeGrooveR():FORMATS['12in'].r/LP.r;
   for(const g of[record,record2,sleeve,sleeve2])g.userData.build();
   insert.geometry.dispose();insert.geometry=new THREE.BoxGeometry(INS.s,INS.s,INS.t);
-  $('hole-row').hidden=!is7();formatTexts();
+  $('hole-row').hidden=!is7();$('shape-note').hidden=!shapeOn();formatTexts();
   const key=state.format+state.centerHole;if(key!==sampleKey){sampleKey=key;redrawSamples()}
 }
 let sampleKey='12insmall';
@@ -2528,6 +2606,8 @@ seg('jacket-type','jacketType',()=>{applyJacketType();
 let panelFormat=state.format;
 seg('format','format',()=>{rescaleFormat(panelFormat,state.format);panelFormat=state.format;refreshAll();if(previewActive())fitPreview()});
 seg('center-hole','centerHole',()=>{applyFormat();pose()});
+// A new outline rebuilds the discs and their groove maps; the camera re-frames unless the viewer moved it.
+$('disc-shape').addEventListener('change',e=>{state.shape=e.target.value;applyFormat();applyVinyl();pose();if(!userMoved)setView(state.view)});field('disc-shape','shape');
 seg('lp-count','lpCount',applyLpCount);seg('lp-layout','lpLayout',applyJacketType);
 // Black -> colour takes the cover's colours unless this disc's colour was already set (by hand, by the
 // eyedropper or by a spec); a cover that gives nothing keeps the defaults. Disc 2 starts one candidate on.
@@ -2788,6 +2868,7 @@ const colorF=(path,key,desc)=>({path,key,type:'color',desc});
 const strF=(path,key,desc,maxLength)=>({path,key,type:'string',desc,maxLength});
 const SPEC_FIELDS=[
   enumF('format','format',['12in','7in'],'唱片规格：12in 为 12 寸 LP（默认，封套 314 mm、唱片 Ø302 mm、标签 Ø100 mm）；7in 为 7 寸单曲（封套 184 mm、唱片 Ø175 mm、标签 Ø90 mm、内袋 178 mm）。换成 7in 时，没写的贴纸、编号位置和 Obi 宽度按封套等比缩小。也接受 7 / 12'),
+  enumF('records.shape','shape',SHAPE_IDS,'唱片外形（异形胶），两张共用：none 圆形（默认），heart 心形，star 五角星，square 圆角方形，octagon 八边形，oval 椭圆，scallop 花瓣边，shield 盾形。外形在唱片原尺寸内冲切，中孔放在外形里能放下最大圆的位置；音槽是以中孔为圆心、贴着这个圆的环形，外圈不刻槽、是光面。唱片立放时以最低点着地，records.labelRotation 会一起转动外形'),
   enumF('records.centerHole','centerHole',['small','large'],'中孔：small 小孔 Ø7.24 mm（默认）；large 大孔 Ø38 mm（美式点唱机 45 转）。只在 format=7in 时生效'),
   enumF('scene.mode','sceneMode',['package','disc'],'场景模式：package 完整包装（默认）；disc 只看唱片，只显示盘面和标签，封套、内袋、插页、塑封、Obi、贴纸、编号都不显示，它们的设置保留'),
   numF('scene.disc','sceneDisc',1,2,1,'scene.mode=disc 且 records.count=2 时展示哪一张：1 为 A / B 面，2 为 C / D 面',true),
@@ -2874,7 +2955,7 @@ function slotGuideAll(){
     square('innerRight','双开内页右',W,'composite',{used:isGate(),notes:'右页适合留给歌词排版'}),
     {slot:'obi',label:'Obi 展开图',px:[obiPx,2048],mm:[Math.round(total*10*10)/10,W],visible:`从左到右：背面 ${obiMm} mm | 书脊 ${mm(obiLayout().s)} mm | 正面 ${obiMm} mm`,covered:[],recommend:'typeset',used:state.obiOn,notes:'文字为主，不建议生图'},
     {...square('sleeve','内袋印刷',mm(SLV.s),'generated'),visible:`中心 Ø${mm(SLV.hole*2)} mm 圆孔被挖空，抽出时只露出一部分`,used:state.sleeveOn,notes:'低对比底纹即可，一般不放文字'},
-    ...['A','B','C','D'].map(k=>({slot:'label'+k,label:`${k} 面标签`,px:[1024,1024],mm:[lab,lab],visible:`只显示方图的内切圆（Ø${lab} mm）；正中 Ø${hole} mm 是中孔${hole>10?'，这一圈的图会被挖掉':''}`,covered:[],recommend:'composite',used:k<'C'||state.lpCount===2,notes:'底图可生成俯视平面圆形纹理，标题、面号、转速用排版'})),
+    ...['A','B','C','D'].map(k=>({slot:'label'+k,label:`${k} 面标签`,px:[1024,1024],mm:[lab,lab],visible:`只显示方图的内切圆（Ø${lab} mm）；正中 Ø${hole} mm 是中孔${hole>10?'，这一圈的图会被挖掉':''}`,covered:[],recommend:'composite',used:k<'C'||state.lpCount===2,notes:['底图可生成俯视平面圆形纹理，标题、面号、转速用排版',shapeOn()?`异形胶（${state.shape}）：外形不用贴图，音槽区到 Ø${mm(shapeGrooveR()*2)} mm 为止`:''].filter(Boolean).join('；')})),
     square('insertFront','插页正面',mm(INS.s),'composite',{used:state.insertOn,notes:'歌词、制作名单用排版'}),
     square('insertBack','插页背面',mm(INS.s),'composite',{used:state.insertOn}),
     {slot:'sticker',label:'Hype sticker',px:state.stickerShape==='rect'?[1024,640]:[1024,1024],mm:state.stickerShape==='rect'?[mm(state.stickerSize*1.6),mm(state.stickerSize)]:[mm(state.stickerSize),mm(state.stickerSize)],
@@ -2978,6 +3059,8 @@ async function applySpec(spec){
   // A new format carries what the spec doesn't place over to the same spot on the new jacket.
   {const paths={stickerX:'sticker.x',stickerY:'sticker.y',stickerSize:'sticker.size',numX:'number.x',numY:'number.y',numSize:'number.size',obiWidth:'obi.width'};
     rescaleFormat(formatWas,state.format,FMT_SCALED.filter(k=>has(paths[k])));panelFormat=state.format}
+  if(shapeOn()){const w=Math.round((shapeGrooveR()-FORMATS[state.format].label)*10);
+    if(w<12)warnings.push(`records.shape=${state.shape} 在 ${state.format} 上音槽区只有约 ${Math.max(0,w)} mm 宽，几乎都被标签盖住；异形胶通常用 12in`)}
   if(has('records.centerHole')&&!is7())warnings.push('records.centerHole 只在 format=7in 时生效，12 寸唱片用小孔');
   // Same conveniences as the panel: a new place brings its own default position, a new finish its default ink.
   if(has('number.place')){const d=numDefaults(state.numPlace);if(!has('number.x'))state.numX=d.x;if(!has('number.y'))state.numY=d.y;if(!has('number.size'))state.numSize=d.size;if(!has('number.rotation'))state.numRot=d.rot}
@@ -3102,7 +3185,7 @@ function animPose(u){
   if(p==='turntable')return{turn:dir*2*Math.PI*u};
   if(p==='swing')return{turn:dir*THREE.MathUtils.degToRad(state.animAngle)*Math.sin(2*Math.PI*u)};
   // Records turn clockwise seen from the label side, a whole number of turns per loop at 33⅓ rpm (7": 45).
-  if(p==='spin')return{set:{recordRot:state.recordRot-360*Math.max(1,Math.round(state.animDuration*(is7()?45:SPIN_RPM)/60))*u}};
+  if(p==='spin')return{set:{shapeSpin:true,recordRot:state.recordRot-360*Math.max(1,Math.round(state.animDuration*(is7()?45:SPIN_RPM)/60))*u}};
   const k=outAndBack(u);
   // An opening gatefold has lost its film, sticker and obi, at every frame rather than popping off at 0.5°.
   if(p==='gatefold'){const end=state.gateOpen>.5?state.gateOpen:GATE_OPEN_DEFAULT;return{set:{gateOpen:end*k,disc2Flip:end>90,wrapOn:false,obiOn:false,stickerOn:false}}}
