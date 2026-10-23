@@ -1,0 +1,86 @@
+{
+  "version": 1,
+  "jacket": {
+    "type": "single",
+    "finish": "satin"
+  },
+  "records": {
+    "sleeve": {
+      "on": false
+    },
+    "count": 2,
+    "disc1": {
+      "vinyl": "color",
+      "color": "#1f8a8a",
+      "pattern": {
+        "id": "splatter-05",
+        "color": "#f2efe6"
+      },
+      "recordOut": 30
+    },
+    "disc2": {
+      "vinyl": "color",
+      "color": "#f2efe6",
+      "transparency": 40,
+      "recordOut": 52,
+      "sameAsDisc1": false
+    }
+  },
+  "insert": {
+    "out": 0
+  },
+  "obi": {
+    "on": false
+  },
+  "wrap": {
+    "on": false
+  },
+  "sticker": {
+    "on": true,
+    "color": "cover",
+    "template": "colour-vinyl",
+    "lines": [
+      "COLOURED VINYL",
+      "SEAFOAM",
+      "180g"
+    ]
+  },
+  "number": {
+    "on": false
+  },
+  "camera": {
+    "view": "quarter",
+    "zoom": 1.05
+  },
+  "output": {
+    "background": "#ece9e2",
+    "width": 1600,
+    "height": 900
+  },
+  "animation": {
+    "preset": "swing",
+    "duration": 6.8,
+    "fps": 30,
+    "angle": 25,
+    "direction": "left",
+    "aspect": "16:9",
+    "size": 720
+  },
+  "meta": {
+    "title": "Landing hero reel, variant u01 (sample artwork)",
+    "assets": {
+      "front": {
+        "source": "composite",
+        "note": "Unsplash photo by Shifaaz shamoon, https://unsplash.com/photos/aerial-photo-of-seashore-sLAk1guBG90 (Unsplash License), title typeset by tools/typeset-hero-covers.mjs"
+      },
+      "spine": {
+        "source": "composite",
+        "note": "Unsplash photo by Shifaaz shamoon, https://unsplash.com/photos/aerial-photo-of-seashore-sLAk1guBG90 (Unsplash License), title typeset by tools/typeset-hero-covers.mjs"
+      }
+    }
+  },
+  "images": {
+    "front": "art/u01-front.png",
+    "spine": "art/u01-spine.png"
+  }
+}
