@@ -42,6 +42,7 @@ cd cli && npm install
 | 想做的事 | 字段 |
 |---|---|
 | 7 寸单曲 | `format: "7in"`（也接受 `7`）：封套 184 mm、唱片 Ø175 mm、标签 Ø90 mm、内袋和插页 178 mm，转速 45。默认 `12in`。`records.centerHole: "large"` 换成 Ø38 mm 大孔（美式 45 转），标签图中间这一圈会被挖掉。单开、双开、2 张、内袋、插页、塑封、Obi、贴纸、编号都能用 |
+| 异形胶 | `records.shape`：`heart` 心形 / `star` 五角星 / `square` 圆角方形 / `octagon` 八边形 / `oval` 椭圆 / `scallop` 花瓣边 / `shield` 盾形，默认 `none` 圆形，两张共用。外形在唱片原尺寸里冲切，音槽是居中的圆（最大到唱片直径的 60%，12 寸约 Ø181 mm），外圈是不刻槽的光面；胶色和纹路照常用。`records.labelRotation` 连外形一起转，唱片立放时以最低点着地 |
 | 换封面、背面、书脊 | `images.front` / `images.back` / `images.spine` |
 | 双开及内页 | `jacket.type: "gatefold"`，`images.innerLeft` / `innerRight`，`jacket.gateOpen` 为 0–180 |
 | 2LP | `records.count: 2`，`records.disc2.*`，标签用 `images.labelC` / `labelD`。单开时两张叠在同一个口袋；双开时按 `records.layout` 分装：`split`（默认）左右两扇各装一张，第 2 张在左扇（封面）里，打开后向左抽出；`stacked` 两张叠在右扇。第 2 张默认沿用第 1 张的胶色和纹路（`records.disc2.sameAsDisc1: true`）；写了 `disc2` 的 `vinyl` / `color` / `transparency` / `pattern` 就视为分别设置 |
@@ -77,4 +78,5 @@ cd cli && npm install
 - 检查视频时不要看第一帧就算数：GIF 和 MP4 都要抽几帧看（比如 0、1/4、1/2、3/4 处），确认转到侧面和背面时没有穿帮。
 - 液体胶的色块会往上浮一些；唱片自转时液体跟着唱片一起转，只有轻微晃动。2LP 的两张即使样式相同，分布也不一样。液体和沙在封套里看不见，要把唱片抽出来或者用 `scene.mode: "disc"`。
 - 换成 `format: "7in"` 时，spec 里没写的贴纸位置和尺寸、编号位置和字高、Obi 宽度按封套等比缩小（×0.586）；写了的值按原样用，是 7 寸封套上的 mm。镜头取景也按封套缩放，所以 7 寸和 12 寸出图时画面里的大小差不多，看起来不会更小。
+- 异形胶基本都是 12 寸：`format: "7in"` 加 `records.shape` 时音槽区只剩几毫米、几乎被标签盖住，会给警告。液体胶和沙的腔体限制在音槽圈里，亮片铺满整个外形。自转动画里异形胶绕中孔转，中心固定，不会上下跳，所以第一帧的位置和静帧略有不同。
 - 批量出编号图：`node cli/record-mockup.mjs numbers spec.json --from 1 --to 50 --dir out/`。
