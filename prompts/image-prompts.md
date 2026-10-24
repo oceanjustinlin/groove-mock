@@ -55,6 +55,20 @@ Areas outside the circle plain {palette[0]}.
 
 排版层：专辑名（上半圈）、SIDE A / B / C / D（下半圈）、33⅓ RPM、编号。A/B 两面可以用同一张底图配不同的面号，也可以分别换主色。
 
+## 2b. 画胶盘面（`vinyl: picture`）
+
+1:1，2048 × 2048。唱片铺满整张图，只显示内切圆（12 寸 Ø302 mm，7 寸 Ø175 mm）；正中 Ø7.24 mm 是中孔（7 寸大孔 Ø38 mm）。没开纸标时中间也会印出来；开了 `picture.paperLabel`，中间 Ø100 mm（7 寸 Ø90 mm）被纸标盖住，主体要放到外圈。
+
+```text
+Circular illustration for a picture disc, seen exactly top-down, composed to fill a perfect
+circle that touches all four canvas edges. {style}, palette {palette}, motif from {motifs}.
+Main subject centered, nothing important within 3% of the canvas center (spindle hole)
+or in the outer 4% ring. Areas outside the circle plain {palette[0]}.
+{禁止项}
+```
+
+排版层（可选）：艺人名、专辑名、SIDE A / B 放在下半圈。A/B 面通常是两张不同的画，B 面不给时沿用 A 面。不要照搬真实发行的画胶。
+
 ## 3. 双开内页跨页
 
 先生成 2:1 的整张跨页（4096 × 2048），再从中间切成 innerLeft、innerRight 两张方图。

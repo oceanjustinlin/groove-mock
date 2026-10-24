@@ -24,6 +24,7 @@ Record Mockup 用来渲染接近实拍效果的**黑胶唱片 3D 模型图**，�
 - **封套**：单开或双开，按实物尺寸建模：12 寸 LP 为 314 × 314 mm，7 寸单曲为 184 × 184 mm（`format: "7in"`，唱片 Ø175 mm、45 转，可选 Ø38 mm 大孔）；纸张有哑光、缎面、亮面三种；可贴正面、背面、书脊和双开内页。
 - **唱片**：单 LP 或 2LP，音槽带曲目间隙；A/B/C/D 面标签；每面 1–20 条音轨；每张唱片可选黑胶、彩胶或半透明；内袋和双面插页都能从封套开口抽出。双开 2LP 可以左右两扇各装一张，也可以两张叠在右扇。
 - **只看唱片：** 场景里只留唱片本体（盘面和标签），其余全部不显示，用来单独设计盘面；2LP 时选择展示哪一张（`scene.mode: "disc"`）。
+- **画胶**：每面一张图，印在透明胶层下（`vinyl: "picture"`，`images.pictureA`～`pictureD`），默认一直印到中孔，也可以在中间贴纸标。
 - **液体胶、沙和亮片**：在纹路里选。液体胶有三种形态（清液里漂着色块、液体铺满漂着浅色块、铺满密集液滴），只选一个颜色，唱片转动时液体跟着转；还有沙和亮片。
 - **胶色和纹路**：纯黑胶，或者彩胶（透明度 0–80%）。彩胶可以加纹路：飞溅、色块、漩涡、风车、波纹、星芒、烟雾、大理石，或者二分、三分、四分的分色。颜色可以自己选，也可以从封面取色。2LP 的第 2 张默认和第 1 张一样，也可以单独设置。
 - **曲库检索**：按艺人和专辑名查 MusicBrainz 和 Cover Art Archive（支持艺人别名，英文名也能找到中日文艺人），选一个 12 寸黑胶版本，把其中任意图片用到任意贴图位。碟数、双开和每面音轨数自动填好，盘面照片自动裁成面标签，封面默认取专辑数字版的官方图。你自己上传的图默认保留。
@@ -111,6 +112,8 @@ node cli/record-mockup.mjs init -o output/spec.json
 单位和编辑器一致：长度用 mm，抽出程度用 %，角度用度。
 
 胶色按张设置，写在 `records.disc1` 和 `records.disc2` 里。`vinyl` 为 `black`（纯黑胶，不透明，不叠纹路）或 `color`（彩胶，用 `color` 和 `transparency`，透明度 0–80%）。`pattern.id` 在彩胶上加纹路，底色是 `color`。分色类（`split-half`、`split-tri`、`split-quad`）用 `pattern.color` 作第二块，`split-tri` 再用 `pattern.color2` 作第三块。其他大多数纹路用 `pattern.color` 作纹路色，其余色层自动推算；同色系纹路（`ripple-01`、`starburst-04`，以及 `smoke-*`、`marble-*`）只用底色的深浅变化，`pattern.contrast` 调反差。`pattern.rotation` 旋转纹路；`pattern.fromCover: true` 从 `images.front` 取色，写明的颜色优先。`transparency` 是底色的透明度；主次类纹路可以再用 `pattern.transparency`（0–80%，默认 0）让纹路本身也变透明。分色类和同色系没有单独的纹路透明度，写了会给警告。第 2 张默认沿用第 1 张（`records.disc2.sameAsDisc1: true`）；写了它的胶色、颜色或纹路字段，就视为单独设置。完整的纹路列表用 `schema` 查看。`records.discN.tracks` 设每面音轨数（1–20，默认 6）。双开 2LP 用 `records.layout` 选分装方式：`split`（默认，第 2 张在左扇，向左抽出）或 `stacked`（两张叠在右扇）。旧值 `"clear"` 仍然可用，等于 `color` 加 38% 透明度。
+
+画胶是 `vinyl: "picture"`：A 面显示 `images.pictureA`，B 面显示 `images.pictureB`（第 2 张用 `pictureC` / `pictureD`），方图，唱片铺满整张图；B 面没给时沿用 A 面。默认没有纸标，面标签不显示；`picture.paperLabel: true` 时中间贴纸标。画胶不使用颜色、透明度和纹路。
 
 ## 命令
 
