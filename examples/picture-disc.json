@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "meta": {
+    "title": "Picture disc"
+  },
+  "records": {
+    "disc1": {
+      "vinyl": "picture",
+      "recordOut": 75
+    }
+  },
+  "camera": {
+    "view": "quarter"
+  },
+  "output": {
+    "width": 2400,
+    "height": 1600,
+    "background": "#e6e3dc"
+  }
+}

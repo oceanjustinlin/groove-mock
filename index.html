@@ -466,7 +466,7 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
             <div class="disc">
               <h3>第 1 张 <small>A / B 面</small></h3>
               <div class="row"><span class="lbl">胶色</span>
-                <div class="seg" id="vinyl-style"><button data-v="black" aria-pressed="true">黑胶</button><button data-v="color" aria-pressed="false">彩胶</button></div>
+                <div class="seg" id="vinyl-style"><button data-v="black" aria-pressed="true">黑胶</button><button data-v="color" aria-pressed="false">彩胶</button><button data-v="picture" aria-pressed="false">画胶</button></div>
               </div>
               <div class="sub" id="vinyl-colored" hidden>
                 <div class="row"><span class="lbl">样式</span>
@@ -487,8 +487,16 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
                 <div class="slider" id="pattern-contrast-row" data-look="pattern"><label for="pattern-contrast">反差</label><input type="range" id="pattern-contrast" min="0" max="200" value="100"><output id="pattern-contrast-v">100%</output></div>
                 <div class="slider" data-look="pattern"><label for="pattern-rot">纹路角度</label><input type="range" id="pattern-rot" min="-180" max="180" value="0"><output id="pattern-rot-v">0°</output></div>
               </div>
+              <div class="sub" id="vinyl-picture" hidden>
+                <label class="switch"><input type="checkbox" id="pic-label">贴纸标</label>
+                <p class="note">画胶的画面印在透明胶层下，默认一直印到中孔；贴纸标后中间换成下面的标签。</p>
+              </div>
               <div class="slider"><label for="tracks">每面音轨</label><input type="range" id="tracks" min="1" max="20" value="6"><output id="tracks-v">6</output></div>
-              <div class="tiles two">
+              <div class="tiles two" id="pictures1" hidden>
+                <label class="tile" data-slot="pictureA"><span class="thumb"><span class="tag">示例</span></span><input id="up-pictureA" type="file" accept="image/*" aria-label="上传 A 面画胶">A 面画胶</label>
+                <label class="tile" data-slot="pictureB"><span class="thumb"><span class="tag">示例</span></span><input id="up-pictureB" type="file" accept="image/*" aria-label="上传 B 面画胶">B 面画胶</label>
+              </div>
+              <div class="tiles two" id="labels1">
                 <label class="tile" data-slot="labelA"><span class="thumb"><span class="tag">示例</span></span><input id="up-labelA" type="file" accept="image/*" aria-label="上传 A 面标签">A 面标签</label>
                 <label class="tile" data-slot="labelB"><span class="thumb"><span class="tag">示例</span></span><input id="up-labelB" type="file" accept="image/*" aria-label="上传 B 面标签">B 面标签</label>
               </div>
@@ -501,7 +509,7 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
               <label class="switch"><input type="checkbox" id="vinyl-same" checked>胶色和纹路与第 1 张相同</label>
               <div class="sub" id="vinyl2-own" hidden>
                 <div class="row"><span class="lbl">胶色</span>
-                  <div class="seg" id="vinyl2-style"><button data-v="black" aria-pressed="true">黑胶</button><button data-v="color" aria-pressed="false">彩胶</button></div>
+                  <div class="seg" id="vinyl2-style"><button data-v="black" aria-pressed="true">黑胶</button><button data-v="color" aria-pressed="false">彩胶</button><button data-v="picture" aria-pressed="false">画胶</button></div>
                 </div>
                 <div class="sub" id="vinyl2-colored" hidden>
                   <div class="row"><span class="lbl">样式</span>
@@ -522,9 +530,16 @@ input[type="color"]{width:34px;height:26px;padding:0;border:1px solid var(--line
                   <div class="slider" id="pattern2-contrast-row" data-look="pattern"><label for="pattern2-contrast">反差</label><input type="range" id="pattern2-contrast" min="0" max="200" value="100"><output id="pattern2-contrast-v">100%</output></div>
                   <div class="slider" data-look="pattern"><label for="pattern2-rot">纹路角度</label><input type="range" id="pattern2-rot" min="-180" max="180" value="0"><output id="pattern2-rot-v">0°</output></div>
                 </div>
+                <div class="sub" id="vinyl2-picture" hidden>
+                  <label class="switch"><input type="checkbox" id="pic2-label">贴纸标</label>
+                </div>
               </div>
               <div class="slider"><label for="tracks2">每面音轨</label><input type="range" id="tracks2" min="1" max="20" value="6"><output id="tracks2-v">6</output></div>
-              <div class="tiles two">
+              <div class="tiles two" id="pictures2" hidden>
+                <label class="tile" data-slot="pictureC"><span class="thumb"><span class="tag">示例</span></span><input id="up-pictureC" type="file" accept="image/*" aria-label="上传 C 面画胶">C 面画胶</label>
+                <label class="tile" data-slot="pictureD"><span class="thumb"><span class="tag">示例</span></span><input id="up-pictureD" type="file" accept="image/*" aria-label="上传 D 面画胶">D 面画胶</label>
+              </div>
+              <div class="tiles two" id="labels2">
                 <label class="tile" data-slot="labelC"><span class="thumb"><span class="tag">示例</span></span><input id="up-labelC" type="file" accept="image/*" aria-label="上传 C 面标签">C 面标签</label>
                 <label class="tile" data-slot="labelD"><span class="thumb"><span class="tag">示例</span></span><input id="up-labelD" type="file" accept="image/*" aria-label="上传 D 面标签">D 面标签</label>
               </div>
@@ -796,7 +811,9 @@ const EN={
   '唱片与内袋':'Records & sleeves','33⅓ RPM · 标签 Ø100':'33⅓ RPM · Label Ø100','数量':'Count','分装':'Layout','左右各一张':'One per panel','同一口袋':'Both in one pocket','单 LP':'1LP','标签角度':'Label angle',
   '显示内袋':'Show inner sleeve','只看唱片':'Disc only','展示':'Show','显示完整包装':'Show the full package','只显示唱片本体（盘面和标签）；封套、内袋、插页、塑封、Obi、贴纸和编号都不显示，关掉后原样恢复。':'Only the record itself, vinyl and labels. The jacket, inner sleeve, insert, film, obi, sticker and number are hidden, and come back as they were when you turn this off.','只看唱片时，这一页的内容不显示。':'In disc-only mode, nothing on this page is shown.','上传内袋印刷图':'Upload inner sleeve art','印刷图':'Artwork','内袋颜色':'Sleeve colour',
   '第 1 张':'Disc 1','A / B 面':'Sides A / B','上传 A 面标签':'Upload side A label','上传 B 面标签':'Upload side B label','A 面标签':'Side A label','B 面标签':'Side B label',
-  '胶色':'Vinyl','黑胶':'Black','彩胶':'Colour','第 1 张胶色':'Disc 1 vinyl colour','内袋抽出':'Sleeve out','唱片抽出':'Record out','每面音轨':'Tracks per side',
+  '胶色':'Vinyl','黑胶':'Black','彩胶':'Colour','画胶':'Picture','贴纸标':'Paper label','A 面画胶':'Side A picture','B 面画胶':'Side B picture','C 面画胶':'Side C picture','D 面画胶':'Side D picture',
+  '上传 A 面画胶':'Upload side A picture','上传 B 面画胶':'Upload side B picture','上传 C 面画胶':'Upload side C picture','上传 D 面画胶':'Upload side D picture',
+  '画胶的画面印在透明胶层下，默认一直印到中孔；贴纸标后中间换成下面的标签。':'The picture is printed under clear vinyl, right up to the spindle hole; a paper label puts the label below in the middle.','第 1 张胶色':'Disc 1 vinyl colour','内袋抽出':'Sleeve out','唱片抽出':'Record out','每面音轨':'Tracks per side',
   '第 2 张':'Disc 2','C / D 面 · 放在第 1 张后面':'Sides C / D · behind disc 1','上传 C 面标签':'Upload side C label','上传 D 面标签':'Upload side D label',
   'C 面标签':'Side C label','D 面标签':'Side D label','第 2 张胶色':'Disc 2 vinyl colour',
   '纹路':'Pattern','第 1 张纹路':'Disc 1 pattern','第 2 张纹路':'Disc 2 pattern','纹路色':'Pattern colour','第 1 张纹路色':'Disc 1 pattern colour','第 2 张纹路色':'Disc 2 pattern colour',
@@ -843,7 +860,7 @@ function translateStatic(){
 translateStatic();
 const state = {
   finish:'satin', sleeveOn:false, sleeveColor:'#f3f1ea', sleeveX:0, recordX:.6, recordRot:0,
-  vinyl:'black', vinylColor:'#c8392b', vinyl2:'black', vinyl2Color:'#d9a441', wrapOn:true, wrinkle:1, gloss:1,
+  vinyl:'black', vinylColor:'#c8392b', vinyl2:'black', vinyl2Color:'#d9a441', picLabel:false, pic2Label:false, wrapOn:true, wrinkle:1, gloss:1,
   pattern:'none', patternColor:'#1b1b1b', patternAlt:'#2a6f4e', patternContrast:1, patternClear:0, patternRot:0, patternFromCover:false,
   pattern2:'none', pattern2Color:'#1b1b1b', pattern2Alt:'#2a6f4e', pattern2Contrast:1, pattern2Clear:0, pattern2Rot:0, pattern2FromCover:false, vinylSame:true,
   vinylClear:0, vinyl2Clear:0, tracks:6, tracks2:6,
@@ -915,6 +932,20 @@ function sampleLabel(side){const s=1024,c=canvas(s,s),g=c.getContext('2d'),m=s/2
   g.font=`800 ${s*.13}px ${DISPLAY}`;g.fillText('SIDE '+side,m,s*.8);
   g.font=`500 ${s*.04}px ${MONO}`;g.fillText(`${FORMATS[state.format].rpm} RPM · STEREO · GM-001`,m,s*(big?.25:.35));
   g.font=`500 ${s*.036}px ${BODY}`;g.fillText(tr('示例标签','SAMPLE LABEL'),m,s*.66);
+  return c}
+// Picture disc sample: square with the disc filling it, like the record face UVs. The middle is printed too,
+// since a picture disc has no paper label unless one is switched on.
+function samplePicture(side){const s=2048,c=canvas(s,s),g=c.getContext('2d'),m=s/2;
+  const [sky,sun,hill]={A:['#efe3c8','#e46a4b','#1f3b2d'],B:['#cfe0e3','#e7ad45','#2b2340'],C:['#f1d7c4','#d0463b','#173a4a'],D:['#dfe8d2','#d98a4e','#3b2a1f']}[side];
+  g.fillStyle=sky;g.fillRect(0,0,s,s);
+  g.fillStyle=sun;g.beginPath();g.arc(m*1.18,m*.62,s*.15,0,Math.PI*2);g.fill();
+  // Two hill lines across the lower half; the sample text sits on the near one.
+  for(const [y,a,col] of[[.58,.06,'#7a9a76'],[.66,.05,hill]]){g.fillStyle=col;g.beginPath();g.moveTo(0,s);
+    for(let x=0;x<=s;x+=16)g.lineTo(x,s*(y+a*Math.sin(x/s*Math.PI*2.2+y*9)));g.lineTo(s,s);g.fill()}
+  g.fillStyle='#efe9d8';g.textAlign='center';
+  g.font=`800 ${s*.05}px ${DISPLAY}`;g.fillText('NIGHT PRESSING',m,s*.78);
+  g.font=`800 ${s*.075}px ${DISPLAY}`;g.fillText('SIDE '+side,m,s*.86);
+  g.font=`500 ${s*.022}px ${BODY}`;g.fillText(tr('示例画胶 · 上传图片后替换','SAMPLE PICTURE DISC · UPLOAD TO REPLACE'),m,s*.91);
   return c}
 function sampleSticker(shape){const w=1024,h=shape==='rect'?640:1024,c=canvas(w,h),g=c.getContext('2d');
   g.fillStyle='#f7cf1d';g.beginPath();
@@ -1198,7 +1229,7 @@ const ground=new THREE.Mesh(new THREE.PlaneGeometry(400,400),new THREE.ShadowMat
 ground.rotation.x=-Math.PI/2;ground.position.y=GROUND_Y;ground.receiveShadow=true;scene.add(ground);
 
 // ---------- Textures ----------
-const tex={front:colorTex(sampleFront()),back:colorTex(sampleBack()),spine:colorTex(sampleSpine()),labelA:colorTex(sampleLabel('A')),labelB:colorTex(sampleLabel('B')),labelC:colorTex(sampleLabel('C')),labelD:colorTex(sampleLabel('D')),sticker:colorTex(sampleSticker('circle')),sleeve:null,
+const tex={front:colorTex(sampleFront()),back:colorTex(sampleBack()),spine:colorTex(sampleSpine()),labelA:colorTex(sampleLabel('A')),labelB:colorTex(sampleLabel('B')),labelC:colorTex(sampleLabel('C')),labelD:colorTex(sampleLabel('D')),pictureA:colorTex(samplePicture('A')),pictureB:colorTex(samplePicture('B')),pictureC:colorTex(samplePicture('C')),pictureD:colorTex(samplePicture('D')),sticker:colorTex(sampleSticker('circle')),sleeve:null,
   innerLeft:colorTex(sampleInnerLeft()),innerRight:colorTex(sampleInnerRight()),insertFront:colorTex(sampleInsert('front')),insertBack:colorTex(sampleInsert('back')),obi:null};
 const userSticker={img:null},userObi={img:null};
 const wrapNormal=wrapNormalMap(),bump=paperBump();
@@ -1227,6 +1258,24 @@ function vinylMats(){const face=new THREE.MeshPhysicalMaterial({color:0x0b0b0c,m
   face.customProgramCacheKey=()=>'vinyl-face-v1';
   return{face,edge:new THREE.MeshPhysicalMaterial({color:0x0b0b0c,metalness:0,roughness:.3,envMap:studioEnv,envMapIntensity:.3})}}
 const vinyl1=vinylMats(),vinyl2=vinylMats();
+// Picture disc: the artwork is printed under a clear PVC skin, so the groove sheen and a gloss coat sit over
+// it. One material per side; the meshes come from buildRecord (parts) and syncPicture shows them.
+function pictureMats(i){const m=()=>new THREE.MeshPhysicalMaterial({color:0xffffff,metalness:0,roughness:1,anisotropy:.9,clearcoat:.5,clearcoatRoughness:.12,envMap:studioEnv,envMapIntensity:.25});
+  return{i,top:m(),bottom:m(),parts:null}}
+const picture1=pictureMats(1),picture2=pictureMats(2);
+const PICTURE_LIFT=1.25;   // like VINYL_LIFT, smaller: the print is smoother than bare grooves
+const PICTURE_RIM='#d8d3c8';
+const isPicture=i=>state['vinyl'+styleSfx(i)]==='picture';
+// Vinyl faces or picture faces; with a paper label the print stops at the label's edge.
+function syncPicture(pm){const p=pm.parts;if(!p)return;const on=isPicture(pm.i),paper=on&&state[`pic${styleSfx(pm.i)}Label`];
+  for(const x of p.vinyl)x.visible=!on;for(const x of p.labels)x.visible=!on||paper;
+  for(const x of p.full)x.visible=on&&!paper;for(const x of p.outer)x.visible=on&&paper}
+// Side B (D) shows its own artwork once it has one; until then it repeats side A's (C's) if that was given,
+// else it keeps its own sample.
+function applyPictureMaps(){const filled=sl=>!!slotOrigin[sl];
+  for(const [pm,a,b] of[[picture1,'pictureA','pictureB'],[picture2,'pictureC','pictureD']]){
+    const g=grooveMaps(state[pm.i===2?'tracks2':'tracks']);pm.top.map=tex[a];pm.bottom.map=filled(b)||!filled(a)?tex[b]:tex[a];
+    for(const m of[pm.top,pm.bottom]){m.color.setScalar(PICTURE_LIFT);m.roughnessMap=g.rough;m.anisotropyMap=g.aniso;m.needsUpdate=true}}}
 const labelMatA=new THREE.MeshStandardMaterial({map:tex.labelA,roughness:.62});
 const labelMatB=new THREE.MeshStandardMaterial({map:tex.labelB,roughness:.62});
 const labelMatC=new THREE.MeshStandardMaterial({map:tex.labelC,roughness:.62});
@@ -1404,12 +1453,12 @@ const patternToken=[0,0];
 // Which disc's vinyl/pattern settings a disc uses: a 2LP shares disc 1's until "same as disc 1" is turned off.
 // The keys differ only by this suffix: vinyl/vinyl2, vinylColor/vinyl2Color, pattern/pattern2, ...
 const styleSfx=i=>i===2&&!state.vinylSame?'2':'';
-const STYLE_KEYS=['vinyl#','vinyl#Color','vinyl#Clear','pattern#','pattern#Color','pattern#Alt','pattern#Contrast','pattern#Clear','pattern#Rot'];
+const STYLE_KEYS=['vinyl#','pic#Label','vinyl#Color','vinyl#Clear','pattern#','pattern#Color','pattern#Alt','pattern#Contrast','pattern#Clear','pattern#Rot'];
 // A disc's look: black is plain black (no pattern, opaque); colour is a solid colour or a pattern on that
 // colour as its base, either one optionally see-through. Only main + accent patterns have a pattern
 // transparency (pclear): split regions and tonal shades are all part of the base.
-function discLook(i){const s=styleSfx(i),black=state['vinyl'+s]==='black',mask=black?null:maskById(state['pattern'+s]);
-  return{s,black,base:black?VINYL_BLACK:state[`vinyl${s}Color`],clear:black?0:state[`vinyl${s}Clear`],mask,pclear:mask?.palette.mode==='accent'&&!mask.fill?state[`pattern${s}Clear`]:0}}
+function discLook(i){const s=styleSfx(i),v=state['vinyl'+s],black=v==='black',color=v==='color',mask=color?maskById(state['pattern'+s]):null;
+  return{s,black,base:black?VINYL_BLACK:state[`vinyl${s}Color`],clear:color?state[`vinyl${s}Clear`]:0,mask,pclear:mask?.palette.mode==='accent'&&!mask.fill?state[`pattern${s}Clear`]:0}}
 async function applyPatternTo(i,mats){
   const{s,base,clear,pclear,mask:m}=discLook(i),token=++patternToken[i-1];
   const drop=()=>{for(const t of[mats.face.map,mats.face.alphaMap])t?.dispose();mats.face.map=mats.face.alphaMap=null;mats.face.needsUpdate=true};
@@ -1429,6 +1478,9 @@ function applyVinylTo(i,mats){
   // A liquid or sand disc's clear shell is seen through its whole width at the rim: darker and nearly opaque.
   mats.face.userData.shellEdge.value=sealed?1:0;
   if(sealed){mats.edge.color.multiplyScalar(.7);mats.edge.opacity=1-shellClear*.3}
+  // A picture disc's rim is the pressed sandwich edge: clear PVC over the printed core, pale and opaque.
+  if(isPicture(i))mats.edge.color.set(PICTURE_RIM);
+  syncPicture(i===2?picture2:picture1);applyPictureMaps();
   mats.face.envMapIntensity=black?.32:.22;
   const g=grooveMaps(state[i===2?'tracks2':'tracks']);
   if(mats.face.roughnessMap!==g.rough){mats.face.roughnessMap=g.rough;mats.face.anisotropyMap=g.aniso;mats.face.needsUpdate=true}
@@ -1761,8 +1813,8 @@ function buildSleeve(group){clearGroup(group);const s=SLV.s,shape=new THREE.Shap
 const sleeve=makeSleeve(),sleeve2=makeSleeve();
 
 // LP: grooved faces, rim, two labels, spindle hole.
-function makeRecord(matA,matB,vm,fm){const group=new THREE.Group();group.userData.build=()=>buildRecord(group,matA,matB,vm,fm);group.userData.build();scene.add(group);return group}
-function buildRecord(group,matA,matB,vm,fm){clearGroup(group);const {r,t,label,hole}=LP;
+function makeRecord(matA,matB,vm,fm,pm){const group=new THREE.Group();group.userData.build=()=>buildRecord(group,matA,matB,vm,fm,pm);group.userData.build();scene.add(group);return group}
+function buildRecord(group,matA,matB,vm,fm,pm){clearGroup(group);const {r,t,label,hole}=LP;
   const face=remapUV(new THREE.RingGeometry(label,r,256,6),r*2);
   // The back face is the front turned over (x flipped), so its U is flipped too: both faces then sample the
   // pattern at the same point of the disc, and a see-through disc shows the same pattern through it.
@@ -1776,8 +1828,12 @@ function buildRecord(group,matA,matB,vm,fm){clearGroup(group);const {r,t,label,h
   const ring=new THREE.RingGeometry(label,r,256,4),mid=mesh(ring,fm.mat,{cast:false,receive:false});mid.visible=false;mid.onBeforeRender=fillOnBeforeRender(fm);fm.mesh=mid;
   // Glitter sits just under each face instead, so it also shows in opaque vinyl.
   fm.glitter=[1,-1].map(side=>{const g=mesh(ring,fm.mat,{cast:false,receive:false});g.position.z=side*(t/2+.003);if(side<0)g.rotation.y=Math.PI;g.visible=false;g.onBeforeRender=mid.onBeforeRender;return g});
-  group.add(top,bot,edge,la,lb,bore,mid,...fm.glitter)}
-const record=makeRecord(labelMatA,labelMatB,vinyl1,fill1),record2=makeRecord(labelMatC,labelMatD,vinyl2,fill2);
+  // Picture faces, printed to the spindle hole or round a paper label. They read the right way up from their
+  // own side, like the labels (side B is turned over, its U not flipped).
+  const pic=(r0,mat,side)=>{const m=mesh(remapUV(new THREE.RingGeometry(r0,r,256,6),r*2),mat);m.position.z=side*t/2;if(side<0)m.rotation.y=Math.PI;return m};
+  pm.parts={vinyl:[top,bot],labels:[la,lb],full:[pic(hole,pm.top,1),pic(hole,pm.bottom,-1)],outer:[pic(label,pm.top,1),pic(label,pm.bottom,-1)]};
+  group.add(top,bot,edge,la,lb,bore,mid,...fm.glitter,...pm.parts.full,...pm.parts.outer);syncPicture(pm)}
+const record=makeRecord(labelMatA,labelMatB,vinyl1,fill1,picture1),record2=makeRecord(labelMatC,labelMatD,vinyl2,fill2,picture2);
 
 // Shrink wrap shell: displaced box. Faces stay tight at the box edges (no cracks), wrinkle near edges and corners.
 const wrap=new THREE.Mesh(undefined,[wrapMouthMat,wrapMat,wrapMat,wrapMat,wrapMat,wrapMat]);wrap.renderOrder=2;scene.add(wrap);
@@ -2028,13 +2084,15 @@ const SLOTS={
   spine:{w:64,h:4096,rotateIfWide:true,mats:()=>[spineMat]},
   labelA:{w:1024,h:1024,mats:()=>[labelMatA]},labelB:{w:1024,h:1024,mats:()=>[labelMatB]},
   labelC:{w:1024,h:1024,mats:()=>[labelMatC]},labelD:{w:1024,h:1024,mats:()=>[labelMatD]},
+  // Picture disc sides: applyPictureMaps puts them on the faces (side B may repeat side A).
+  pictureA:{w:2048,h:2048,mats:()=>[]},pictureB:{w:2048,h:2048,mats:()=>[]},pictureC:{w:2048,h:2048,mats:()=>[]},pictureD:{w:2048,h:2048,mats:()=>[]},
   sleeve:{w:2048,h:2048,mats:()=>[sleeveMat]},sticker:{},obi:{},
   innerLeft:{w:2048,h:2048,mats:()=>[innerLeftMat]},innerRight:{w:2048,h:2048,mats:()=>[innerRightMat]},
   insertFront:{w:2048,h:2048,mats:()=>[insertFrontMat]},insertBack:{w:2048,h:2048,mats:()=>[insertBackMat]}
 };
 function thumb(slot,url){const el=document.querySelector(`[data-slot="${slot}"]`);if(!el)return;el.querySelector('.thumb').style.backgroundImage=`url("${url}")`}
 function markFilled(slot){const el=document.querySelector(`[data-slot="${slot}"]`);el.classList.add('filled');el.querySelector('.tag')?.remove()}
-for(const slot of['front','back','spine','labelA','labelB','labelC','labelD','sticker','innerLeft','innerRight','insertFront','insertBack'])thumb(slot,tex[slot].image.toDataURL('image/jpeg',.6));
+for(const slot of['front','back','spine','labelA','labelB','labelC','labelD','pictureA','pictureB','pictureC','pictureD','sticker','innerLeft','innerRight','insertFront','insertBack'])thumb(slot,tex[slot].image.toDataURL('image/jpeg',.6));
 // One loader for every artwork slot, shared by the upload tiles and the agent API.
 // slotOrigin remembers who filled each slot, so a library pick leaves the viewer's own uploads alone.
 const slotOrigin={},assetLog={};
@@ -2044,7 +2102,7 @@ async function setSlotImage(slot,img,thumbUrl,origin='user',src){
   if(slot==='sticker'){userSticker.img=img;stickerTexture()}
   else if(slot==='obi'){userObi.img=img;obiTexture()}
   else{const s=SLOTS[slot];setTex(slot,colorTex(fitImage(img,s.w,s.h,{rotateIfWide:s.rotateIfWide})),...s.mats());if(slot==='sleeve')sleeveMat.color.set('#ffffff')}
-  thumb(slot,thumbUrl);markFilled(slot);slotOrigin[slot]=origin;if(origin!=='fetched')delete assetLog[slot];
+  thumb(slot,thumbUrl);markFilled(slot);slotOrigin[slot]=origin;if(slot.startsWith('picture'))applyPictureMaps();if(origin!=='fetched')delete assetLog[slot];
   if(origin==='fetched'){const el=document.querySelector(`[data-slot="${slot}"] .thumb`),t=document.createElement('span');t.className='tag lib';t.textContent=tr('曲库','Library');el.append(t)}
   saveSlot(slot,img,src)}
 for(const slot of Object.keys(SLOTS)){
@@ -2289,7 +2347,8 @@ function roundThumb(img,c,size=160){const t=renderLabel(img,c,size),out=canvas(s
 const libSlotNames=()=>Object.fromEntries([['front',tr('正面','Front')],['back',tr('背面','Back')],['spine',tr('书脊','Spine')],
   ['innerLeft',tr('内页左','Inner left')],['innerRight',tr('内页右','Inner right')],['sleeve',tr('内袋','Inner sleeve')],
   ['insertFront',tr('插页正面','Insert front')],['insertBack',tr('插页背面','Insert back')],['obi',tr('Obi 侧标','Obi strip')],['sticker',tr('贴纸','Sticker')],
-  ['labelA',tr('A 面标签','Side A label')],['labelB',tr('B 面标签','Side B label')],['labelC',tr('C 面标签','Side C label')],['labelD',tr('D 面标签','Side D label')]]);
+  ['labelA',tr('A 面标签','Side A label')],['labelB',tr('B 面标签','Side B label')],['labelC',tr('C 面标签','Side C label')],['labelD',tr('D 面标签','Side D label')],
+  ...['A','B','C','D'].map(k=>['picture'+k,tr(`${k} 面画胶`,`Side ${k} picture`)])]);
 // The scene the images will land in: the panel as it is, with the record settings Apply will write if they are ticked.
 function libScene(){const p=libPlan,v=$('lib-view'),on=k=>!!v.querySelector(`[data-param="${k}"]:checked`);
   return{lps:p?.vinyl&&on('count')?p.lps:state.lpCount,gate:p?.jacket&&on('jacket')?p.jacket==='gatefold':isGate(),sleeve:state.sleeveOn,insert:state.insertOn,disc:discOnly()}}
@@ -2297,8 +2356,9 @@ function libScene(){const p=libPlan,v=$('lib-view'),on=k=>!!v.querySelector(`[da
 // the inner sleeve and the insert are only switched off, so they stay in the menu, disabled, saying where to turn them on.
 function libSlotOff(sl,sc=libScene()){
   // Disc only shows labels; the front stays open since vinyl colours can be taken from it.
-  if(sc.disc&&!sl.startsWith('label')&&sl!=='front')return{why:tr('只看唱片时不显示','not shown in disc-only mode')};
-  if((sl==='labelC'||sl==='labelD')&&sc.lps!==2)return{gone:true,why:tr('只在 2LP 时可见','only shows on 2LP')};
+  if(sc.disc&&!sl.startsWith('label')&&!sl.startsWith('picture')&&sl!=='front')return{why:tr('只看唱片时不显示','not shown in disc-only mode')};
+  if((sl==='labelC'||sl==='labelD'||sl==='pictureC'||sl==='pictureD')&&sc.lps!==2)return{gone:true,why:tr('只在 2LP 时可见','only shows on 2LP')};
+  if(sl.startsWith('picture')&&!isPicture(sl<'pictureC'?1:2))return{gone:true,why:tr('只在画胶时可见','only shows on a picture disc')};
   if(sl.startsWith('inner')&&!sc.gate)return{gone:true,why:tr('只在双开封套里可见','only shows on a gatefold jacket')};
   if(sl==='sleeve'&&!sc.sleeve)return{why:tr('需先在唱片页开启内袋','turn on the inner sleeve on the Records page first')};
   if(sl.startsWith('insert')&&!sc.insert)return{why:tr('需先在插页页开启插页','turn on the insert on the Insert page first')};
@@ -2544,7 +2604,7 @@ seg('bg-mode','bg',()=>{applyBg();syncAnimPanel();syncExportSummary()});
 seg('export-scale','scale',()=>syncExportSummary());
 // Picking a colour while on black switches that disc to coloured vinyl.
 for(const [cid,sid,key] of[['vinyl-color','vinyl-style','vinyl'],['vinyl2-color','vinyl2-style','vinyl2']])
-  $(cid).addEventListener('input',e=>{state[key+'Color']=e.target.value;colorSet[key==='vinyl'?0:1]=true;if(state[key]==='black'){state[key]='color';for(const x of $(sid).children)x.setAttribute('aria-pressed',x.dataset.v==='color')}applyVinyl()});
+  $(cid).addEventListener('input',e=>{state[key+'Color']=e.target.value;colorSet[key==='vinyl'?0:1]=true;if(state[key]!=='color'){state[key]='color';for(const x of $(sid).children)x.setAttribute('aria-pressed',x.dataset.v==='color')}applyVinyl()});
 $('bg-color').addEventListener('input',e=>{state.bgColor=e.target.value;state.bg='color';for(const x of $('bg-mode').children)x.setAttribute('aria-pressed',x.dataset.v==='color');applyBg();syncExportSummary()});
 $('sleeve-color').addEventListener('input',e=>{state.sleeveColor=e.target.value;sleeveMat.color.set(tex.sleeve?'#ffffff':e.target.value)});
 field('vinyl-color','vinylColor');field('vinyl2-color','vinyl2Color');field('bg-color','bgColor');field('sleeve-color','sleeveColor');
@@ -2571,8 +2631,11 @@ function pickPattern(i,id){const s=i===1?'':'2',m=maskById(id);state['pattern'+s
   if(m&&!maskDone.has(id)){const b=$(`pattern${s}-pick`).querySelector(`[data-id="${id}"]`);b.dataset.loading='';done.catch(()=>{}).then(()=>delete b.dataset.loading)}}
 // Start the download as soon as a swatch is pointed at, so the click often finds the mask already here.
 const warmMask=e=>{const id=e.target.closest?.('button')?.dataset.id;if(id)loadMask(id).catch(()=>{})};
-function syncPatterns(){for(const i of[1,2]){const s=i===1?'':'2',black=state['vinyl'+s]==='black',m=maskById(state['pattern'+s]),mode=m?.palette.mode;
-  $(`vinyl${s}-colored`).hidden=black;
+function syncPatterns(){
+  // Picture tiles take the label tiles' place unless the disc keeps a paper label.
+  for(const i of[1,2]){const pic=isPicture(i);$(`pictures${i}`).hidden=!pic;$(`labels${i}`).hidden=pic&&!state[`pic${styleSfx(i)}Label`]}
+  for(const i of[1,2]){const s=i===1?'':'2',v=state['vinyl'+s],m=maskById(state['pattern'+s]),mode=m?.palette.mode;
+  $(`vinyl${s}-colored`).hidden=v!=='color';$(`vinyl${s}-picture`).hidden=v!=='picture';
   for(const b of $(`vinyl${s}-look`).children)b.setAttribute('aria-pressed',String(b.dataset.v===(m?'pattern':'solid')));
   for(const el of $(`vinyl${s}-colored`).querySelectorAll('[data-look="pattern"]'))el.hidden=!m;
   $(`vinyl${s}-color-lbl`).textContent=!m?tr('颜色','Colour'):mode==='regions'?tr('第一块','First region'):tr('底色','Base');
@@ -2622,6 +2685,7 @@ for(const i of[1,2]){const s=i===1?'':'2';buildPicker(s);
   $(`pattern${s}-shuffle`).addEventListener('click',()=>shufflePattern(i));
   $(`pattern${s}-cover`).addEventListener('click',()=>{if(applyCover(i)){colorSet[i-1]=true;applyVinyl();syncUI()}else alertNote(tr('封面颜色太单一，没取到可用的配色。','The cover has too few distinct colours to suggest a palette.'))})}
 toggle('sleeve-on','sleeveOn',null,()=>{foldSleeve();syncUI();pose()});
+toggle('pic-label','picLabel',null,()=>{applyVinyl();syncPatterns()});toggle('pic2-label','pic2Label',null,()=>{applyVinyl();syncPatterns()});
 // 2LP: disc 2 follows disc 1 until unlinked; unlinking starts it from disc 1's current look.
 $('vinyl-same').addEventListener('change',e=>{state.vinylSame=e.target.checked;
   if(!state.vinylSame){for(const k of STYLE_KEYS)state[k.replace('#','2')]=state[k.replace('#','')];colorSet[1]=colorSet[0]}
@@ -2802,7 +2866,8 @@ const SPEC_FIELDS=[
   boolF('records.sleeve.on','sleeveOn','是否显示内袋。不显示时没有 sleeveOut，唱片位置只看 recordOut（唱片抽出封套的比例）'),
   colorF('records.sleeve.color','sleeveColor','内袋纸色，未提供 images.sleeve 时生效'),
   ...[1,2].flatMap(i=>{const s=i===1?'':'2',note=i===2?'（仅 records.count=2 时生效）':'';return[
-    enumF(`records.disc${i}.vinyl`,`vinyl${s}`,['black','color'],`第 ${i} 张胶色：black 纯黑胶（不叠纹路、不透明）；color 彩胶，用 color 和 transparency，可再加 pattern。旧值 clear 仍可用，等于 color + transparency 38${note}`),
+    enumF(`records.disc${i}.vinyl`,`vinyl${s}`,['black','color','picture'],`第 ${i} 张胶色：black 纯黑胶（不叠纹路、不透明）；color 彩胶，用 color 和 transparency，可再加 pattern；picture 画胶，盘面印 images.${i===1?'pictureA / pictureB':'pictureC / pictureD'}，color、transparency、pattern 都不使用，默认没有纸标（见 picture.paperLabel）。旧值 clear 仍可用，等于 color + transparency 38${note}`),
+    boolF(`records.disc${i}.picture.paperLabel`,`pic${s}Label`,`第 ${i} 张画胶是否贴纸标：false（默认）画面一直印到中孔，${i===1?'labelA / labelB':'labelC / labelD'} 不显示；true 中间贴纸标，画面只在标签外圈。仅 vinyl=picture 时生效${note}`),
     numF(`records.disc${i}.transparency`,`vinyl${s}Clear`,0,80,.01,`第 ${i} 张彩胶的透明度（%），0 为不透明。有纹路时是底色的透明度：主次类纹路的透明度另用 pattern.transparency；分色类只有第一块变透明，同色系的深浅纹路不透明；black 不使用${note}`),
     colorF(`records.disc${i}.color`,`vinyl${s}Color`,`第 ${i} 张彩胶颜色；有纹路时是底色（分色类的第一块）${note}`),
     numF(`records.disc${i}.sleeveOut`,`sleeve${s}X`,0,100,.01,`第 ${i} 张内袋连同唱片从封套开口抽出的比例（%），只在 records.sleeve.on=true 时生效，内袋不显示时写了会被忽略并给出警告${note}${i===2?'。双开且 records.layout=split 时从左扇的开口抽出：合上时朝右，打开后朝左':''}`),
@@ -2850,6 +2915,7 @@ const IMAGE_SLOTS={
   innerLeft:'双开内页左（方图）',innerRight:'双开内页右（方图）',
   obi:'Obi 展开图（竖长条，从左到右依次为背面 | 书脊 | 正面）',sleeve:'内袋印刷图（方图，中孔 Ø90 mm 处会被挖空）',
   labelA:'A 面标签（方图，只显示中间 Ø100 mm 圆形）',labelB:'B 面标签',labelC:'C 面标签（2LP）',labelD:'D 面标签（2LP）',
+  pictureA:'A 面画胶（方图，唱片铺满整张图，只显示内切圆；records.disc1.vinyl=picture 时使用）',pictureB:'B 面画胶（不给时沿用 pictureA）',pictureC:'C 面画胶（2LP）',pictureD:'D 面画胶（2LP，不给时沿用 pictureC）',
   insertFront:'插页正面（方图，12 寸 304 × 304 mm，7 寸 178 × 178 mm）',insertBack:'插页背面（方图）',sticker:'Hype sticker 图（圆形会被裁成圆）'};
 const CAMERA_VIEWS=['quarter','front','side'];
 // Per-slot production guide for agents preparing artwork: canvas size, physical size, what the viewer
@@ -2859,7 +2925,7 @@ const ASSET_SOURCES=['user','generated','typeset','composite','sample','fetched'
 function slotGuide(){
   // Disc only: nothing but the shown record's labels is in the picture.
   if(discOnly()){const shown=state.lpCount===2&&state.sceneDisc===2?['C','D']:['A','B'];
-    return slotGuideAll().map(g=>g.slot.startsWith('label')?{...g,used:shown.includes(g.slot.slice(5))}:{...g,used:false,notes:[g.notes,'scene.mode=disc 时不显示'].filter(Boolean).join('；')})}
+    return slotGuideAll().map(g=>g.slot.startsWith('label')||g.slot.startsWith('picture')?{...g,used:g.used&&shown.includes(g.slot.at(-1))}:{...g,used:false,notes:[g.notes,'scene.mode=disc 时不显示'].filter(Boolean).join('；')})}
   return slotGuideAll()}
 function slotGuideAll(){
   const mm=v=>Math.round(v*10*10)/10,obiMm=mm(state.obiWidth),depth=mm(jacketDepth()),{total}=obiLayout(),obiPx=Math.max(64,Math.round(2048*total/J.h));
@@ -2876,7 +2942,12 @@ function slotGuideAll(){
     square('innerRight','双开内页右',W,'composite',{used:isGate(),notes:'右页适合留给歌词排版'}),
     {slot:'obi',label:'Obi 展开图',px:[obiPx,2048],mm:[Math.round(total*10*10)/10,W],visible:`从左到右：背面 ${obiMm} mm | 书脊 ${mm(obiLayout().s)} mm | 正面 ${obiMm} mm`,covered:[],recommend:'typeset',used:state.obiOn,notes:'文字为主，不建议生图'},
     {...square('sleeve','内袋印刷',mm(SLV.s),'generated'),visible:`中心 Ø${mm(SLV.hole*2)} mm 圆孔被挖空，抽出时只露出一部分`,used:state.sleeveOn,notes:'低对比底纹即可，一般不放文字'},
-    ...['A','B','C','D'].map(k=>({slot:'label'+k,label:`${k} 面标签`,px:[1024,1024],mm:[lab,lab],visible:`只显示方图的内切圆（Ø${lab} mm）；正中 Ø${hole} mm 是中孔${hole>10?'，这一圈的图会被挖掉':''}`,covered:[],recommend:'composite',used:k<'C'||state.lpCount===2,notes:'底图可生成俯视平面圆形纹理，标题、面号、转速用排版'})),
+    ...['A','B','C','D'].map(k=>{const i=k<'C'?1:2,pic=isPicture(i),paper=state[`pic${styleSfx(i)}Label`];
+      return{slot:'label'+k,label:`${k} 面标签`,px:[1024,1024],mm:[lab,lab],visible:`只显示方图的内切圆（Ø${lab} mm）；正中 Ø${hole} mm 是中孔${hole>10?'，这一圈的图会被挖掉':''}`,covered:[],recommend:'composite',used:(i===1||state.lpCount===2)&&(!pic||paper),
+        notes:pic&&!paper?`第 ${i} 张是画胶且没有纸标，标签不显示`:'底图可生成俯视平面圆形纹理，标题、面号、转速用排版'}}),
+    ...['A','B','C','D'].map(k=>{const i=k<'C'?1:2,paper=state[`pic${styleSfx(i)}Label`],d=mm(LP.r*2),follows=k==='B'||k==='D'?`；不给时沿用 ${k==='B'?'A':'C'} 面`:'';
+      return{slot:'picture'+k,label:`${k} 面画胶`,px:[2048,2048],mm:[d,d],visible:`只显示方图的内切圆（Ø${d} mm）；正中 Ø${hole} mm 是中孔${paper?`，中间 Ø${lab} mm 被纸标盖住`:'，没有纸标，中间也印'}${follows}`,
+        covered:[],recommend:'generated',used:isPicture(i)&&(i===1||state.lpCount===2),notes:'圆形构图，主体放在中心附近、避开中孔；外圈约 10 mm 在音槽外、斜看时会变窄。不要做成真实发行的画胶'}}),
     square('insertFront','插页正面',mm(INS.s),'composite',{used:state.insertOn,notes:'歌词、制作名单用排版'}),
     square('insertBack','插页背面',mm(INS.s),'composite',{used:state.insertOn}),
     {slot:'sticker',label:'Hype sticker',px:state.stickerShape==='rect'?[1024,640]:[1024,1024],mm:state.stickerShape==='rect'?[mm(state.stickerSize*1.6),mm(state.stickerSize)]:[mm(state.stickerSize),mm(state.stickerSize)],
@@ -2889,13 +2960,14 @@ function specFromState(){
   const s={version:1};
   for(const f of SPEC_FIELDS)setPath(s,f.path,toSpecValue(f,state[f.key]));
   // A linked disc 2 has no style of its own; writing disc 1's copy would contradict sameAsDisc1.
-  if(state.vinylSame)for(const k of['vinyl','color','transparency','pattern'])delete s.records.disc2[k];
+  if(state.vinylSame)for(const k of['vinyl','color','transparency','pattern','picture'])delete s.records.disc2[k];
   if(!state.sleeveOn)for(const i of[1,2])delete s.records[`disc${i}`].sleeveOut;
   if(!discOnly()||state.lpCount!==2)delete s.scene.disc;
   if(!is7())delete s.records.centerHole;
   // Plain black has no colour, transparency or pattern; solid colour has no pattern.
   for(const i of[1,2]){const d=s.records[`disc${i}`],sx=i===1?'':'2';if(!('vinyl' in d))continue;
-    if(state['vinyl'+sx]==='black')for(const k of['color','transparency','pattern'])delete d[k];
+    if(state['vinyl'+sx]!=='picture')delete d.picture;
+    if(state['vinyl'+sx]!=='color')for(const k of['color','transparency','pattern'])delete d[k];
     else if(!maskById(state['pattern'+sx]))delete d.pattern;
     else{const m=maskById(state['pattern'+sx]);if(m.palette.mode!=='accent'||m.fill)delete d.pattern.transparency;if(m.fill&&m.fill.type!=='none')delete d.transparency}}
   {const t=stickerTpl();if(t){delete s.sticker.shape;s.sticker.lines=tplLines(t,state.stickerLines)}else delete s.sticker.color}
@@ -2997,7 +3069,7 @@ async function applySpec(spec){
   // A disc whose spec gives a colour keeps it when the panel later switches black -> colour.
   for(const i of[1,2])colorSet[i-1]=['color','pattern.color','pattern.color2','pattern.fromCover'].some(k=>has(`records.disc${i}.${k}`));
   // Older specs set disc 2's vinyl without the switch: writing its style fields means "set separately".
-  const disc2Style=['vinyl','color','transparency','pattern'].filter(k=>has('records.disc2.'+k));
+  const disc2Style=['vinyl','color','transparency','pattern','picture'].filter(k=>has('records.disc2.'+k));
   if(disc2Style.length){if(!has('records.disc2.sameAsDisc1'))state.vinylSame=false;
     else if(state.vinylSame)warnings.push(`records.disc2.sameAsDisc1=true，第 2 张沿用第 1 张的样式，已忽略 ${disc2Style.map(k=>'records.disc2.'+k).join('、')}`)}
   for(const i of[1,2]){const s=i===1?'':'2',m=maskById(state['pattern'+s]),pre=`records.disc${i}`;if(!m||(i===2&&state.vinylSame))continue;
@@ -3047,6 +3119,16 @@ async function applySpec(spec){
   for(const i of[1,2]){const s=i===1?'':'2',pre=`records.disc${i}`;if(state['vinyl'+s]!=='black'||(i===2&&state.vinylSame))continue;
     const unused=[has(`${pre}.pattern.id`)&&getPath(spec,`${pre}.pattern.id`)!=='none'&&`${pre}.pattern`,has(`${pre}.transparency`)&&`${pre}.transparency`].filter(Boolean);
     if(unused.length)warnings.push(`${pre}.vinyl=black 是纯黑胶，${unused.join('、')} 无效；要用纹路或透明度请设 vinyl=color`)}
+  // Picture disc: the print replaces colour, pattern and transparency; its images only show on a picture disc.
+  for(const i of[1,2]){const s=i===1?'':'2',pre=`records.disc${i}`,[a,b]=i===1?['A','B']:['C','D'],own=!(i===2&&state.vinylSame);
+    const pic=state['vinyl'+(own?s:'')]==='picture',imgs=[a,b].map(k=>'images.picture'+k).filter(has);
+    if(own&&pic){const unused=['color','transparency','pattern'].filter(k=>has(`${pre}.${k}`)).map(k=>`${pre}.${k}`);
+      if(unused.length)warnings.push(`${pre}.vinyl=picture 是画胶，${unused.join('、')} 无效`)}
+    if(own&&!pic&&has(`${pre}.picture.paperLabel`))warnings.push(`${pre}.picture.paperLabel 只在 ${pre}.vinyl=picture 时生效`);
+    if(!pic&&imgs.length)warnings.push(`${imgs.join('、')} 只在第 ${i} 张为画胶（${pre}.vinyl=picture）时显示`);
+    if(pic&&!state[`pic${own?s:''}Label`]){const labs=[a,b].map(k=>'images.label'+k).filter(has);
+      if(labs.length)warnings.push(`第 ${i} 张是画胶且没有纸标，${labs.join('、')} 不显示；要贴纸标请设 ${pre}.picture.paperLabel=true`)}
+    if(pic&&i===2&&state.lpCount!==2&&imgs.length)warnings.push(`${imgs.join('、')} 仅在 records.count=2 时可见`)}
   if(state.numFont==='custom'&&!userFontFace){warnings.push('number.font=custom 但没有可用的 number.fontFile，已改用 auto');state.numFont='auto'}
   refreshAll();
   try{await vinylReady}catch(e){warnings.push(`彩胶纹路蒙版读取失败：${e.message}，已按纯色渲染`)}
@@ -3391,10 +3473,10 @@ $('jacket-spec').textContent=specText();applyFinish();applyVinyl();syncPatterns(
 new ResizeObserver(resize).observe(stage);
 // Redraw sample art once web fonts arrive so the placeholder type renders correctly.
 function redrawSamples(){
-  const redo={front:sampleFront,back:sampleBack,spine:sampleSpine,labelA:()=>sampleLabel('A'),labelB:()=>sampleLabel('B'),labelC:()=>sampleLabel('C'),labelD:()=>sampleLabel('D'),innerLeft:sampleInnerLeft,innerRight:sampleInnerRight,insertFront:()=>sampleInsert('front'),insertBack:()=>sampleInsert('back')};
+  const redo={front:sampleFront,back:sampleBack,spine:sampleSpine,labelA:()=>sampleLabel('A'),labelB:()=>sampleLabel('B'),labelC:()=>sampleLabel('C'),labelD:()=>sampleLabel('D'),pictureA:()=>samplePicture('A'),pictureB:()=>samplePicture('B'),pictureC:()=>samplePicture('C'),pictureD:()=>samplePicture('D'),innerLeft:sampleInnerLeft,innerRight:sampleInnerRight,insertFront:()=>sampleInsert('front'),insertBack:()=>sampleInsert('back')};
   for(const[slot,fn]of Object.entries(redo)){const el=document.querySelector(`[data-slot="${slot}"]`);if(el.classList.contains('filled'))continue;setTex(slot,colorTex(fn()),...SLOTS[slot].mats());thumb(slot,tex[slot].image.toDataURL('image/jpeg',.6))}
   if(!userObi.img)obiTexture();
-  numTexture();
+  applyPictureMaps();numTexture();
   if(!userSticker.img||stickerTpl())stickerTexture();
   if(!userSticker.img)thumb('sticker',sampleSticker(state.stickerShape).toDataURL('image/jpeg',.6));
 }

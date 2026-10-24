@@ -47,6 +47,7 @@ cd cli && npm install
 | 2LP | `records.count: 2`，`records.disc2.*`，标签用 `images.labelC` / `labelD`。单开时两张叠在同一个口袋；双开时按 `records.layout` 分装：`split`（默认）左右两扇各装一张，第 2 张在左扇（封面）里，打开后向左抽出；`stacked` 两张叠在右扇。第 2 张默认沿用第 1 张的胶色和纹路（`records.disc2.sameAsDisc1: true`）；写了 `disc2` 的 `vinyl` / `color` / `transparency` / `pattern` 就视为分别设置 |
 | 胶色 | `records.discN.vinyl`：`black` 纯黑胶（不叠纹路、不透明），`color` 彩胶：`color` 为颜色，`transparency` 为透明度（0–80%）。旧值 `clear` 等于 `color` + `transparency: 38` |
 | 彩胶纹路 | `records.discN.pattern.id`（可选值和分类见 `schema`）。底色是 `records.discN.color`。分色类（`split-*`）：`pattern.color` 为第二块，`split-tri` 用 `pattern.color2` 为第三块；主次类：`pattern.color` 为纹路色，其余色层自动推算；同色系：只用底色，`pattern.contrast` 调反差。只在 `vinyl: color` 时生效。`rotation` 旋转纹路。`transparency` 是底色的透明度；主次类可以再用 `pattern.transparency`（0–80%，默认 0）让纹路色和推算出的色层也变透明，底色不透明时纹路会变淡、透出底色。分色类（`transparency` 只作用于第一块）和同色系不使用 `pattern.transparency`，写了会给警告。`pattern.fromCover: true` 从 `images.front` 自动取底色和纹路色，写明的颜色优先 |
+| 画胶 | `records.discN.vinyl: "picture"`：盘面印图，图在透明胶层下。图片用 `images.pictureA` / `pictureB`（第 2 张 `pictureC` / `pictureD`），方图、唱片铺满整张图、只显示内切圆；B（D）面不给时沿用 A（C）面。默认没有纸标，画面一直印到中孔，`labelA`～`labelD` 不显示；`records.discN.picture.paperLabel: true` 在中间贴纸标。`color` / `transparency` / `pattern` 不使用，写了会给警告。2LP 默认两张都是画胶（`sameAsDisc1`） |
 | 液体胶 / 沙 / 亮片 | 都是纹路，`pattern.id` 写 `liquid-01`～`liquid-03`、`sand-01`、`glitter-01` / `glitter-02`。液体胶是同色系，只写 `color`，`pattern.contrast` 调推算色的深浅差，外壳总是透明、不用 `transparency`。三款形态不同：`liquid-01` 透明清液里漂着主色和推算色的大块；`liquid-02` 主色液体铺满，漂着浅色大块；`liquid-03` 主色液体铺满，满是推算色的密集液滴。沙是主次类：底色和 `pattern.color` 是两种沙色，不用透明度。亮片是主次类：底色是胶色（可配合 `transparency`），`pattern.color` 是亮片颜色 |
 | 音轨数 | `records.discN.tracks`：每面音轨数（1–20，默认 6），盘面按等宽分圈，两面相同 |
 | 内袋 | `records.sleeve.on` 默认 `false`，不显示内袋，唱片直接从封套抽出；要显示就设为 `true` |
@@ -75,6 +76,7 @@ cd cli && npm install
 - `video` 的警告里有 `animation` 相关的（单开封套用 gatefold、自转时标签被挡住），说明这段动画看不出效果，先改场景再出片。
 - 转台会转到背面，没给 `images.back` 时出现的是示例图；没有背面素材就用 `animation.preset: "swing"`。
 - 检查视频时不要看第一帧就算数：GIF 和 MP4 都要抽几帧看（比如 0、1/4、1/2、3/4 处），确认转到侧面和背面时没有穿帮。
+- 画胶的 B 面图从背后看是正的（和标签一样），不用自己镜像。拍 B 面用 `scene.mode: "disc"` + `camera.view: "front"` + `azimuth: 180`。
 - 液体胶的色块会往上浮一些；唱片自转时液体跟着唱片一起转，只有轻微晃动。2LP 的两张即使样式相同，分布也不一样。液体和沙在封套里看不见，要把唱片抽出来或者用 `scene.mode: "disc"`。
 - 换成 `format: "7in"` 时，spec 里没写的贴纸位置和尺寸、编号位置和字高、Obi 宽度按封套等比缩小（×0.586）；写了的值按原样用，是 7 寸封套上的 mm。镜头取景也按封套缩放，所以 7 寸和 12 寸出图时画面里的大小差不多，看起来不会更小。
 - 批量出编号图：`node cli/record-mockup.mjs numbers spec.json --from 1 --to 50 --dir out/`。
